@@ -35,8 +35,8 @@
    especially those whose name start with YY_ or yy_.  They are
    private implementation details that can be changed or removed.  */
 
-#ifndef YY_YY_Y_TAB_H_INCLUDED
-# define YY_YY_Y_TAB_H_INCLUDED
+#ifndef YY_YY_PARSER_TAB_HPP_INCLUDED
+# define YY_YY_PARSER_TAB_HPP_INCLUDED
 /* Debug traces.  */
 #ifndef YYDEBUG
 # define YYDEBUG 0
@@ -55,35 +55,48 @@ extern int yydebug;
     YYerror = 256,                 /* error  */
     YYUNDEF = 257,                 /* "invalid token"  */
     IDENTIFIER = 258,              /* IDENTIFIER  */
-    CHARACTER = 259,               /* CHARACTER  */
-    INTEGER = 260,                 /* INTEGER  */
-    FLOAT = 261                    /* FLOAT  */
+    STRING = 259,                  /* STRING  */
+    POW = 260,                     /* POW  */
+    SQRT = 261,                    /* SQRT  */
+    SHL = 262,                     /* SHL  */
+    SHR = 263,                     /* SHR  */
+    DATA_TYPE = 264,               /* DATA_TYPE  */
+    IF = 265,                      /* IF  */
+    ELSE = 266,                    /* ELSE  */
+    WHILE = 267,                   /* WHILE  */
+    FOR = 268,                     /* FOR  */
+    AND = 269,                     /* AND  */
+    OR = 270,                      /* OR  */
+    GTE = 271,                     /* GTE  */
+    LTE = 272,                     /* LTE  */
+    LT = 273,                      /* LT  */
+    GT = 274,                      /* GT  */
+    ISEQUAL = 275,                 /* ISEQUAL  */
+    NOTEQUAL = 276,                /* NOTEQUAL  */
+    FUNCTIONDEF = 277,             /* FUNCTIONDEF  */
+    DO = 278,                      /* DO  */
+    CHARACTER = 279,               /* CHARACTER  */
+    INTEGER = 280,                 /* INTEGER  */
+    BOOLEAN = 281,                 /* BOOLEAN  */
+    FLOAT = 282                    /* FLOAT  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
-/* Token kinds.  */
-#define YYEMPTY -2
-#define YYEOF 0
-#define YYerror 256
-#define YYUNDEF 257
-#define IDENTIFIER 258
-#define CHARACTER 259
-#define INTEGER 260
-#define FLOAT 261
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 11 "parser.y"
+#line 14 "parser.ypp"
 
     int INum;
     float FNum;
     char character;
     char* str;
-    EvaluationNode operationValue;
 
-#line 87 "y.tab.h"
+    ExpressionNode* ENode;
+
+#line 100 "parser.tab.hpp"
 
 };
 typedef union YYSTYPE YYSTYPE;
@@ -98,4 +111,4 @@ extern YYSTYPE yylval;
 int yyparse (void);
 
 
-#endif /* !YY_YY_Y_TAB_H_INCLUDED  */
+#endif /* !YY_YY_PARSER_TAB_HPP_INCLUDED  */
