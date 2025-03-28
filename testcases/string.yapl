@@ -1,0 +1,5 @@
+x = "mohamed " + "adel";
+x = "MoAdelEzz" - 3;
+x = "Nigga" << "Move";
+x = "Move" >> "Nigga";
+x = "Fox Osama Nigger"[4:11];

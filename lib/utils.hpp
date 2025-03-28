@@ -3,49 +3,45 @@
 #include <iostream>
 #include <string>
 #include <sys/stat.h>
-
-#define BOOLEAN_TYPE 0
-#define INT_TYPE 1
-#define CHAR_TYPE 2
-#define FLOAT_TYPE 3
-#define STRING_TYPE 4
-#define UNDEFINED_TYPE 5
-extern void yyerror(const char* s);
-enum ValueType {
-    TBOOLEAN, TINT, TCHAR, TFLOAT, TSTRING, TUNDEFINED
-};
-
 #define IsInt(type) (type == TINT || type == TBOOLEAN || type == TCHAR)
 
+extern void yyerror(const char* s);
+enum ValueType { TBOOLEAN, TINT, TCHAR, TFLOAT, TSTRING, TUNDEFINED };
 
 class ExpressionNode {
-    private:
+    public:
         void* value;
         enum ValueType type;
-    public:
-        ExpressionNode(enum ValueType type) : type(type), value(nullptr) { 
-            value = malloc(valueSize(type));
-        }
+        ExpressionNode(char* value, enum ValueType type) : type(type), value(nullptr) {
+            if (value == nullptr) {
+                return;
+            }
 
-        friend std::ostream& operator<<(std::ostream& os, const ExpressionNode& node) {
-            switch (node.type) {
+            this->value = malloc(typeToSize(type));
+            switch (type) {
                 case TINT:
-                    os << *(int*)node.value;
+                    *(int*)this->value = atoi(value);
                     break;
                 case TFLOAT:
-                    os << *(float*)node.value;
+                    *(float*)this->value = atof(value);
                     break;
                 case TCHAR:
-                    os << *(char*)node.value;
+                    *(char*)this->value = value[0];
                     break;
-                case TBOOLEAN:
-                    os << *(bool*)node.value;
+                case TSTRING:
+                    *(std::string**)this->value = new std::string(value);
                     break;
                 default:
-                    throw("WTF Bro");
+                    break;
             }
-            return os;
         }
+
+        ValueType getType() { return type; }
+        void* getValue() { return value; }
+
+        //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////////// Casts ////////////////////////////////////////////////////////////////////////
+        //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
         operator int() const {
             return *(int*)value;
@@ -101,33 +97,8 @@ class ExpressionNode {
                     return "undefined";
             }
         }
-
-        static ExpressionNode* createIntNode(int num) {
-            ExpressionNode* node = new ExpressionNode(TINT);
-            node->value = (void*)malloc(sizeof(int));
-            *(int*)node->value = num;
-            return node;
-        }
-
-        static ExpressionNode* createCharNode(char c) {
-            ExpressionNode* node = new ExpressionNode(TCHAR);
-            *(int*)node->value = c;
-            return node;
-        }
-
-        static ExpressionNode* createFloatNode(float num) {
-            ExpressionNode* node = new ExpressionNode(TFLOAT);
-            *(float*)node->value = num;
-            return node;
-        }
-
-        static ExpressionNode* createBooleanNode(int num) {
-            ExpressionNode* node = new ExpressionNode(TBOOLEAN);
-            *(int*)node->value = num;
-            return node;
-        }
-
-        static int valueSize(ValueType type) {
+        
+        static int typeToSize(ValueType type) {
             switch (type) {
                 case TINT:
                     return sizeof(int);
@@ -168,7 +139,44 @@ class ExpressionNode {
             return TUNDEFINED;
         }
 
-        ExpressionNode& operator+(ExpressionNode that) {
+        friend std::ostream& operator<<(std::ostream& os, const ExpressionNode& node) {
+            switch (node.type) {
+                case TINT:
+                    os << *(int*)node.value;
+                    break;
+                case TFLOAT:
+                    os << *(float*)node.value;
+                    break;
+                case TCHAR:
+                    os << *(char*)node.value;
+                    break;
+                case TBOOLEAN:
+                    os << *(bool*)node.value;
+                    break;
+                default:
+                    throw("WTF Bro");
+            }
+            return os;
+        }
+};
+
+class MathNode : public ExpressionNode {
+    public:
+        MathNode(char* value, enum ValueType type) : ExpressionNode(value, type) {};
+        
+        //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        /////////////////////////////////////////////////// Operators Overloading ////////////////////////////////////////////////////////////////
+        //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        bool isNonZero() {
+            if (type == TFLOAT) {
+                return *(float*)value != 0;
+            }
+            return *(int*)value != 0;
+        }
+
+
+        MathNode& operator+(MathNode that) {
             ValueType inferedType = inferResultType(this->type, that.type);
 
             void* resultValue = nullptr;
@@ -191,7 +199,7 @@ class ExpressionNode {
             return *this;
         }
 
-        ExpressionNode& operator-(ExpressionNode that) {
+        MathNode& operator-(MathNode that) {
             ValueType inferedType = inferResultType(this->type, that.type);
 
             void* resultValue = nullptr;
@@ -214,7 +222,7 @@ class ExpressionNode {
             return *this;
         }
 
-        ExpressionNode& operator*(ExpressionNode that) {
+        MathNode& operator*(MathNode that) {
             ValueType inferedType = inferResultType(this->type, that.type);
 
             void* resultValue = nullptr;
@@ -237,7 +245,7 @@ class ExpressionNode {
             return *this;
         }
 
-        ExpressionNode& operator/(ExpressionNode that) {
+        MathNode& operator/(MathNode that) {
             ValueType inferedType = inferResultType(this->type, that.type);
 
             void* resultValue = nullptr;
@@ -262,7 +270,7 @@ class ExpressionNode {
             return *this;
         }
 
-        ExpressionNode& operator%(ExpressionNode that) {
+        MathNode& operator%(MathNode that) {
             if (this->type == TFLOAT || that.type == TFLOAT) 
                 yyerror("Integer Modulo is not supported for floating point operations");
             
@@ -280,7 +288,7 @@ class ExpressionNode {
             return *this;
         }
 
-        ExpressionNode& operator<<(ExpressionNode that) {
+        MathNode& operator<<(MathNode that) {
             if ( ! IsInt(that.type) || ! IsInt(this->type)) {
                 yyerror("shift operation is not supported for non integer types");
             } else {
@@ -295,7 +303,7 @@ class ExpressionNode {
             return *this;
         }   
         
-        ExpressionNode& operator>>(ExpressionNode that) {
+        MathNode& operator>>(MathNode that) {
             if ( ! IsInt(that.type) || ! IsInt(this->type)) {
                 yyerror("shift operation is not supported for non integer types");
             } else {
@@ -310,7 +318,7 @@ class ExpressionNode {
             return *this;
         }  
         
-        ExpressionNode& operator| (ExpressionNode that) {
+        MathNode& operator| (MathNode that) {
             if ( ! IsInt(that.type) || ! IsInt(this->type)) {
                 yyerror("shift operation is not supported for non integer types");
             } else {
@@ -325,7 +333,7 @@ class ExpressionNode {
             return *this;
         }
 
-        ExpressionNode& operator& (ExpressionNode that) {
+        MathNode& operator& (MathNode that) {
             if ( ! IsInt(that.type) || ! IsInt(this->type)) {
                 yyerror("shift operation is not supported for non integer types");
             } else {
@@ -340,7 +348,7 @@ class ExpressionNode {
             return *this;
         }
 
-        ExpressionNode& operator^ (ExpressionNode that) {
+        MathNode& operator^ (MathNode that) {
             if ( ! IsInt(that.type) || ! IsInt(this->type)) {
                 yyerror("shift operation is not supported for non integer types");
             } else {
@@ -354,8 +362,96 @@ class ExpressionNode {
             }
             return *this;
         }
+        
+        int operator>=(MathNode that) {
+            switch (type) {
+                case TINT: case TCHAR: case TBOOLEAN:
+                    return (int)(*this) >= (int)(that);
+                    break;
+                case TFLOAT:
+                    return (float)(*this) >= (float)(that);
+                    break;
+                default:
+                    yyerror("Comparison operator is not supported for this type");
+            }
+            return false;
+        }
 
-        ExpressionNode& SQRT() {
+        int operator>(MathNode that) {
+            switch (type) {
+                case TINT: case TCHAR: case TBOOLEAN:
+                    return (int)(*this) > (int)(that);
+                    break;
+                case TFLOAT:
+                    return (float)(*this) > (float)(that);
+                    break;
+                default:
+                    yyerror("Comparison operator is not supported for this type");
+            }
+            return false;
+        }
+
+        int operator<=(MathNode that) {
+            switch (type) {
+                case TINT: case TCHAR: case TBOOLEAN:
+                    return (int)(*this) <= (int)(that);
+                    break;
+                case TFLOAT:
+                    return (float)(*this) <= (float)(that);
+                    break;
+                default:
+                    yyerror("Comparison operator is not supported for this type");
+            }
+            return false;
+        }
+
+        int operator<(MathNode that) {
+            switch (type) {
+                case TINT: case TCHAR: case TBOOLEAN:
+                    return (int)(*this) < (int)(that);
+                    break;
+                case TFLOAT:
+                    return (float)(*this) < (float)(that);
+                    break;
+                default:
+                    yyerror("Comparison operator is not supported for this type");
+            }
+            return false;
+        }
+
+        int operator==(MathNode that) {
+            switch (type) {
+                case TINT: case TCHAR: case TBOOLEAN:
+                    return (int)(*this) == (int)(that);
+                    break;
+                case TFLOAT:
+                    return (float)(*this) == (float)(that);
+                    break;
+                default:
+                    yyerror("Comparison operator is not supported for this type");
+            }
+            return false;
+        }
+
+        int operator!=(MathNode that) {
+            switch (type) {
+                case TINT: case TCHAR: case TBOOLEAN:
+                    return (int)(*this) != (int)(that);
+                    break;
+                case TFLOAT:
+                    return (float)(*this) != (float)(that);
+                    break;
+                default:
+                    yyerror("Comparison operator is not supported for this type");
+            }
+            return false;
+        }
+
+        //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        ////////////////////////////////////////////////////// Math Functions ////////////////////////////////////////////////////////////////////
+        //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        MathNode& SQRT() {
             float* resultValue = (float *)malloc(sizeof(float));
             *resultValue = sqrt((float)(*this));
             free(value);
@@ -364,7 +460,7 @@ class ExpressionNode {
             return *this;
         }
 
-        ExpressionNode& POW(ExpressionNode that) {
+        MathNode& POW(MathNode that) {
             void* resultValue =  (void*)malloc(sizeof(float));
             *(float*)resultValue = pow( (float)(*this), (float)(that) );
 
@@ -374,9 +470,68 @@ class ExpressionNode {
             return *this;
         }
 
-        ~ExpressionNode() {
+        ~MathNode() {
             if (value != nullptr) {
                 free(value);
             }
         }
+};
+
+class StringNode: public ExpressionNode {
+        std::string strVal;
+    public:
+        StringNode(const char* value) : ExpressionNode(nullptr, TSTRING) {
+            strVal = std::string(value);
+        }
+        
+        int size() { return strVal.size(); }
+
+        StringNode& operator+(MathNode that) {
+            switch (that.type) {
+                case TINT: case TBOOLEAN:
+                    this->strVal += std::to_string((int)that);
+                    break;
+                case TCHAR:
+                    this->strVal += std::to_string((char)that);
+                    break;
+                case TFLOAT:
+                    this->strVal += std::to_string((float)that);
+                    break;
+                default:
+                    break;
+            }
+            return *this;
+        }
+
+        StringNode& operator+(StringNode that) {
+            this->strVal += that.strVal;
+            return *this;
+        }
+
+        StringNode& operator-(MathNode that) {
+            for (int i = 0; i < (int)that && strVal.size() > 0; i++) {
+                this->strVal.pop_back();
+            }
+            return *this;
+        }
+
+        StringNode* partition(char* start, char* end) {
+            int l = std::atoi(start);
+            int r = std::atoi(end);
+            std::string sliced = strVal.substr(l, r - l);
+            return new StringNode(sliced.c_str());
+        }
+
+        StringNode* append(StringNode* that) {
+            StringNode* otherGuy = new StringNode(this->strVal.c_str());
+            otherGuy->strVal += " " + that->strVal;
+            return otherGuy;
+        }
+
+        friend std::ostream& operator<<(std::ostream& os, const StringNode& node) {
+            os << node.strVal;
+            return os;
+        }
+
+        ~StringNode() {};
 };

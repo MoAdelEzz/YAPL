@@ -12,14 +12,15 @@ done
 
 # Generate parser and lexer files
 echo "Generating parser and lexer..."
-bison -d parser.ypp
-flex -o lex.yy.cc lexer.l
+bison -d lex-yacc/parser.ypp -o src/parser.tab.cpp --defines=lib/parser.tab.hpp
+flex -o src/lex.yy.cc lex-yacc/lexer.l 
 
 # Compile the program
 echo "Compiling the program..."
 g++ -std=c++17 -o yapl \
-    parser.tab.cpp \
-    lex.yy.cc \
+    -Ilib \
+    src/parser.tab.cpp \
+    src/lex.yy.cc \
     -lfl
 
 # Check if compilation was successful

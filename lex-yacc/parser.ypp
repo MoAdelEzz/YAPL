@@ -1,0 +1,157 @@
+%{ 
+    #include <iostream>
+    #include <string>
+    #include "node.hpp"
+    #include "parser.tab.hpp"
+
+    extern int yylex();
+    extern FILE *yyin;   
+    void yyerror(const char* s) {
+        std::cerr << "Error: " << s << std::endl;
+    }
+%}
+
+%union  {
+    int INum;
+    float FNum;
+    char character;
+    char* str;
+    ExpressionNode* MNode;
+    StringNode* SNode;
+}
+
+
+%token <str> IDENTIFIER STRING POW SQRT SHL SHR DATA_TYPE IF ELSE WHILE FOR AND OR GTE LTE LT GT ISEQUAL NOTEQUAL FUNCTIONDEF DO
+%token <str> CHARACTER
+%token <str> INTEGER BOOLEAN
+%token <str> FLOAT
+
+%type <MNode> MathOperand MathOperation Condition
+%type <SNode> StringOperation StringOperand 
+
+/* %type <MNode> Operation MathOperand  */
+
+%right IF ELSE
+%left '+' '-'
+%left SHL SHR GTE LTE LT GT ISEQUAL NOTEQUAL 
+%left '^' '&' '|'
+%left '*' '/' '%'
+%right '['
+%left ']'
+%left ')'
+
+%start Program
+
+%%
+
+Program: Sentences
+
+Scope: '{' Sentences '}'
+
+Sentences: 
+      Sentence Sentences 
+    | ;
+
+Sentence: 
+      VariableAssignment 
+    | VariableDeclaration   
+    | FunctionDefinition
+    | IFSentence
+    | ForSentence
+    | WhileSentence
+    | DoWhileSentence
+
+IFSentence:
+      IF '(' MathOperation ')' Scope
+    | IFSentence ELSE IFSentence
+    | IFSentence ELSE Scope
+
+ForSentence: FOR '(' IdentifierInit ';' Condition ';' MathOperation ')' Scope
+
+WhileSentence: WHILE '(' Condition ')' Scope
+
+DoWhileSentence: DO Scope WHILE '(' Condition ')' ';'
+
+FunctionDefinition: FUNCTIONDEF IDENTIFIER '(' FunctionParams ')' Scope
+
+FunctionParams: IdentifierDefintion ',' FunctionParams | ;
+
+IdentifierDefintion: DATA_TYPE IDENTIFIER
+
+VariableDeclaration: IdentifierDefintion ';'
+
+IdentifierInit: IdentifierDefintion '=' Operation ';'
+
+VariableAssignment:
+      IDENTIFIER '=' Operation ';'            
+    | VariableDeclaration '=' Operation ';'
+
+Condition:
+        MathOperation OR MathOperation              { $$ = new ExpressionNode($1, $3, OP_OR);  }
+    |   MathOperation AND MathOperation             { $$ = new ExpressionNode($1, $3, OP_AND); } 
+    |   MathOperation GTE MathOperation             { $$ = new ExpressionNode($1, $3, OP_GE);  } 
+    |   MathOperation GT MathOperation              { $$ = new ExpressionNode($1, $3, OP_GT);  } 
+    |   MathOperation LTE MathOperation             { $$ = new ExpressionNode($1, $3, OP_LE);  } 
+    |   MathOperation LT MathOperation              { $$ = new ExpressionNode($1, $3, OP_LT);  } 
+    |   MathOperation ISEQUAL MathOperation         { $$ = new ExpressionNode($1, $3, OP_EQ);  } 
+    |   MathOperation NOTEQUAL MathOperation        { $$ = new ExpressionNode($1, $3, OP_NEQ); } 
+
+    |   StringOperation GTE StringOperation         { $$ = new StringNode($1, $3, OP_GE);   }
+    |   StringOperation GT StringOperation          { $$ = new StringNode($1, $3, OP_GT);   }
+    |   StringOperation LTE StringOperation         { $$ = new StringNode($1, $3, OP_LE);   }
+    |   StringOperation LT StringOperation          { $$ = new StringNode($1, $3, OP_LT);   }
+    |   StringOperation ISEQUAL StringOperation     { $$ = new StringNode($1, $3, OP_EQ);   }
+    |   StringOperation NOTEQUAL StringOperation    { $$ = new StringNode($1, $3, OP_NEQ);  }
+
+    |   MathOperation                               { $$ = $1; }
+    |   StringOperation                             { $$ = $1; }
+
+Operation: 
+      MathOperation                                 { std::cout << $1->getValue() << std::endl; }
+    | StringOperation                               { std::cout << "Finished String Operation: " << std::endl; }
+
+MathOperation:
+        MathOperation '+' MathOperation             { $$ = new ExpressionNode($1, $3, OP_ADD); }
+    |   MathOperation '-' MathOperation             { $$ = new ExpressionNode($1, $3, OP_SUB); }  
+    |   MathOperation '*' MathOperation             { $$ = new ExpressionNode($1, $3, OP_MUL); } 
+    |   MathOperation '/' MathOperation             { $$ = new ExpressionNode($1, $3, OP_DIV); }    
+    |   MathOperation '%' MathOperation             { $$ = new ExpressionNode($1, $3, OP_MOD); }     
+    |   '(' MathOperation ')' MathOperation         { $$ = new ExpressionNode($2, $4, OP_MUL); } 
+    |   '(' MathOperation ')'                       {                   $$ = $2;               }
+    |   POW '(' MathOperation ',' MathOperation ')' { $$ = new ExpressionNode($3, $5, OP_POW);  }
+    |   SQRT '(' MathOperation ')'                  { $$ = new ExpressionNode($3, $3, OP_SQRT); }
+    |   MathOperation SHL MathOperation             { $$ = new ExpressionNode($1, $3, OP_SHL); } 
+    |   MathOperation SHR MathOperation             { $$ = new ExpressionNode($1, $3, OP_SHR); } 
+    |   MathOperation '|' MathOperation             { $$ = new ExpressionNode($1, $3, OP_OR); }
+    |   MathOperation '&' MathOperation             { $$ = new ExpressionNode($1, $3, OP_AND); }
+    |   MathOperation '^' MathOperation             { $$ = new ExpressionNode($1, $3, OP_XOR); }
+    |   MathOperand                    
+
+StringOperation:
+        StringOperand '+' StringOperand             { $$ =  new StringNode($1, $3, OP_ADD); } 
+    |   StringOperand '-' MathOperand               { $$ =  new StringNode($1, $3, OP_SUB); }    
+    |   '(' StringOperand ')'                       { $$ =  $2; } 
+    /* |   StringOperand '[' INTEGER ':' INTEGER ']'   { $$ =  new StringNode($1, $3, OP_SHR); }  */
+    |   StringOperand SHL StringOperand             { $$ =  new StringNode($1, $3, OP_SHL); } 
+    |   StringOperand SHR StringOperand             { $$ =  new StringNode($1, $3, OP_SHR); } 
+    |   StringOperand   
+
+MathOperand:
+        INTEGER         { $$ = new ExpressionNode($1, TINT);}
+
+        | FLOAT         { $$ = new ExpressionNode($1, TFLOAT);}
+
+        | CHARACTER     { $$ = new ExpressionNode($1, TCHAR);}
+
+        | BOOLEAN       { $$ = new ExpressionNode($1, TBOOLEAN);}
+    
+StringOperand: STRING   { $$ = new StringNode($1); }
+
+%%
+
+
+int main() {
+    yyin = fopen("test.yapl", "r");
+    yyparse();
+    return 0;
+}
