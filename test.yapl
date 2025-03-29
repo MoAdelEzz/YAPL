@@ -1,14 +1,11 @@
-x = 0;
-y = 10 + 150;
-x = 10 - 150;
-x = 10 * 10;
-x = 10 / 10;
-x = 10 / 0;
-x = 20 % 3;
-x = sqrt(64);
-x = pow(4, 2);
-x = 2 | 8;
-x = 2 & 4;
-x = 6 ^ 10;
-x = 1 << 2;
-x = 4 >> 2;
+int x = 5;
+{
+    float y = x + 0.2;
+    float w = y + 4;
+    {
+        float u = w + y;
+        float y = y + 10;
+    }
+    float u = y;
+}
+float z = x;

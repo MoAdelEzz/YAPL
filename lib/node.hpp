@@ -1,11 +1,13 @@
+#ifndef NODE_HPP
+#define NODE_HPP
+
 #include <iostream>
 #include <string>
 #include <math.h>
-#include <vector>
+#include "identifier.hpp"
+#include "program.hpp"
 
 extern void yyerror(const char* s);
-
-enum ValueType { TBOOLEAN, TINT, TCHAR, TFLOAT, TSTRING, TUNDEFINED };
 
 enum OperationType { 
     OP_ADD, OP_SUB, OP_MUL, OP_DIV, OP_MOD, 
@@ -14,152 +16,7 @@ enum OperationType {
     OP_POW, OP_SQRT, OP_NONE
 };
 
-class ProgramNode {
-    std::vector<ProgramNode> children;
-
-    public:
-        ProgramNode() {}
-        ProgramNode(std::vector<ProgramNode> children) : children(children) {}
-        std::vector<ProgramNode> getChildren() { return children; }
-        void addChild(ProgramNode child) { children.push_back(child); }
-
-        virtual void run() {}
-};
-
-class Value {
-    public:
-        void* content;
-        ValueType type;
-
-        void init(const char* value, ValueType type) {
-            this->type = type;
-            if (value == nullptr) { return; }
-            content = malloc(typeToSize(type));
-            switch (type) {
-                case TINT:
-                    *(int*)content = atoi(value); break;
-                case TFLOAT:
-                    *(float*)content = atof(value); break;
-                case TCHAR:
-                    *(char*)content = value[0]; break;
-                case TSTRING:
-                    *(std::string*)content = std::string(value); break;
-                default: break;
-            }
-        }
-        
-        static std::string typeToString(ValueType type) {
-            switch (type) {
-                case TINT:
-                    return "int";
-                case TFLOAT:
-                    return "float";
-                case TCHAR:
-                    return "char";
-                case TBOOLEAN:
-                    return "boolean";
-                case TSTRING:
-                    return "string";
-                default:
-                    return "undefined";
-            }
-        }
-        
-        static int typeToSize(ValueType type) {
-            switch (type) {
-                case TINT:
-                    return sizeof(int);
-                case TFLOAT:
-                    return sizeof(float);
-                case TCHAR:
-                    return sizeof(int);
-                case TBOOLEAN:
-                    return sizeof(int);
-                default:
-                    return 0;
-            }
-        }
-
-        std::string toString() const {
-            switch (type) {
-                case TINT: case TBOOLEAN: case TCHAR:
-                    return std::to_string((int) *(int*)content);
-                case TFLOAT:
-                    return std::to_string((float) *(float*)content);
-                case TSTRING:
-                    return *(std::string*)content;
-                default:
-                    return "undefined";
-            }
-        }
-
-        operator int() const {
-            switch (type) {
-                case TINT: case TBOOLEAN: case TCHAR:
-                    return (int) *(int*)content;
-                case TFLOAT:
-                    return (int) *(float*)content;
-                default:
-                    return 0;
-            }
-        }
-
-        operator float() const {
-            switch (type) {
-                case TINT: case TBOOLEAN: case TCHAR:
-                    return (float) *(int*)content;
-                case TFLOAT:
-                    return (float) *(float*)content;
-                default:
-                    return 0;
-            }
-        }
-
-        operator char() const {
-            switch (type) {
-                case TINT: case TBOOLEAN: case TCHAR:
-                    return (char) (int) *(int*)content;
-                case TFLOAT:
-                    return (char) (int) *(float*)content;
-                default:
-                    return 0;
-            }
-        }
-
-        operator bool() const {
-            switch (type) {
-                case TINT: case TBOOLEAN: case TCHAR:
-                    return *(int*)content != 0;
-                case TFLOAT:
-                    return *(float*)content != 0;
-                default:
-                    return 0;
-            }
-        }
-
-        friend std::ostream& operator<<(std::ostream& os, const Value& node) {
-            switch (node.type) {
-                case TINT:
-                    os << (int)node;
-                    break;
-                case TFLOAT:
-                    os << (float)node;
-                    break;
-                case TCHAR:
-                    os << (char)node;
-                    break;
-                case TBOOLEAN:
-                    os << (bool)node;
-                    break;
-                default:
-                    throw("WTF Bro");
-            }
-            return os;
-        }
-};
-
-
-class ExpressionNode : public ProgramNode {
+class ExpressionNode {
     protected:
         ExpressionNode *left;
         ExpressionNode *right;
@@ -171,6 +28,7 @@ class ExpressionNode : public ProgramNode {
 
         ExpressionNode(const char* value, ValueType type) {
             nodeValue.init(value, type);
+
         }
        
         ValueType inferResultType(ValueType type1, ValueType type2){
@@ -199,9 +57,9 @@ class ExpressionNode : public ProgramNode {
             return TUNDEFINED;
         }
 
-        Value calculateNodeValue(ExpressionNode* left, ExpressionNode* right) { 
-            Value op1 = left->getValue();
-            Value op2 = right->getValue();
+        virtual Value calculateNodeValue(ExpressionNode* left, ExpressionNode* right, Scope* scope) { 
+            Value op1 = left->getValue(scope);
+            Value op2 = right->getValue(scope);
 
             if (op == OP_SQRT) {
                 float res = sqrt((float)op1);
@@ -216,8 +74,6 @@ class ExpressionNode : public ProgramNode {
             }
             
             ValueType resType = inferResultType(op1.type, op2.type);
-            bool castToInt = resType == TINT;
-
             if (resType == TINT || resType == TBOOLEAN || resType == TCHAR) {
                 int result = 0;
                 switch (op) {
@@ -299,59 +155,52 @@ class ExpressionNode : public ProgramNode {
 
         ValueType getType() { return nodeValue.type; }
 
-        Value getValue() { 
+        virtual Value getValue(Scope* scope = nullptr) { 
             if (left == nullptr && right == nullptr) {
                 return nodeValue;
             } else if (left != nullptr && right == nullptr) {
-                return left->getValue();
+                this->nodeValue = left->getValue(scope);
             } else if (left == nullptr && right != nullptr) {
-                return right->getValue();
+                this->nodeValue = right->getValue(scope);
             } else {
-                return calculateNodeValue(left, right);
+                this->nodeValue = calculateNodeValue(left, right, scope);
             }
+            return this->nodeValue;
         }
 
-        friend std::ostream& operator<<(std::ostream& os, const ExpressionNode& node) {
-            switch (node.nodeValue.type) {
-                case TINT:
-                    os << (int)node.nodeValue;
-                    break;
+        bool isZero() {
+            if (nodeValue.content == nullptr) { getValue(); }
+            
+            switch (nodeValue.type) {
+                case TINT: case TBOOLEAN: case TCHAR:
+                    return (int)nodeValue == 0;
                 case TFLOAT:
-                    os << (float)node.nodeValue;
-                    break;
-                case TCHAR:
-                    os << (char)node.nodeValue;
-                    break;
-                case TBOOLEAN:
-                    os << (bool)node.nodeValue;
-                    break;
+                    return (float)nodeValue == 0;
+                case TSTRING:
+                    return nodeValue.toString() == "";
                 default:
-                    throw("WTF Bro");
+                    return false;
             }
-            return os;
-        }
-};
 
+            return false;
+        }
+
+};
 
 class StringNode : public ExpressionNode {
     public:
-        StringNode(StringNode* left, StringNode* right, OperationType op) : ExpressionNode(left, right, op) {}
         StringNode(ExpressionNode *left, ExpressionNode *right, OperationType op) : ExpressionNode(left, right, op) {}
-        StringNode(const char* value) : ExpressionNode(nullptr, TSTRING) {}
+        StringNode(const char* value) : ExpressionNode(value, TSTRING) {}
         
-        
-        Value calculateNodeValue(ExpressionNode* left, ExpressionNode* right) { 
-            Value op1 = left->getValue();
-            Value op2 = right->getValue();
+        Value calculateNodeValue(ExpressionNode* left, ExpressionNode* right, Scope* scope) { 
+            Value op1 = left->getValue(scope);
+            Value op2 = right->getValue(scope);
             
-            ValueType resType = inferResultType(op1.type, op2.type);
-            bool castToInt = resType == TINT;
-
-            Value res;
             std::string result = "";
             switch (op) {
                 case OP_ADD:
-                    result = op1.toString() + op2.toString();   break;
+                    result = op1.toString() + op2.toString();   
+                    break;
 
                 case OP_SUB:
                     result = op1.toString();
@@ -384,8 +233,91 @@ class StringNode : public ExpressionNode {
 
                 default: break;
             }
-            res.init(result.c_str(), resType);
-            return res;
+            nodeValue.init(result.c_str(), TSTRING);
+            return nodeValue;
         }
 
+        friend std::ostream& operator<<(std::ostream& os, const StringNode& node) {
+            std::cout << "StringNode: ";
+            os << *(std::string*)node.nodeValue.content;
+            return os;
+        }
 };
+
+class IdentifierNode : public ExpressionNode {
+    std::string varName;
+    public:
+        IdentifierNode(std::string varName) : ExpressionNode(nullptr, TUNDEFINED), varName(varName) {}
+        
+        Value getValue(Scope* scope = nullptr) { 
+            if (scope == nullptr) {
+                std::cout << "Skill Issues" << std::endl;
+            }
+
+            return scope->valueOf(this->varName);
+        }
+
+        friend std::ostream& operator<<(std::ostream& os, const IdentifierNode& node) {
+            std::cout << "Identifier ( " << node.varName << " ): ";
+            os << *(std::string*)node.nodeValue.content;
+            return os;
+        }
+};
+
+class VariableDefinitionNode : public ProgramNode {
+    ExpressionNode* value;
+    std::string name;
+    ValueType type;
+    
+    public:
+        VariableDefinitionNode( std::string type, std::string name, ExpressionNode* value) {            
+            this->name = name;
+            this->value = value;
+            if (type == "int") { this->type = TINT; }
+            else if (type == "float") { this->type = TFLOAT; }
+            else if (type == "char") { this->type = TCHAR; }
+            else if (type == "string") { this->type = TSTRING; }
+            else if (type == "bool") { this->type = TBOOLEAN; }
+        }
+
+        void run(Scope* scope = nullptr) {
+            scope->defineVariable(name, type, value->getValue(scope));
+            std::cout << scope->valueOf(name) << std::endl;       
+        }
+};
+
+class VariableAssignmentNode: public ProgramNode {
+    ExpressionNode* value;
+    std::string name;
+    
+    public:
+        VariableAssignmentNode( std::string name, ExpressionNode* value ) {            
+            this->name = name;
+            this->value = value;
+            this->setNext(nullptr);
+        }
+
+        void run(Scope* scope = nullptr) {
+            scope->assignVariable(name,  value->getValue(scope));
+            std::cout << "Assigning " << name << " = " << scope->valueOf(name) << std::endl;
+        }
+};
+
+// class ForNode : public ProgramNode {
+//     ExpressionNode* value;
+//     std::string name;
+    
+//     public:
+//         ForNode(  ) {            
+//             this->name = name;
+//             this->value = value;
+//             this->setNext(nullptr);
+//         }
+
+//         void run(Scope* scope = nullptr) {
+//             scope->assignVariable(name,  value->getValue(scope));
+//             std::cout << "Assigning " << name << " = " << scope->valueOf(name) << std::endl;
+//         }
+// }
+
+#endif

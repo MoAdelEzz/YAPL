@@ -1,7 +1,12 @@
 %{
     #include <string>
     #include <iostream>
-    #include "utils.hpp"
+
+    #include "program.hpp"
+    #include "identifier.hpp"
+    #include "node.hpp"
+    #include "if.hpp"
+
     #include "parser.tab.hpp"
 %}
 
@@ -33,7 +38,7 @@ for         { return FOR;   }
 \!\=        { return NOTEQUAL;}
 func        { return FUNCTIONDEF;}
 
-int|float|bool|char|string { return DATA_TYPE; }
+int|float|bool|char|string { yylval.str = strdup(yytext); return DATA_TYPE; }
 
 [a-zA-Z_][a-zA-Z0-9_]* {
     // std::cout << "Variable" << " " << yytext <<  std::endl;
@@ -68,7 +73,7 @@ int|float|bool|char|string { return DATA_TYPE; }
     return STRING;
 }
 
-[=();+\-*/%,&|^\[\]:] {
+[=();+\-*/%,&|^\[\]:\}\{] {
     // std::cout << "symbol " << yytext << std::endl;
     return yytext[0];
 }
