@@ -6,7 +6,6 @@
 #include <utility>
 #include "identifier.hpp"
 
-
 extern void yyerror(const char* s);
 
 class Scope {
@@ -26,6 +25,10 @@ class Scope {
                 throw std::runtime_error("Variable " + varName + " has already been declared");
             }
         }    
+
+        void reset() {
+            variables.clear();
+        }
 
         void assignVariable(std::string varName, Value value) {
             const auto& it = variables.find(varName);
@@ -108,6 +111,8 @@ class ScopeNode : public ProgramNode {
     }
 
     Scope* getScope() { return scope; }
+
+    void resetScope() { scope->reset(); }
 
     void run(Scope* parentScope = nullptr) {
         this->scope->setParent(parentScope);

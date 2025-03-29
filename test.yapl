@@ -1,11 +1,11 @@
-int x = 30;
-int w = 30;
-if (x == 10) {
-    int y = 1;
-} else if (x == 20) {
-    int z = 2;
-} else {
-    int w = 20 + w;
+int N = 7;
+int prev = 1;
+int fibonacchi = 1;
+
+for (int i = 0; i < N - 2; i = i + 1;) {
+    int temp = fibonacchi;
+    fibonacchi = fibonacchi + prev;
+    prev = temp;
 }
 
-int z = w;
+yee("Fibonacchi At Index " + N + " = " + fibonacchi);

@@ -238,7 +238,7 @@ class StringNode : public ExpressionNode {
         }
 
         friend std::ostream& operator<<(std::ostream& os, const StringNode& node) {
-            std::cout << "StringNode: ";
+            // std::cout << "StringNode: ";
             os << *(std::string*)node.nodeValue.content;
             return os;
         }
@@ -258,7 +258,7 @@ class IdentifierNode : public ExpressionNode {
         }
 
         friend std::ostream& operator<<(std::ostream& os, const IdentifierNode& node) {
-            std::cout << "Identifier ( " << node.varName << " ): ";
+            // std::cout << "Identifier ( " << node.varName << " ): ";
             os << *(std::string*)node.nodeValue.content;
             return os;
         }
@@ -282,7 +282,7 @@ class VariableDefinitionNode : public ProgramNode {
 
         void run(Scope* scope = nullptr) {
             scope->defineVariable(name, type, value->getValue(scope));
-            std::cout << scope->valueOf(name) << std::endl;       
+            // std::cout << scope->valueOf(name) << std::endl;       
         }
 };
 
@@ -299,7 +299,20 @@ class VariableAssignmentNode: public ProgramNode {
 
         void run(Scope* scope = nullptr) {
             scope->assignVariable(name,  value->getValue(scope));
-            std::cout << "Assigning " << name << " = " << scope->valueOf(name) << std::endl;
+            // std::cout << "Assigning " << name << " = " << scope->valueOf(name) << std::endl;
+        }
+};
+
+
+class PrintNode : public ProgramNode {
+    ExpressionNode* data;
+    public:
+        PrintNode( ExpressionNode* data ) {
+            this->data = data;
+        }   
+
+        void run(Scope* scope = nullptr) {
+            std::cout << data->getValue(scope) << std::endl;
         }
 };
 

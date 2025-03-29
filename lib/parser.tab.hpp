@@ -78,7 +78,8 @@ extern int yydebug;
     CHARACTER = 279,               /* CHARACTER  */
     INTEGER = 280,                 /* INTEGER  */
     BOOLEAN = 281,                 /* BOOLEAN  */
-    FLOAT = 282                    /* FLOAT  */
+    FLOAT = 282,                   /* FLOAT  */
+    PRINT = 283                    /* PRINT  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -94,6 +95,9 @@ union YYSTYPE
     ExpressionNode* MNode;
     StringNode*     SNode;
     IfNode*         FNode;
+    WhileNode*      WNode;
+    DoWhileNode*    DWNode;
+    PrintNode*      PrNode;
     VariableDefinitionNode* VDNode;
     VariableAssignmentNode* VANode;
     ForNode*        FrNode;
@@ -102,7 +106,7 @@ union YYSTYPE
     char character;
     char* str;
 
-#line 106 "lib/parser.tab.hpp"
+#line 110 "lib/parser.tab.hpp"
 
 };
 typedef union YYSTYPE YYSTYPE;

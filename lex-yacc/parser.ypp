@@ -22,6 +22,9 @@
     ExpressionNode* MNode;
     StringNode*     SNode;
     IfNode*         FNode;
+    WhileNode*      WNode;
+    DoWhileNode*    DWNode;
+    PrintNode*      PrNode;
     VariableDefinitionNode* VDNode;
     VariableAssignmentNode* VANode;
     ForNode*        FrNode;
@@ -36,7 +39,11 @@
 %token <str> CHARACTER
 %token <str> INTEGER BOOLEAN
 %token <str> FLOAT
+%token <str> PRINT
 
+%type <PrNode> PrintSentence
+%type <DWNode> DoWhileSentence;
+%type <WNode>  WhileSentence;
 %type <FrNode> ForSentence
 %type <VANode> VariableAssignment
 %type <VDNode> VariableDeclaration
@@ -48,7 +55,7 @@
 
 
 %left ';'
-%right ISEQUAL NOTEQUAL
+%right ISEQUAL NOTEQUAL PRINT
 %left '|'
 %left '^'
 %left '&'
@@ -88,8 +95,14 @@ Sentence:
     | FunctionDefinition        { $$ = new ScopeNode(); }
     | IFSentence                { $$ = $1; }   
     | ForSentence               { $$ = $1; }
-    | WhileSentence             { $$ = new ScopeNode(); }
-    | DoWhileSentence           { $$ = new ScopeNode(); }
+    | WhileSentence             { $$ = $1; }
+    | DoWhileSentence           { $$ = $1; }
+    | PrintSentence             { $$ = $1; }
+
+PrintSentence:
+    PRINT '(' Operation ')' ';' {
+        $$ = new PrintNode($3);
+    }
 
 IFSentence:
       IF '(' Condition ')' Scope   { $$ = new IfNode($3, $5);   }
@@ -100,9 +113,13 @@ ForSentence: FOR '(' VariableDeclaration Condition ';' VariableAssignment ')' Sc
     $$ = new ForNode($3, $4, $6, $8);
 }
 
-WhileSentence: WHILE '(' Condition ')' Scope
+WhileSentence: WHILE '(' Condition ')' Scope {
+    $$ = new WhileNode($3, $5);
+}
 
-DoWhileSentence: DO Scope WHILE '(' Condition ')' ';'
+DoWhileSentence: DO Scope WHILE '(' Condition ')' ';' {
+    $$ = new DoWhileNode($5, $2);
+}
 
 FunctionDefinition: FUNCTIONDEF IDENTIFIER '(' FunctionParams ')' Scope
 

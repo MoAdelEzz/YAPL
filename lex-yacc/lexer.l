@@ -29,6 +29,7 @@ else        { return ELSE;  }
 while       { return WHILE; }
 do          { return DO;    }
 for         { return FOR;   }
+yee         { return PRINT; }
 &&          { return AND;   }
 \|\|        { return OR;    }
 \>\=        { return GTE;   }
