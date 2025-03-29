@@ -87,7 +87,7 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 18 "lex-yacc/parser.ypp"
+#line 19 "lex-yacc/parser.ypp"
 
     ProgramNode*    PNode;
     ScopeNode*      SCNode;
@@ -96,12 +96,13 @@ union YYSTYPE
     IfNode*         FNode;
     VariableDefinitionNode* VDNode;
     VariableAssignmentNode* VANode;
+    ForNode*        FrNode;
     int INum;
     float FNum;
     char character;
     char* str;
 
-#line 105 "lib/parser.tab.hpp"
+#line 106 "lib/parser.tab.hpp"
 
 };
 typedef union YYSTYPE YYSTYPE;

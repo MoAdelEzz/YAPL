@@ -6,6 +6,7 @@
     #include "identifier.hpp"
     #include "node.hpp"
     #include "if.hpp"
+    #include "for.hpp"
 
     #include "parser.tab.hpp"
     extern int yylex();
@@ -23,6 +24,7 @@
     IfNode*         FNode;
     VariableDefinitionNode* VDNode;
     VariableAssignmentNode* VANode;
+    ForNode*        FrNode;
     int INum;
     float FNum;
     char character;
@@ -35,7 +37,7 @@
 %token <str> INTEGER BOOLEAN
 %token <str> FLOAT
 
-
+%type <FrNode> ForSentence
 %type <VANode> VariableAssignment
 %type <VDNode> VariableDeclaration
 %type <FNode>  IFSentence
@@ -85,16 +87,18 @@ Sentence:
     | VariableDeclaration       { $$ = $1; }   
     | FunctionDefinition        { $$ = new ScopeNode(); }
     | IFSentence                { $$ = $1; }   
-    | ForSentence               { $$ = new ScopeNode(); }
+    | ForSentence               { $$ = $1; }
     | WhileSentence             { $$ = new ScopeNode(); }
     | DoWhileSentence           { $$ = new ScopeNode(); }
 
 IFSentence:
       IF '(' Condition ')' Scope   { $$ = new IfNode($3, $5);   }
-    | IFSentence ELSE IFSentence   { $$ = $1; $$->setElse($3);  }
-    | IFSentence ELSE Scope        { $$ = $1; $$->setElse($3);  }
+    | IFSentence ELSE IFSentence   { $$ = $1->setElse($3);  }
+    | IFSentence ELSE Scope        { $$ = $1->setElse($3);  }
 
-ForSentence: FOR '(' VariableDeclaration ';' Condition ';' MathOperation ')' Scope
+ForSentence: FOR '(' VariableDeclaration Condition ';' VariableAssignment ')' Scope {
+    $$ = new ForNode($3, $4, $6, $8);
+}
 
 WhileSentence: WHILE '(' Condition ')' Scope
 

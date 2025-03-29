@@ -8,28 +8,19 @@ class IfNode : public ProgramNode {
     ProgramNode* accept;
     ProgramNode* reject;
 
-public:
+    public:
+        IfNode( ExpressionNode* condition, ProgramNode* accept ) {
+            this->condition = condition;
+            this->accept = accept;
+        }   
 
-    IfNode(ExpressionNode* cond, ProgramNode* acc) {
-        condition = cond;
-        accept = acc;
-    }
+        IfNode* setElse(ProgramNode* reject) { this->reject = reject; return this; }
 
-    IfNode(ExpressionNode* cond, ProgramNode* acc, ProgramNode* rej) {
-        condition = cond;
-        accept = acc;
-        reject = rej;
-    }
-
-    void setElse(ProgramNode* rej) {
-        reject = rej;
-    }
-
-    void run() {
-        if (condition->getValue() == 0) {
-
-        } else {
-
+        void run(Scope* scope = nullptr) {
+            if (condition->getValue(scope) != 0) {
+                accept->run(scope);
+            } else if (reject) {
+                reject->run(scope);
+            }
         }
-    }
 };

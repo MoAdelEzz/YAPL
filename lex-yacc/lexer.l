@@ -6,6 +6,7 @@
     #include "identifier.hpp"
     #include "node.hpp"
     #include "if.hpp"
+    #include "for.hpp"
 
     #include "parser.tab.hpp"
 %}

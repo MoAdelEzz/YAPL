@@ -1,9 +1,4 @@
 #include "node.hpp"
-#include <string>
-
-class Identifier {
-    std::string name;
-};
 
 
 class AssignmentNode {

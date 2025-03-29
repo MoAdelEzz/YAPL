@@ -1,0 +1,11 @@
+int x = 5;
+{
+    float y = x + 0.2;
+    float w = y + 4;
+    {
+        float u = w + y;
+        float y = y + 10;
+    }
+    float u = y;
+}
+float z = x;
