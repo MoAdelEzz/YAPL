@@ -2,11 +2,13 @@
     #include <string>
     #include <iostream>
 
+    #include "branching.hpp"
+    #include "common.hpp"
+    #include "expression.hpp"
+    #include "loop.hpp"
     #include "program.hpp"
-    #include "identifier.hpp"
-    #include "node.hpp"
-    #include "if.hpp"
-    #include "for.hpp"
+    #include "scoping.hpp"
+    #include "var-op.hpp"
 
     #include "parser.tab.hpp"
 %}
@@ -16,7 +18,7 @@
 
 %%
 true|false {
-    yylval.INum = yytext == "true" ? 1 : 0;
+    yylval.str = strdup(yytext);
     return BOOLEAN;
 }
 
@@ -51,21 +53,19 @@ int|float|bool|char|string { yylval.str = strdup(yytext); return DATA_TYPE; }
 
 0+|-?[0-9]+[0-9]* {
     // std::cout << "Integer " << yytext << std::endl;
-    yylval.INum = atoi(yytext);
-    yylval.str = yytext;
+    yylval.str = strdup(yytext);
     return INTEGER;
 }
 
 0+\.0*|[-+]?[0-9]*\.[0-9]* {
     // std::cout << "FLOAT " << yytext << std::endl;
-    yylval.FNum = atof(yytext);
-    yylval.str = yytext;
+    yylval.str = strdup(yytext);
     return FLOAT;
 }
 
 '.' {
     // std::cout << "Character " << yytext << std::endl;
-    yylval.character = yytext[1];
+    yylval.str = strdup(yytext);
     return CHARACTER;
 }
 

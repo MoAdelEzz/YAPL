@@ -72,11 +72,13 @@
     #include <iostream>
     #include <string>
 
+    #include "branching.hpp"
+    #include "common.hpp"
+    #include "expression.hpp"
+    #include "loop.hpp"
     #include "program.hpp"
-    #include "identifier.hpp"
-    #include "node.hpp"
-    #include "if.hpp"
-    #include "for.hpp"
+    #include "scoping.hpp"
+    #include "var-op.hpp"
 
     #include "parser.tab.hpp"
     extern int yylex();
@@ -85,7 +87,7 @@
         std::cerr << "Error: " << s << std::endl;
     }
 
-#line 89 "src/parser.tab.cpp"
+#line 91 "src/parser.tab.cpp"
 
 # ifndef YY_CAST
 #  ifdef __cplusplus
@@ -567,14 +569,14 @@ static const yytype_int8 yytranslate[] =
 /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_uint8 yyrline[] =
 {
-       0,    77,    77,    84,    86,    88,    90,    93,    94,    95,
-      96,    97,    98,    99,   100,   103,   108,   109,   110,   112,
-     116,   120,   124,   126,   126,   129,   130,   132,   135,   136,
-     137,   138,   139,   140,   141,   142,   144,   145,   146,   147,
-     148,   149,   151,   152,   155,   156,   159,   160,   161,   162,
-     163,   164,   165,   166,   167,   168,   169,   170,   171,   172,
-     173,   176,   177,   178,   179,   181,   182,   183,   186,   188,
-     190,   192,   194,   196
+       0,    62,    62,    69,    71,    73,    75,    78,    79,    80,
+      81,    82,    83,    84,    85,    88,    93,    94,    95,    97,
+     101,   105,   109,   111,   111,   114,   115,   117,   120,   121,
+     122,   123,   124,   125,   126,   127,   129,   130,   131,   132,
+     133,   134,   136,   137,   140,   141,   144,   145,   146,   147,
+     148,   149,   150,   151,   152,   153,   154,   155,   156,   157,
+     158,   161,   162,   163,   164,   166,   167,   168,   171,   173,
+     175,   177,   179,   181
 };
 #endif
 
@@ -1261,420 +1263,420 @@ yyreduce:
   switch (yyn)
     {
   case 2: /* Program: Sentences  */
-#line 77 "lex-yacc/parser.ypp"
+#line 62 "lex-yacc/parser.ypp"
                     {
-    ScopeNode* scopeNode = new ScopeNode((yyvsp[0].PNode));
+    ScopeNode* scopeNode = new ScopeNode((yyvsp[0].Node));
     scopeNode->run();
 }
-#line 1270 "src/parser.tab.cpp"
+#line 1272 "src/parser.tab.cpp"
     break;
 
   case 3: /* Sentences: Sentence Sentences  */
-#line 84 "lex-yacc/parser.ypp"
-                                { (yyval.PNode) = (yyvsp[-1].PNode)->setNext((yyvsp[0].PNode)); }
-#line 1276 "src/parser.tab.cpp"
+#line 69 "lex-yacc/parser.ypp"
+                                { (yyval.Node) = (yyvsp[-1].Node)->setNext((yyvsp[0].Node)); }
+#line 1278 "src/parser.tab.cpp"
     break;
 
   case 4: /* Sentences: Scope Sentences  */
-#line 86 "lex-yacc/parser.ypp"
-                                { (yyval.PNode) = (yyvsp[-1].SCNode)->setNext((yyvsp[0].PNode)); }
-#line 1282 "src/parser.tab.cpp"
+#line 71 "lex-yacc/parser.ypp"
+                                { (yyval.Node) = (yyvsp[-1].Node)->setNext((yyvsp[0].Node)); }
+#line 1284 "src/parser.tab.cpp"
     break;
 
   case 5: /* Sentences: %empty  */
-#line 88 "lex-yacc/parser.ypp"
-                                { (yyval.PNode) = nullptr; }
-#line 1288 "src/parser.tab.cpp"
+#line 73 "lex-yacc/parser.ypp"
+                                { (yyval.Node) = nullptr; }
+#line 1290 "src/parser.tab.cpp"
     break;
 
   case 6: /* Scope: '{' Sentences '}'  */
-#line 90 "lex-yacc/parser.ypp"
-                                { (yyval.SCNode) = new ScopeNode((yyvsp[-1].PNode)); }
-#line 1294 "src/parser.tab.cpp"
+#line 75 "lex-yacc/parser.ypp"
+                                { (yyval.Node) = new ScopeNode((yyvsp[-1].Node)); }
+#line 1296 "src/parser.tab.cpp"
     break;
 
   case 7: /* Sentence: VariableAssignment  */
-#line 93 "lex-yacc/parser.ypp"
-                                { (yyval.PNode) = (yyvsp[0].VANode); }
-#line 1300 "src/parser.tab.cpp"
+#line 78 "lex-yacc/parser.ypp"
+                                { (yyval.Node) = (yyvsp[0].Node); }
+#line 1302 "src/parser.tab.cpp"
     break;
 
   case 8: /* Sentence: VariableDeclaration  */
-#line 94 "lex-yacc/parser.ypp"
-                                { (yyval.PNode) = (yyvsp[0].VDNode); }
-#line 1306 "src/parser.tab.cpp"
+#line 79 "lex-yacc/parser.ypp"
+                                { (yyval.Node) = (yyvsp[0].Node); }
+#line 1308 "src/parser.tab.cpp"
     break;
 
   case 9: /* Sentence: FunctionDefinition  */
-#line 95 "lex-yacc/parser.ypp"
-                                { (yyval.PNode) = new ScopeNode(); }
-#line 1312 "src/parser.tab.cpp"
+#line 80 "lex-yacc/parser.ypp"
+                                { (yyval.Node) = new ScopeNode(); }
+#line 1314 "src/parser.tab.cpp"
     break;
 
   case 10: /* Sentence: IFSentence  */
-#line 96 "lex-yacc/parser.ypp"
-                                { (yyval.PNode) = (yyvsp[0].FNode); }
-#line 1318 "src/parser.tab.cpp"
+#line 81 "lex-yacc/parser.ypp"
+                                { (yyval.Node) = (yyvsp[0].Node); }
+#line 1320 "src/parser.tab.cpp"
     break;
 
   case 11: /* Sentence: ForSentence  */
-#line 97 "lex-yacc/parser.ypp"
-                                { (yyval.PNode) = (yyvsp[0].FrNode); }
-#line 1324 "src/parser.tab.cpp"
+#line 82 "lex-yacc/parser.ypp"
+                                { (yyval.Node) = (yyvsp[0].Node); }
+#line 1326 "src/parser.tab.cpp"
     break;
 
   case 12: /* Sentence: WhileSentence  */
-#line 98 "lex-yacc/parser.ypp"
-                                { (yyval.PNode) = (yyvsp[0].WNode); }
-#line 1330 "src/parser.tab.cpp"
+#line 83 "lex-yacc/parser.ypp"
+                                { (yyval.Node) = (yyvsp[0].Node); }
+#line 1332 "src/parser.tab.cpp"
     break;
 
   case 13: /* Sentence: DoWhileSentence  */
-#line 99 "lex-yacc/parser.ypp"
-                                { (yyval.PNode) = (yyvsp[0].DWNode); }
-#line 1336 "src/parser.tab.cpp"
+#line 84 "lex-yacc/parser.ypp"
+                                { (yyval.Node) = (yyvsp[0].Node); }
+#line 1338 "src/parser.tab.cpp"
     break;
 
   case 14: /* Sentence: PrintSentence  */
-#line 100 "lex-yacc/parser.ypp"
-                                { (yyval.PNode) = (yyvsp[0].PrNode); }
-#line 1342 "src/parser.tab.cpp"
+#line 85 "lex-yacc/parser.ypp"
+                                { (yyval.Node) = (yyvsp[0].Node); }
+#line 1344 "src/parser.tab.cpp"
     break;
 
   case 15: /* PrintSentence: PRINT '(' Operation ')' ';'  */
-#line 103 "lex-yacc/parser.ypp"
+#line 88 "lex-yacc/parser.ypp"
                                 {
-        (yyval.PrNode) = new PrintNode((yyvsp[-2].MNode));
+        (yyval.Node) = new PrintNode((yyvsp[-2].Exp));
     }
-#line 1350 "src/parser.tab.cpp"
+#line 1352 "src/parser.tab.cpp"
     break;
 
   case 16: /* IFSentence: IF '(' Condition ')' Scope  */
-#line 108 "lex-yacc/parser.ypp"
-                                   { (yyval.FNode) = new IfNode((yyvsp[-2].MNode), (yyvsp[0].SCNode));   }
-#line 1356 "src/parser.tab.cpp"
+#line 93 "lex-yacc/parser.ypp"
+                                   { (yyval.Node) = new IfNode((yyvsp[-2].Exp), (yyvsp[0].Node));   }
+#line 1358 "src/parser.tab.cpp"
     break;
 
   case 17: /* IFSentence: IFSentence ELSE IFSentence  */
-#line 109 "lex-yacc/parser.ypp"
-                                   { (yyval.FNode) = (yyvsp[-2].FNode)->setElse((yyvsp[0].FNode));  }
-#line 1362 "src/parser.tab.cpp"
+#line 94 "lex-yacc/parser.ypp"
+                                   { (yyval.Node) = dynamic_cast<IfNode*>((yyvsp[-2].Node))->setElse((yyvsp[0].Node));  }
+#line 1364 "src/parser.tab.cpp"
     break;
 
   case 18: /* IFSentence: IFSentence ELSE Scope  */
-#line 110 "lex-yacc/parser.ypp"
-                                   { (yyval.FNode) = (yyvsp[-2].FNode)->setElse((yyvsp[0].SCNode));  }
-#line 1368 "src/parser.tab.cpp"
+#line 95 "lex-yacc/parser.ypp"
+                                   { (yyval.Node) = dynamic_cast<IfNode*>((yyvsp[-2].Node))->setElse((yyvsp[0].Node));  }
+#line 1370 "src/parser.tab.cpp"
     break;
 
   case 19: /* ForSentence: FOR '(' VariableDeclaration Condition ';' VariableAssignment ')' Scope  */
-#line 112 "lex-yacc/parser.ypp"
+#line 97 "lex-yacc/parser.ypp"
                                                                                     {
-    (yyval.FrNode) = new ForNode((yyvsp[-5].VDNode), (yyvsp[-4].MNode), (yyvsp[-2].VANode), (yyvsp[0].SCNode));
+    (yyval.Node) = new ForNode(dynamic_cast<DefineNode*>((yyvsp[-5].Node)), (yyvsp[-4].Exp), dynamic_cast<AssignNode*>((yyvsp[-2].Node)), dynamic_cast<ScopeNode*>((yyvsp[0].Node)));
 }
-#line 1376 "src/parser.tab.cpp"
+#line 1378 "src/parser.tab.cpp"
     break;
 
   case 20: /* WhileSentence: WHILE '(' Condition ')' Scope  */
-#line 116 "lex-yacc/parser.ypp"
+#line 101 "lex-yacc/parser.ypp"
                                              {
-    (yyval.WNode) = new WhileNode((yyvsp[-2].MNode), (yyvsp[0].SCNode));
+    (yyval.Node) = new WhileNode((yyvsp[-2].Exp), dynamic_cast<ScopeNode*>((yyvsp[0].Node)));
 }
-#line 1384 "src/parser.tab.cpp"
+#line 1386 "src/parser.tab.cpp"
     break;
 
   case 21: /* DoWhileSentence: DO Scope WHILE '(' Condition ')' ';'  */
-#line 120 "lex-yacc/parser.ypp"
+#line 105 "lex-yacc/parser.ypp"
                                                       {
-    (yyval.DWNode) = new DoWhileNode((yyvsp[-2].MNode), (yyvsp[-5].SCNode));
+    (yyval.Node) = new DoWhileNode((yyvsp[-2].Exp), dynamic_cast<ScopeNode*>((yyvsp[-5].Node)));
 }
-#line 1392 "src/parser.tab.cpp"
+#line 1394 "src/parser.tab.cpp"
     break;
 
   case 25: /* VariableDeclaration: DATA_TYPE IDENTIFIER ';'  */
-#line 129 "lex-yacc/parser.ypp"
-                                                    { (yyval.VDNode) = new VariableDefinitionNode((yyvsp[-2].str), (yyvsp[-1].str), nullptr); }
-#line 1398 "src/parser.tab.cpp"
+#line 114 "lex-yacc/parser.ypp"
+                                                    { (yyval.Node) = new DefineNode((yyvsp[-2].str), (yyvsp[-1].str), nullptr); }
+#line 1400 "src/parser.tab.cpp"
     break;
 
   case 26: /* VariableDeclaration: DATA_TYPE IDENTIFIER '=' Operation ';'  */
-#line 130 "lex-yacc/parser.ypp"
-                                                    { (yyval.VDNode) = new VariableDefinitionNode((yyvsp[-4].str), (yyvsp[-3].str), (yyvsp[-1].MNode)); }
-#line 1404 "src/parser.tab.cpp"
+#line 115 "lex-yacc/parser.ypp"
+                                                    { (yyval.Node) = new DefineNode((yyvsp[-4].str), (yyvsp[-3].str), (yyvsp[-1].Exp)); }
+#line 1406 "src/parser.tab.cpp"
     break;
 
   case 27: /* VariableAssignment: IDENTIFIER '=' Operation ';'  */
-#line 132 "lex-yacc/parser.ypp"
-                                                    { (yyval.VANode) = new VariableAssignmentNode((yyvsp[-3].str), (yyvsp[-1].MNode)); }
-#line 1410 "src/parser.tab.cpp"
+#line 117 "lex-yacc/parser.ypp"
+                                                    { (yyval.Node) = new AssignNode((yyvsp[-3].str), (yyvsp[-1].Exp)); }
+#line 1412 "src/parser.tab.cpp"
     break;
 
   case 28: /* Condition: MathOperation OR MathOperation  */
-#line 135 "lex-yacc/parser.ypp"
-                                                    { (yyval.MNode) = new ExpressionNode((yyvsp[-2].MNode), (yyvsp[0].MNode), OP_OR);  }
-#line 1416 "src/parser.tab.cpp"
+#line 120 "lex-yacc/parser.ypp"
+                                                    { (yyval.Exp) = new Expression((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_OR);  }
+#line 1418 "src/parser.tab.cpp"
     break;
 
   case 29: /* Condition: MathOperation AND MathOperation  */
-#line 136 "lex-yacc/parser.ypp"
-                                                    { (yyval.MNode) = new ExpressionNode((yyvsp[-2].MNode), (yyvsp[0].MNode), OP_AND); }
-#line 1422 "src/parser.tab.cpp"
+#line 121 "lex-yacc/parser.ypp"
+                                                    { (yyval.Exp) = new Expression((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_AND); }
+#line 1424 "src/parser.tab.cpp"
     break;
 
   case 30: /* Condition: MathOperation GTE MathOperation  */
-#line 137 "lex-yacc/parser.ypp"
-                                                    { (yyval.MNode) = new ExpressionNode((yyvsp[-2].MNode), (yyvsp[0].MNode), OP_GE);  }
-#line 1428 "src/parser.tab.cpp"
+#line 122 "lex-yacc/parser.ypp"
+                                                    { (yyval.Exp) = new Expression((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_GE);  }
+#line 1430 "src/parser.tab.cpp"
     break;
 
   case 31: /* Condition: MathOperation GT MathOperation  */
-#line 138 "lex-yacc/parser.ypp"
-                                                    { (yyval.MNode) = new ExpressionNode((yyvsp[-2].MNode), (yyvsp[0].MNode), OP_GT);  }
-#line 1434 "src/parser.tab.cpp"
+#line 123 "lex-yacc/parser.ypp"
+                                                    { (yyval.Exp) = new Expression((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_GT);  }
+#line 1436 "src/parser.tab.cpp"
     break;
 
   case 32: /* Condition: MathOperation LTE MathOperation  */
-#line 139 "lex-yacc/parser.ypp"
-                                                    { (yyval.MNode) = new ExpressionNode((yyvsp[-2].MNode), (yyvsp[0].MNode), OP_LE);  }
-#line 1440 "src/parser.tab.cpp"
+#line 124 "lex-yacc/parser.ypp"
+                                                    { (yyval.Exp) = new Expression((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_LE);  }
+#line 1442 "src/parser.tab.cpp"
     break;
 
   case 33: /* Condition: MathOperation LT MathOperation  */
-#line 140 "lex-yacc/parser.ypp"
-                                                    { (yyval.MNode) = new ExpressionNode((yyvsp[-2].MNode), (yyvsp[0].MNode), OP_LT);  }
-#line 1446 "src/parser.tab.cpp"
+#line 125 "lex-yacc/parser.ypp"
+                                                    { (yyval.Exp) = new Expression((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_LT);  }
+#line 1448 "src/parser.tab.cpp"
     break;
 
   case 34: /* Condition: MathOperation ISEQUAL MathOperation  */
-#line 141 "lex-yacc/parser.ypp"
-                                                    { (yyval.MNode) = new ExpressionNode((yyvsp[-2].MNode), (yyvsp[0].MNode), OP_EQ);  }
-#line 1452 "src/parser.tab.cpp"
+#line 126 "lex-yacc/parser.ypp"
+                                                    { (yyval.Exp) = new Expression((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_EQ);  }
+#line 1454 "src/parser.tab.cpp"
     break;
 
   case 35: /* Condition: MathOperation NOTEQUAL MathOperation  */
-#line 142 "lex-yacc/parser.ypp"
-                                                    { (yyval.MNode) = new ExpressionNode((yyvsp[-2].MNode), (yyvsp[0].MNode), OP_NEQ); }
-#line 1458 "src/parser.tab.cpp"
+#line 127 "lex-yacc/parser.ypp"
+                                                    { (yyval.Exp) = new Expression((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_NEQ); }
+#line 1460 "src/parser.tab.cpp"
     break;
 
   case 36: /* Condition: StringOperation GTE StringOperation  */
-#line 144 "lex-yacc/parser.ypp"
-                                                    { (yyval.MNode) = new StringNode((yyvsp[-2].SNode), (yyvsp[0].SNode), OP_GE);   }
-#line 1464 "src/parser.tab.cpp"
+#line 129 "lex-yacc/parser.ypp"
+                                                    { (yyval.Exp) = new StringContainer((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_GE);   }
+#line 1466 "src/parser.tab.cpp"
     break;
 
   case 37: /* Condition: StringOperation GT StringOperation  */
-#line 145 "lex-yacc/parser.ypp"
-                                                    { (yyval.MNode) = new StringNode((yyvsp[-2].SNode), (yyvsp[0].SNode), OP_GT);   }
-#line 1470 "src/parser.tab.cpp"
+#line 130 "lex-yacc/parser.ypp"
+                                                    { (yyval.Exp) = new StringContainer((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_GT);   }
+#line 1472 "src/parser.tab.cpp"
     break;
 
   case 38: /* Condition: StringOperation LTE StringOperation  */
-#line 146 "lex-yacc/parser.ypp"
-                                                    { (yyval.MNode) = new StringNode((yyvsp[-2].SNode), (yyvsp[0].SNode), OP_LE);   }
-#line 1476 "src/parser.tab.cpp"
+#line 131 "lex-yacc/parser.ypp"
+                                                    { (yyval.Exp) = new StringContainer((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_LE);   }
+#line 1478 "src/parser.tab.cpp"
     break;
 
   case 39: /* Condition: StringOperation LT StringOperation  */
-#line 147 "lex-yacc/parser.ypp"
-                                                    { (yyval.MNode) = new StringNode((yyvsp[-2].SNode), (yyvsp[0].SNode), OP_LT);   }
-#line 1482 "src/parser.tab.cpp"
+#line 132 "lex-yacc/parser.ypp"
+                                                    { (yyval.Exp) = new StringContainer((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_LT);   }
+#line 1484 "src/parser.tab.cpp"
     break;
 
   case 40: /* Condition: StringOperation ISEQUAL StringOperation  */
-#line 148 "lex-yacc/parser.ypp"
-                                                    { (yyval.MNode) = new StringNode((yyvsp[-2].SNode), (yyvsp[0].SNode), OP_EQ);   }
-#line 1488 "src/parser.tab.cpp"
+#line 133 "lex-yacc/parser.ypp"
+                                                    { (yyval.Exp) = new StringContainer((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_EQ);   }
+#line 1490 "src/parser.tab.cpp"
     break;
 
   case 41: /* Condition: StringOperation NOTEQUAL StringOperation  */
-#line 149 "lex-yacc/parser.ypp"
-                                                    { (yyval.MNode) = new StringNode((yyvsp[-2].SNode), (yyvsp[0].SNode), OP_NEQ);  }
-#line 1494 "src/parser.tab.cpp"
+#line 134 "lex-yacc/parser.ypp"
+                                                    { (yyval.Exp) = new StringContainer((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_NEQ);  }
+#line 1496 "src/parser.tab.cpp"
     break;
 
   case 42: /* Condition: MathOperation  */
-#line 151 "lex-yacc/parser.ypp"
-                                                    { (yyval.MNode) = (yyvsp[0].MNode); }
-#line 1500 "src/parser.tab.cpp"
+#line 136 "lex-yacc/parser.ypp"
+                                                    { (yyval.Exp) = (yyvsp[0].Exp); }
+#line 1502 "src/parser.tab.cpp"
     break;
 
   case 43: /* Condition: StringOperation  */
-#line 152 "lex-yacc/parser.ypp"
-                                                    { (yyval.MNode) = (yyvsp[0].SNode); }
-#line 1506 "src/parser.tab.cpp"
+#line 137 "lex-yacc/parser.ypp"
+                                                    { (yyval.Exp) = (yyvsp[0].Exp); }
+#line 1508 "src/parser.tab.cpp"
     break;
 
   case 44: /* Operation: MathOperation  */
-#line 155 "lex-yacc/parser.ypp"
-                                                    { (yyval.MNode) = (yyvsp[0].MNode); /*std::cout << $1->getValue() << std::endl;*/ }
-#line 1512 "src/parser.tab.cpp"
+#line 140 "lex-yacc/parser.ypp"
+                                                    { (yyval.Exp) = (yyvsp[0].Exp); /*std::cout << $1->getValue() << std::endl;*/ }
+#line 1514 "src/parser.tab.cpp"
     break;
 
   case 45: /* Operation: StringOperation  */
-#line 156 "lex-yacc/parser.ypp"
-                                                    { (yyval.MNode) = (yyvsp[0].SNode); /*std::cout << $1->getValue() << std::endl;*/ }
-#line 1518 "src/parser.tab.cpp"
+#line 141 "lex-yacc/parser.ypp"
+                                                    { (yyval.Exp) = (yyvsp[0].Exp); /*std::cout << $1->getValue() << std::endl;*/ }
+#line 1520 "src/parser.tab.cpp"
     break;
 
   case 46: /* MathOperation: MathOperation '+' MathOperation  */
-#line 159 "lex-yacc/parser.ypp"
-                                                    { (yyval.MNode) = new ExpressionNode((yyvsp[-2].MNode), (yyvsp[0].MNode), OP_ADD); }
-#line 1524 "src/parser.tab.cpp"
+#line 144 "lex-yacc/parser.ypp"
+                                                    { (yyval.Exp) = new Expression((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_ADD); }
+#line 1526 "src/parser.tab.cpp"
     break;
 
   case 47: /* MathOperation: MathOperation '-' MathOperation  */
-#line 160 "lex-yacc/parser.ypp"
-                                                    { (yyval.MNode) = new ExpressionNode((yyvsp[-2].MNode), (yyvsp[0].MNode), OP_SUB); }
-#line 1530 "src/parser.tab.cpp"
+#line 145 "lex-yacc/parser.ypp"
+                                                    { (yyval.Exp) = new Expression((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_SUB); }
+#line 1532 "src/parser.tab.cpp"
     break;
 
   case 48: /* MathOperation: MathOperation '*' MathOperation  */
-#line 161 "lex-yacc/parser.ypp"
-                                                    { (yyval.MNode) = new ExpressionNode((yyvsp[-2].MNode), (yyvsp[0].MNode), OP_MUL); }
-#line 1536 "src/parser.tab.cpp"
+#line 146 "lex-yacc/parser.ypp"
+                                                    { (yyval.Exp) = new Expression((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_MUL); }
+#line 1538 "src/parser.tab.cpp"
     break;
 
   case 49: /* MathOperation: MathOperation '/' MathOperation  */
-#line 162 "lex-yacc/parser.ypp"
-                                                    { (yyval.MNode) = new ExpressionNode((yyvsp[-2].MNode), (yyvsp[0].MNode), OP_DIV); }
-#line 1542 "src/parser.tab.cpp"
+#line 147 "lex-yacc/parser.ypp"
+                                                    { (yyval.Exp) = new Expression((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_DIV); }
+#line 1544 "src/parser.tab.cpp"
     break;
 
   case 50: /* MathOperation: MathOperation '%' MathOperation  */
-#line 163 "lex-yacc/parser.ypp"
-                                                    { (yyval.MNode) = new ExpressionNode((yyvsp[-2].MNode), (yyvsp[0].MNode), OP_MOD); }
-#line 1548 "src/parser.tab.cpp"
+#line 148 "lex-yacc/parser.ypp"
+                                                    { (yyval.Exp) = new Expression((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_MOD); }
+#line 1550 "src/parser.tab.cpp"
     break;
 
   case 51: /* MathOperation: '(' MathOperation ')' MathOperation  */
-#line 164 "lex-yacc/parser.ypp"
-                                                    { (yyval.MNode) = new ExpressionNode((yyvsp[-2].MNode), (yyvsp[0].MNode), OP_MUL); }
-#line 1554 "src/parser.tab.cpp"
+#line 149 "lex-yacc/parser.ypp"
+                                                    { (yyval.Exp) = new Expression((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_MUL); }
+#line 1556 "src/parser.tab.cpp"
     break;
 
   case 52: /* MathOperation: '(' MathOperation ')'  */
-#line 165 "lex-yacc/parser.ypp"
-                                                    {                   (yyval.MNode) = (yyvsp[-1].MNode);               }
-#line 1560 "src/parser.tab.cpp"
+#line 150 "lex-yacc/parser.ypp"
+                                                    {                   (yyval.Exp) = (yyvsp[-1].Exp);               }
+#line 1562 "src/parser.tab.cpp"
     break;
 
   case 53: /* MathOperation: POW '(' MathOperation ',' MathOperation ')'  */
-#line 166 "lex-yacc/parser.ypp"
-                                                    { (yyval.MNode) = new ExpressionNode((yyvsp[-3].MNode), (yyvsp[-1].MNode), OP_POW);  }
-#line 1566 "src/parser.tab.cpp"
+#line 151 "lex-yacc/parser.ypp"
+                                                    { (yyval.Exp) = new Expression((yyvsp[-3].Exp), (yyvsp[-1].Exp), OP_POW);  }
+#line 1568 "src/parser.tab.cpp"
     break;
 
   case 54: /* MathOperation: SQRT '(' MathOperation ')'  */
-#line 167 "lex-yacc/parser.ypp"
-                                                    { (yyval.MNode) = new ExpressionNode((yyvsp[-1].MNode), (yyvsp[-1].MNode), OP_SQRT); }
-#line 1572 "src/parser.tab.cpp"
+#line 152 "lex-yacc/parser.ypp"
+                                                    { (yyval.Exp) = new Expression((yyvsp[-1].Exp), (yyvsp[-1].Exp), OP_SQRT); }
+#line 1574 "src/parser.tab.cpp"
     break;
 
   case 55: /* MathOperation: MathOperation SHL MathOperation  */
-#line 168 "lex-yacc/parser.ypp"
-                                                    { (yyval.MNode) = new ExpressionNode((yyvsp[-2].MNode), (yyvsp[0].MNode), OP_SHL); }
-#line 1578 "src/parser.tab.cpp"
+#line 153 "lex-yacc/parser.ypp"
+                                                    { (yyval.Exp) = new Expression((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_SHL); }
+#line 1580 "src/parser.tab.cpp"
     break;
 
   case 56: /* MathOperation: MathOperation SHR MathOperation  */
-#line 169 "lex-yacc/parser.ypp"
-                                                    { (yyval.MNode) = new ExpressionNode((yyvsp[-2].MNode), (yyvsp[0].MNode), OP_SHR); }
-#line 1584 "src/parser.tab.cpp"
+#line 154 "lex-yacc/parser.ypp"
+                                                    { (yyval.Exp) = new Expression((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_SHR); }
+#line 1586 "src/parser.tab.cpp"
     break;
 
   case 57: /* MathOperation: MathOperation '|' MathOperation  */
-#line 170 "lex-yacc/parser.ypp"
-                                                    { (yyval.MNode) = new ExpressionNode((yyvsp[-2].MNode), (yyvsp[0].MNode), OP_OR); }
-#line 1590 "src/parser.tab.cpp"
+#line 155 "lex-yacc/parser.ypp"
+                                                    { (yyval.Exp) = new Expression((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_OR); }
+#line 1592 "src/parser.tab.cpp"
     break;
 
   case 58: /* MathOperation: MathOperation '&' MathOperation  */
-#line 171 "lex-yacc/parser.ypp"
-                                                    { (yyval.MNode) = new ExpressionNode((yyvsp[-2].MNode), (yyvsp[0].MNode), OP_AND); }
-#line 1596 "src/parser.tab.cpp"
+#line 156 "lex-yacc/parser.ypp"
+                                                    { (yyval.Exp) = new Expression((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_AND); }
+#line 1598 "src/parser.tab.cpp"
     break;
 
   case 59: /* MathOperation: MathOperation '^' MathOperation  */
-#line 172 "lex-yacc/parser.ypp"
-                                                    { (yyval.MNode) = new ExpressionNode((yyvsp[-2].MNode), (yyvsp[0].MNode), OP_XOR); }
-#line 1602 "src/parser.tab.cpp"
+#line 157 "lex-yacc/parser.ypp"
+                                                    { (yyval.Exp) = new Expression((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_XOR); }
+#line 1604 "src/parser.tab.cpp"
     break;
 
   case 61: /* StringOperation: StringOperation '+' StringOperation  */
-#line 176 "lex-yacc/parser.ypp"
-                                                        { (yyval.SNode) =  new StringNode((yyvsp[-2].SNode), (yyvsp[0].SNode), OP_ADD); }
-#line 1608 "src/parser.tab.cpp"
+#line 161 "lex-yacc/parser.ypp"
+                                                        { (yyval.Exp) =  new StringContainer((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_ADD); }
+#line 1610 "src/parser.tab.cpp"
     break;
 
   case 62: /* StringOperation: StringOperation '+' MathOperation  */
-#line 177 "lex-yacc/parser.ypp"
-                                                        { (yyval.SNode) =  new StringNode((yyvsp[-2].SNode), (yyvsp[0].MNode), OP_ADD); }
-#line 1614 "src/parser.tab.cpp"
+#line 162 "lex-yacc/parser.ypp"
+                                                        { (yyval.Exp) =  new StringContainer((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_ADD); }
+#line 1616 "src/parser.tab.cpp"
     break;
 
   case 63: /* StringOperation: StringOperation '-' MathOperation  */
-#line 178 "lex-yacc/parser.ypp"
-                                                        { (yyval.SNode) =  new StringNode((yyvsp[-2].SNode), (yyvsp[0].MNode), OP_SUB); }
-#line 1620 "src/parser.tab.cpp"
+#line 163 "lex-yacc/parser.ypp"
+                                                        { (yyval.Exp) =  new StringContainer((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_SUB); }
+#line 1622 "src/parser.tab.cpp"
     break;
 
   case 64: /* StringOperation: '(' StringOperation ')'  */
-#line 179 "lex-yacc/parser.ypp"
-                                                        { (yyval.SNode) =  (yyvsp[-1].SNode); }
-#line 1626 "src/parser.tab.cpp"
+#line 164 "lex-yacc/parser.ypp"
+                                                        { (yyval.Exp) =  (yyvsp[-1].Exp); }
+#line 1628 "src/parser.tab.cpp"
     break;
 
   case 65: /* StringOperation: StringOperation SHL StringOperation  */
-#line 181 "lex-yacc/parser.ypp"
-                                                            { (yyval.SNode) =  new StringNode((yyvsp[-2].SNode), (yyvsp[0].SNode), OP_SHL); }
-#line 1632 "src/parser.tab.cpp"
+#line 166 "lex-yacc/parser.ypp"
+                                                            { (yyval.Exp) =  new StringContainer((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_SHL); }
+#line 1634 "src/parser.tab.cpp"
     break;
 
   case 66: /* StringOperation: StringOperation SHR StringOperation  */
-#line 182 "lex-yacc/parser.ypp"
-                                                            { (yyval.SNode) =  new StringNode((yyvsp[-2].SNode), (yyvsp[0].SNode), OP_SHR); }
-#line 1638 "src/parser.tab.cpp"
+#line 167 "lex-yacc/parser.ypp"
+                                                            { (yyval.Exp) =  new StringContainer((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_SHR); }
+#line 1640 "src/parser.tab.cpp"
     break;
 
   case 68: /* MathOperand: INTEGER  */
-#line 186 "lex-yacc/parser.ypp"
-                        { (yyval.MNode) = new ExpressionNode((yyvsp[0].str), TINT);}
-#line 1644 "src/parser.tab.cpp"
+#line 171 "lex-yacc/parser.ypp"
+                        { (yyval.Exp) = new Expression((yyvsp[0].str), TINT);}
+#line 1646 "src/parser.tab.cpp"
     break;
 
   case 69: /* MathOperand: FLOAT  */
-#line 188 "lex-yacc/parser.ypp"
-                        { (yyval.MNode) = new ExpressionNode((yyvsp[0].str), TFLOAT);}
-#line 1650 "src/parser.tab.cpp"
+#line 173 "lex-yacc/parser.ypp"
+                        { (yyval.Exp) = new Expression((yyvsp[0].str), TFLOAT);}
+#line 1652 "src/parser.tab.cpp"
     break;
 
   case 70: /* MathOperand: CHARACTER  */
-#line 190 "lex-yacc/parser.ypp"
-                        { (yyval.MNode) = new ExpressionNode((yyvsp[0].str), TCHAR);}
-#line 1656 "src/parser.tab.cpp"
+#line 175 "lex-yacc/parser.ypp"
+                        { (yyval.Exp) = new Expression((yyvsp[0].str), TCHAR);}
+#line 1658 "src/parser.tab.cpp"
     break;
 
   case 71: /* MathOperand: BOOLEAN  */
-#line 192 "lex-yacc/parser.ypp"
-                        { (yyval.MNode) = new ExpressionNode((yyvsp[0].str), TBOOLEAN);}
-#line 1662 "src/parser.tab.cpp"
+#line 177 "lex-yacc/parser.ypp"
+                        { (yyval.Exp) = new Expression((yyvsp[0].str), TBOOLEAN);}
+#line 1664 "src/parser.tab.cpp"
     break;
 
   case 72: /* MathOperand: IDENTIFIER  */
-#line 194 "lex-yacc/parser.ypp"
-                        { (yyval.MNode) = new IdentifierNode((yyvsp[0].str)); }
-#line 1668 "src/parser.tab.cpp"
+#line 179 "lex-yacc/parser.ypp"
+                        { (yyval.Exp) = new IdentifierContainer((yyvsp[0].str)); }
+#line 1670 "src/parser.tab.cpp"
     break;
 
   case 73: /* StringOperand: STRING  */
-#line 196 "lex-yacc/parser.ypp"
-                        { (yyval.SNode) = new StringNode((yyvsp[0].str)); }
-#line 1674 "src/parser.tab.cpp"
+#line 181 "lex-yacc/parser.ypp"
+                        { (yyval.Exp) = new StringContainer((yyvsp[0].str)); }
+#line 1676 "src/parser.tab.cpp"
     break;
 
 
-#line 1678 "src/parser.tab.cpp"
+#line 1680 "src/parser.tab.cpp"
 
       default: break;
     }
@@ -1867,7 +1869,7 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 198 "lex-yacc/parser.ypp"
+#line 183 "lex-yacc/parser.ypp"
 
 
 

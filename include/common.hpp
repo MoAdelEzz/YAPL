@@ -1,17 +1,16 @@
-#ifndef IDENTIFIER_HPP
-#define IDENTIFIER_HPP
-
+#pragma once
 #include <iostream>
 #include <string>
+#include <unordered_map>
 
+enum OperandType { TBOOLEAN, TINT, TCHAR, TFLOAT, TSTRING, TUNDEFINED };
 
-enum ValueType { TBOOLEAN, TINT, TCHAR, TFLOAT, TSTRING, TUNDEFINED };
-class Value {
+class Operand {
     public:
         void* content;
-        ValueType type;
+        OperandType type;
 
-        void init(const char* value, ValueType type) {
+        void init(const char* value, OperandType type) {
             this->type = type;
             if (value == nullptr) { return; }
 
@@ -33,7 +32,7 @@ class Value {
             }
         }
         
-        static std::string typeToString(ValueType type) {
+        static std::string typeToString(OperandType type) {
             switch (type) {
                 case TINT:
                     return "int";
@@ -50,7 +49,7 @@ class Value {
             }
         }
         
-        static int typeToSize(ValueType type) {
+        static int typeToSize(OperandType type) {
             switch (type) {
                 case TINT:
                     return sizeof(int);
@@ -164,7 +163,7 @@ class Value {
             }
         }
 
-        friend std::ostream& operator<<(std::ostream& os, const Value& node) {
+        friend std::ostream& operator<<(std::ostream& os, const Operand& node) {
             switch (node.type) {
                 case TINT:
                     os << (int)node;
@@ -188,8 +187,64 @@ class Value {
         }
 };
 
-class Identifier {
+class Scope {
+    private:
+        Scope* parent = nullptr;
+        std::unordered_map<std::string, std::pair<OperandType, Operand>> variables;
+    public:
+        Scope() { this->parent = nullptr; }
+        Scope(Scope* parent) { this->parent = parent; }
+        Scope* getParent() { return parent; }
+        void setParent(Scope* parent) { this->parent = parent; }
 
+        void defineVariable(std::string varName, OperandType type, Operand value) { 
+            if (variables.find(varName) == variables.end()) {
+                variables[varName] = {type, value}; 
+            } else {
+                throw std::runtime_error("Variable " + varName + " has already been declared");
+            }
+        }    
+
+        void reset() {
+            variables.clear();
+        }
+
+        void assignVariable(std::string varName, Operand value) {
+            const auto& it = variables.find(varName);
+            if (it != variables.end()) {
+                //TODO: change this later
+                if (variables[varName].first == value.type) {
+                    variables[varName].second = value;
+                } else {
+                    throw std::runtime_error("Variable " + varName + " type mismatch");
+                }
+                
+            } else if (parent != nullptr) {
+                parent->assignVariable(varName, value);
+            } else {
+                throw std::runtime_error("Variable " + varName + " not found");
+            }
+        }
+        
+        Operand valueOf(std::string varName) { 
+            if (variables.find(varName) != variables.end()) {
+                return variables[varName].second;
+            }  else if (parent != nullptr) {
+                return parent->valueOf(varName);
+            } else {
+                throw std::runtime_error("Variable " + varName + " not found");
+                return Operand();
+            }
+        }
+
+        OperandType typeOf(std::string varName) {
+            if (variables.find(varName) != variables.end()) {
+                return variables[varName].first;
+            } else if (parent != nullptr) {
+                return parent->typeOf(varName);
+            } else {
+                throw std::runtime_error("Variable " + varName + " not found");
+                return TINT;
+            }
+        }
 };
-
-#endif

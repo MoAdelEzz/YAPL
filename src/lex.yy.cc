@@ -518,15 +518,17 @@ char *yytext;
     #include <string>
     #include <iostream>
 
+    #include "branching.hpp"
+    #include "common.hpp"
+    #include "expression.hpp"
+    #include "loop.hpp"
     #include "program.hpp"
-    #include "identifier.hpp"
-    #include "node.hpp"
-    #include "if.hpp"
-    #include "for.hpp"
+    #include "scoping.hpp"
+    #include "var-op.hpp"
 
     #include "parser.tab.hpp"
-#line 529 "src/lex.yy.cc"
-#line 530 "src/lex.yy.cc"
+#line 531 "src/lex.yy.cc"
+#line 532 "src/lex.yy.cc"
 
 #define INITIAL 0
 
@@ -743,9 +745,9 @@ YY_DECL
 		}
 
 	{
-#line 17 "lex-yacc/lexer.l"
+#line 19 "lex-yacc/lexer.l"
 
-#line 749 "src/lex.yy.cc"
+#line 751 "src/lex.yy.cc"
 
 	while ( /*CONSTCOND*/1 )		/* loops until end-of-file is reached */
 		{
@@ -804,115 +806,115 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 18 "lex-yacc/lexer.l"
+#line 20 "lex-yacc/lexer.l"
 {
-    yylval.INum = yytext == "true" ? 1 : 0;
+    yylval.str = strdup(yytext);
     return BOOLEAN;
 }
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 23 "lex-yacc/lexer.l"
+#line 25 "lex-yacc/lexer.l"
 { return SHL;   }
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 24 "lex-yacc/lexer.l"
+#line 26 "lex-yacc/lexer.l"
 { return SHR;   }
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 25 "lex-yacc/lexer.l"
+#line 27 "lex-yacc/lexer.l"
 { return POW;   }
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 26 "lex-yacc/lexer.l"
+#line 28 "lex-yacc/lexer.l"
 { return SQRT;  }
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 27 "lex-yacc/lexer.l"
+#line 29 "lex-yacc/lexer.l"
 { return IF;    }
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 28 "lex-yacc/lexer.l"
+#line 30 "lex-yacc/lexer.l"
 { return ELSE;  }
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 29 "lex-yacc/lexer.l"
+#line 31 "lex-yacc/lexer.l"
 { return WHILE; }
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 30 "lex-yacc/lexer.l"
+#line 32 "lex-yacc/lexer.l"
 { return DO;    }
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 31 "lex-yacc/lexer.l"
+#line 33 "lex-yacc/lexer.l"
 { return FOR;   }
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 32 "lex-yacc/lexer.l"
+#line 34 "lex-yacc/lexer.l"
 { return PRINT; }
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 33 "lex-yacc/lexer.l"
+#line 35 "lex-yacc/lexer.l"
 { return AND;   }
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 34 "lex-yacc/lexer.l"
+#line 36 "lex-yacc/lexer.l"
 { return OR;    }
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 35 "lex-yacc/lexer.l"
+#line 37 "lex-yacc/lexer.l"
 { return GTE;   }
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 36 "lex-yacc/lexer.l"
+#line 38 "lex-yacc/lexer.l"
 { return LTE;   }
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 37 "lex-yacc/lexer.l"
+#line 39 "lex-yacc/lexer.l"
 { return LT;    }
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 38 "lex-yacc/lexer.l"
+#line 40 "lex-yacc/lexer.l"
 { return GT;    }
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 39 "lex-yacc/lexer.l"
+#line 41 "lex-yacc/lexer.l"
 { return ISEQUAL;}
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 40 "lex-yacc/lexer.l"
+#line 42 "lex-yacc/lexer.l"
 { return NOTEQUAL;}
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 41 "lex-yacc/lexer.l"
+#line 43 "lex-yacc/lexer.l"
 { return FUNCTIONDEF;}
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 43 "lex-yacc/lexer.l"
+#line 45 "lex-yacc/lexer.l"
 { yylval.str = strdup(yytext); return DATA_TYPE; }
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
-#line 45 "lex-yacc/lexer.l"
+#line 47 "lex-yacc/lexer.l"
 {
     // std::cout << "Variable" << " " << yytext <<  std::endl;
     yylval.str = strdup(yytext);
@@ -921,21 +923,19 @@ YY_RULE_SETUP
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
-#line 52 "lex-yacc/lexer.l"
+#line 54 "lex-yacc/lexer.l"
 {
     // std::cout << "Integer " << yytext << std::endl;
-    yylval.INum = atoi(yytext);
-    yylval.str = yytext;
+    yylval.str = strdup(yytext);
     return INTEGER;
 }
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
-#line 59 "lex-yacc/lexer.l"
+#line 60 "lex-yacc/lexer.l"
 {
     // std::cout << "FLOAT " << yytext << std::endl;
-    yylval.FNum = atof(yytext);
-    yylval.str = yytext;
+    yylval.str = strdup(yytext);
     return FLOAT;
 }
 	YY_BREAK
@@ -944,7 +944,7 @@ YY_RULE_SETUP
 #line 66 "lex-yacc/lexer.l"
 {
     // std::cout << "Character " << yytext << std::endl;
-    yylval.character = yytext[1];
+    yylval.str = strdup(yytext);
     return CHARACTER;
 }
 	YY_BREAK

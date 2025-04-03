@@ -1,15 +1,14 @@
 #pragma once
-
 #include "program.hpp"
-#include "node.hpp"
+#include "expression.hpp"
 
 class IfNode : public ProgramNode {
-    ExpressionNode* condition;
+    Expression* condition;
     ProgramNode* accept;
     ProgramNode* reject;
 
     public:
-        IfNode( ExpressionNode* condition, ProgramNode* accept ) {
+        IfNode( Expression* condition, ProgramNode* accept ) {
             this->condition = condition;
             this->accept = accept;
         }   
