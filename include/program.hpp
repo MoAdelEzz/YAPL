@@ -1,5 +1,4 @@
 #pragma once
-#include "common.hpp"
 #include "expression.hpp"
 
 class ProgramNode {
@@ -21,6 +20,10 @@ class ProgramNode {
                 it->run(scope);
                 it = next->next;
             }
+        }
+
+        virtual std::string nodeName() {
+            return "ProgramNode";
         }
 };
 

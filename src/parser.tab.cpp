@@ -79,6 +79,9 @@
     #include "program.hpp"
     #include "scoping.hpp"
     #include "var-op.hpp"
+    #include "functions.hpp"
+    #include "controllers.hpp"
+    #include "returnNode.hpp"
 
     #include "parser.tab.hpp"
     extern int yylex();
@@ -87,7 +90,7 @@
         std::cerr << "Error: " << s << std::endl;
     }
 
-#line 91 "src/parser.tab.cpp"
+#line 94 "src/parser.tab.cpp"
 
 # ifndef YY_CAST
 #  ifdef __cplusplus
@@ -118,69 +121,84 @@ enum yysymbol_kind_t
   YYSYMBOL_YYEOF = 0,                      /* "end of file"  */
   YYSYMBOL_YYerror = 1,                    /* error  */
   YYSYMBOL_YYUNDEF = 2,                    /* "invalid token"  */
-  YYSYMBOL_IDENTIFIER = 3,                 /* IDENTIFIER  */
-  YYSYMBOL_STRING = 4,                     /* STRING  */
-  YYSYMBOL_POW = 5,                        /* POW  */
-  YYSYMBOL_SQRT = 6,                       /* SQRT  */
-  YYSYMBOL_SHL = 7,                        /* SHL  */
-  YYSYMBOL_SHR = 8,                        /* SHR  */
-  YYSYMBOL_DATA_TYPE = 9,                  /* DATA_TYPE  */
-  YYSYMBOL_IF = 10,                        /* IF  */
-  YYSYMBOL_ELSE = 11,                      /* ELSE  */
-  YYSYMBOL_WHILE = 12,                     /* WHILE  */
-  YYSYMBOL_FOR = 13,                       /* FOR  */
-  YYSYMBOL_AND = 14,                       /* AND  */
-  YYSYMBOL_OR = 15,                        /* OR  */
-  YYSYMBOL_GTE = 16,                       /* GTE  */
-  YYSYMBOL_LTE = 17,                       /* LTE  */
-  YYSYMBOL_LT = 18,                        /* LT  */
-  YYSYMBOL_GT = 19,                        /* GT  */
-  YYSYMBOL_ISEQUAL = 20,                   /* ISEQUAL  */
-  YYSYMBOL_NOTEQUAL = 21,                  /* NOTEQUAL  */
-  YYSYMBOL_FUNCTIONDEF = 22,               /* FUNCTIONDEF  */
+  YYSYMBOL_RETURN = 3,                     /* RETURN  */
+  YYSYMBOL_IDENTIFIER = 4,                 /* IDENTIFIER  */
+  YYSYMBOL_STRING = 5,                     /* STRING  */
+  YYSYMBOL_POW = 6,                        /* POW  */
+  YYSYMBOL_SQRT = 7,                       /* SQRT  */
+  YYSYMBOL_SHL = 8,                        /* SHL  */
+  YYSYMBOL_SHR = 9,                        /* SHR  */
+  YYSYMBOL_DATA_TYPE = 10,                 /* DATA_TYPE  */
+  YYSYMBOL_IF = 11,                        /* IF  */
+  YYSYMBOL_ELSE = 12,                      /* ELSE  */
+  YYSYMBOL_WHILE = 13,                     /* WHILE  */
+  YYSYMBOL_FOR = 14,                       /* FOR  */
+  YYSYMBOL_AND = 15,                       /* AND  */
+  YYSYMBOL_OR = 16,                        /* OR  */
+  YYSYMBOL_GTE = 17,                       /* GTE  */
+  YYSYMBOL_LTE = 18,                       /* LTE  */
+  YYSYMBOL_LT = 19,                        /* LT  */
+  YYSYMBOL_GT = 20,                        /* GT  */
+  YYSYMBOL_ISEQUAL = 21,                   /* ISEQUAL  */
+  YYSYMBOL_NOTEQUAL = 22,                  /* NOTEQUAL  */
   YYSYMBOL_DO = 23,                        /* DO  */
-  YYSYMBOL_CHARACTER = 24,                 /* CHARACTER  */
-  YYSYMBOL_INTEGER = 25,                   /* INTEGER  */
-  YYSYMBOL_BOOLEAN = 26,                   /* BOOLEAN  */
-  YYSYMBOL_FLOAT = 27,                     /* FLOAT  */
-  YYSYMBOL_PRINT = 28,                     /* PRINT  */
-  YYSYMBOL_29_ = 29,                       /* ';'  */
-  YYSYMBOL_30_ = 30,                       /* '|'  */
-  YYSYMBOL_31_ = 31,                       /* '^'  */
-  YYSYMBOL_32_ = 32,                       /* '&'  */
-  YYSYMBOL_33_ = 33,                       /* '+'  */
-  YYSYMBOL_34_ = 34,                       /* '-'  */
-  YYSYMBOL_35_ = 35,                       /* '*'  */
-  YYSYMBOL_36_ = 36,                       /* '/'  */
-  YYSYMBOL_37_ = 37,                       /* '%'  */
-  YYSYMBOL_38_ = 38,                       /* '['  */
-  YYSYMBOL_39_ = 39,                       /* ']'  */
-  YYSYMBOL_40_ = 40,                       /* ')'  */
-  YYSYMBOL_41_ = 41,                       /* '('  */
-  YYSYMBOL_42_ = 42,                       /* '{'  */
-  YYSYMBOL_43_ = 43,                       /* '}'  */
-  YYSYMBOL_44_ = 44,                       /* ','  */
-  YYSYMBOL_45_ = 45,                       /* '='  */
-  YYSYMBOL_YYACCEPT = 46,                  /* $accept  */
-  YYSYMBOL_Program = 47,                   /* Program  */
-  YYSYMBOL_Sentences = 48,                 /* Sentences  */
-  YYSYMBOL_Scope = 49,                     /* Scope  */
-  YYSYMBOL_Sentence = 50,                  /* Sentence  */
-  YYSYMBOL_PrintSentence = 51,             /* PrintSentence  */
-  YYSYMBOL_IFSentence = 52,                /* IFSentence  */
-  YYSYMBOL_ForSentence = 53,               /* ForSentence  */
-  YYSYMBOL_WhileSentence = 54,             /* WhileSentence  */
-  YYSYMBOL_DoWhileSentence = 55,           /* DoWhileSentence  */
-  YYSYMBOL_FunctionDefinition = 56,        /* FunctionDefinition  */
-  YYSYMBOL_FunctionParams = 57,            /* FunctionParams  */
-  YYSYMBOL_VariableDeclaration = 58,       /* VariableDeclaration  */
-  YYSYMBOL_VariableAssignment = 59,        /* VariableAssignment  */
-  YYSYMBOL_Condition = 60,                 /* Condition  */
-  YYSYMBOL_Operation = 61,                 /* Operation  */
-  YYSYMBOL_MathOperation = 62,             /* MathOperation  */
-  YYSYMBOL_StringOperation = 63,           /* StringOperation  */
-  YYSYMBOL_MathOperand = 64,               /* MathOperand  */
-  YYSYMBOL_StringOperand = 65              /* StringOperand  */
+  YYSYMBOL_SWITCH = 24,                    /* SWITCH  */
+  YYSYMBOL_CASE = 25,                      /* CASE  */
+  YYSYMBOL_DEFAULT = 26,                   /* DEFAULT  */
+  YYSYMBOL_CONTINUE = 27,                  /* CONTINUE  */
+  YYSYMBOL_BREAK = 28,                     /* BREAK  */
+  YYSYMBOL_CHARACTER = 29,                 /* CHARACTER  */
+  YYSYMBOL_INCREMENT = 30,                 /* INCREMENT  */
+  YYSYMBOL_DECREMENT = 31,                 /* DECREMENT  */
+  YYSYMBOL_INTEGER = 32,                   /* INTEGER  */
+  YYSYMBOL_BOOLEAN = 33,                   /* BOOLEAN  */
+  YYSYMBOL_FLOAT = 34,                     /* FLOAT  */
+  YYSYMBOL_PRINT = 35,                     /* PRINT  */
+  YYSYMBOL_36_ = 36,                       /* ';'  */
+  YYSYMBOL_37_ = 37,                       /* '|'  */
+  YYSYMBOL_38_ = 38,                       /* '^'  */
+  YYSYMBOL_39_ = 39,                       /* '&'  */
+  YYSYMBOL_40_ = 40,                       /* '+'  */
+  YYSYMBOL_41_ = 41,                       /* '-'  */
+  YYSYMBOL_42_ = 42,                       /* '*'  */
+  YYSYMBOL_43_ = 43,                       /* '/'  */
+  YYSYMBOL_44_ = 44,                       /* '%'  */
+  YYSYMBOL_45_ = 45,                       /* '['  */
+  YYSYMBOL_46_ = 46,                       /* ']'  */
+  YYSYMBOL_47_ = 47,                       /* ')'  */
+  YYSYMBOL_48_ = 48,                       /* '('  */
+  YYSYMBOL_49_ = 49,                       /* '{'  */
+  YYSYMBOL_50_ = 50,                       /* '}'  */
+  YYSYMBOL_51_ = 51,                       /* ':'  */
+  YYSYMBOL_52_ = 52,                       /* ','  */
+  YYSYMBOL_53_ = 53,                       /* '='  */
+  YYSYMBOL_YYACCEPT = 54,                  /* $accept  */
+  YYSYMBOL_Program = 55,                   /* Program  */
+  YYSYMBOL_Sentences = 56,                 /* Sentences  */
+  YYSYMBOL_Scope = 57,                     /* Scope  */
+  YYSYMBOL_Sentence = 58,                  /* Sentence  */
+  YYSYMBOL_SwitchSentence = 59,            /* SwitchSentence  */
+  YYSYMBOL_SwitchBody = 60,                /* SwitchBody  */
+  YYSYMBOL_Case = 61,                      /* Case  */
+  YYSYMBOL_ReturnSentence = 62,            /* ReturnSentence  */
+  YYSYMBOL_PrintSentence = 63,             /* PrintSentence  */
+  YYSYMBOL_IFSentence = 64,                /* IFSentence  */
+  YYSYMBOL_ForSentence = 65,               /* ForSentence  */
+  YYSYMBOL_WhileSentence = 66,             /* WhileSentence  */
+  YYSYMBOL_DoWhileSentence = 67,           /* DoWhileSentence  */
+  YYSYMBOL_FunctionDefinition = 68,        /* FunctionDefinition  */
+  YYSYMBOL_FunctionParams = 69,            /* FunctionParams  */
+  YYSYMBOL_VariableDeclaration = 70,       /* VariableDeclaration  */
+  YYSYMBOL_VariableAssignment = 71,        /* VariableAssignment  */
+  YYSYMBOL_Condition = 72,                 /* Condition  */
+  YYSYMBOL_Operation = 73,                 /* Operation  */
+  YYSYMBOL_FunctionCall = 74,              /* FunctionCall  */
+  YYSYMBOL_FunctionCallParams = 75,        /* FunctionCallParams  */
+  YYSYMBOL_MathOperation = 76,             /* MathOperation  */
+  YYSYMBOL_StringOperation = 77,           /* StringOperation  */
+  YYSYMBOL_Operand = 78,                   /* Operand  */
+  YYSYMBOL_MathOperand = 79,               /* MathOperand  */
+  YYSYMBOL_StringOperand = 80              /* StringOperand  */
 };
 typedef enum yysymbol_kind_t yysymbol_kind_t;
 
@@ -506,21 +524,21 @@ union yyalloc
 #endif /* !YYCOPY_NEEDED */
 
 /* YYFINAL -- State number of the termination state.  */
-#define YYFINAL  31
+#define YYFINAL  63
 /* YYLAST -- Last index in YYTABLE.  */
-#define YYLAST   307
+#define YYLAST   392
 
 /* YYNTOKENS -- Number of terminals.  */
-#define YYNTOKENS  46
+#define YYNTOKENS  54
 /* YYNNTS -- Number of nonterminals.  */
-#define YYNNTS  20
+#define YYNNTS  27
 /* YYNRULES -- Number of rules.  */
-#define YYNRULES  73
+#define YYNRULES  104
 /* YYNSTATES -- Number of states.  */
-#define YYNSTATES  159
+#define YYNSTATES  232
 
 /* YYMAXUTOK -- Last valid token kind.  */
-#define YYMAXUTOK   283
+#define YYMAXUTOK   290
 
 
 /* YYTRANSLATE(TOKEN-NUM) -- Symbol number corresponding to TOKEN-NUM
@@ -537,16 +555,16 @@ static const yytype_int8 yytranslate[] =
        0,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
-       2,     2,     2,     2,     2,     2,     2,    37,    32,     2,
-      41,    40,    35,    33,    44,    34,     2,    36,     2,     2,
-       2,     2,     2,     2,     2,     2,     2,     2,     2,    29,
-       2,    45,     2,     2,     2,     2,     2,     2,     2,     2,
+       2,     2,     2,     2,     2,     2,     2,    44,    39,     2,
+      48,    47,    42,    40,    52,    41,     2,    43,     2,     2,
+       2,     2,     2,     2,     2,     2,     2,     2,    51,    36,
+       2,    53,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
-       2,    38,     2,    39,    31,     2,     2,     2,     2,     2,
+       2,    45,     2,    46,    38,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
-       2,     2,     2,    42,    30,    43,     2,     2,     2,     2,
+       2,     2,     2,    49,    37,    50,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
@@ -562,21 +580,25 @@ static const yytype_int8 yytranslate[] =
        2,     2,     2,     2,     2,     2,     1,     2,     3,     4,
        5,     6,     7,     8,     9,    10,    11,    12,    13,    14,
       15,    16,    17,    18,    19,    20,    21,    22,    23,    24,
-      25,    26,    27,    28
+      25,    26,    27,    28,    29,    30,    31,    32,    33,    34,
+      35
 };
 
 #if YYDEBUG
 /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
-static const yytype_uint8 yyrline[] =
+static const yytype_int16 yyrline[] =
 {
-       0,    62,    62,    69,    71,    73,    75,    78,    79,    80,
-      81,    82,    83,    84,    85,    88,    93,    94,    95,    97,
-     101,   105,   109,   111,   111,   114,   115,   117,   120,   121,
-     122,   123,   124,   125,   126,   127,   129,   130,   131,   132,
-     133,   134,   136,   137,   140,   141,   144,   145,   146,   147,
-     148,   149,   150,   151,   152,   153,   154,   155,   156,   157,
-     158,   161,   162,   163,   164,   166,   167,   168,   171,   173,
-     175,   177,   179,   181
+       0,    71,    71,    77,    79,    81,    83,    87,    88,    89,
+      90,    91,    92,    93,    94,    95,    96,    97,    98,   102,
+     103,   106,   109,   114,   115,   118,   121,   126,   127,   128,
+     130,   134,   138,   143,   147,   153,   154,   157,   158,   161,
+     163,   169,   175,   181,   187,   193,   199,   205,   213,   214,
+     215,   216,   217,   218,   219,   220,   222,   223,   224,   225,
+     226,   227,   229,   230,   233,   234,   235,   238,   239,   242,
+     243,   246,   247,   248,   249,   250,   251,   252,   253,   254,
+     255,   256,   257,   258,   259,   260,   261,   262,   263,   264,
+     267,   268,   269,   270,   272,   273,   274,   276,   276,   279,
+     281,   283,   285,   287,   289
 };
 #endif
 
@@ -592,17 +614,20 @@ static const char *yysymbol_name (yysymbol_kind_t yysymbol) YY_ATTRIBUTE_UNUSED;
    First, the terminals, then, starting at YYNTOKENS, nonterminals.  */
 static const char *const yytname[] =
 {
-  "\"end of file\"", "error", "\"invalid token\"", "IDENTIFIER", "STRING",
-  "POW", "SQRT", "SHL", "SHR", "DATA_TYPE", "IF", "ELSE", "WHILE", "FOR",
-  "AND", "OR", "GTE", "LTE", "LT", "GT", "ISEQUAL", "NOTEQUAL",
-  "FUNCTIONDEF", "DO", "CHARACTER", "INTEGER", "BOOLEAN", "FLOAT", "PRINT",
-  "';'", "'|'", "'^'", "'&'", "'+'", "'-'", "'*'", "'/'", "'%'", "'['",
-  "']'", "')'", "'('", "'{'", "'}'", "','", "'='", "$accept", "Program",
-  "Sentences", "Scope", "Sentence", "PrintSentence", "IFSentence",
+  "\"end of file\"", "error", "\"invalid token\"", "RETURN", "IDENTIFIER",
+  "STRING", "POW", "SQRT", "SHL", "SHR", "DATA_TYPE", "IF", "ELSE",
+  "WHILE", "FOR", "AND", "OR", "GTE", "LTE", "LT", "GT", "ISEQUAL",
+  "NOTEQUAL", "DO", "SWITCH", "CASE", "DEFAULT", "CONTINUE", "BREAK",
+  "CHARACTER", "INCREMENT", "DECREMENT", "INTEGER", "BOOLEAN", "FLOAT",
+  "PRINT", "';'", "'|'", "'^'", "'&'", "'+'", "'-'", "'*'", "'/'", "'%'",
+  "'['", "']'", "')'", "'('", "'{'", "'}'", "':'", "','", "'='", "$accept",
+  "Program", "Sentences", "Scope", "Sentence", "SwitchSentence",
+  "SwitchBody", "Case", "ReturnSentence", "PrintSentence", "IFSentence",
   "ForSentence", "WhileSentence", "DoWhileSentence", "FunctionDefinition",
   "FunctionParams", "VariableDeclaration", "VariableAssignment",
-  "Condition", "Operation", "MathOperation", "StringOperation",
-  "MathOperand", "StringOperand", YY_NULLPTR
+  "Condition", "Operation", "FunctionCall", "FunctionCallParams",
+  "MathOperation", "StringOperation", "Operand", "MathOperand",
+  "StringOperand", YY_NULLPTR
 };
 
 static const char *
@@ -612,7 +637,7 @@ yysymbol_name (yysymbol_kind_t yysymbol)
 }
 #endif
 
-#define YYPACT_NINF (-37)
+#define YYPACT_NINF (-51)
 
 #define yypact_value_is_default(Yyn) \
   ((Yyn) == YYPACT_NINF)
@@ -626,22 +651,30 @@ yysymbol_name (yysymbol_kind_t yysymbol)
    STATE-NUM.  */
 static const yytype_int16 yypact[] =
 {
-       2,   -36,    10,   -18,   -15,    -4,    25,     1,    -3,     2,
-      40,   -37,     2,     2,   -37,    34,   -37,   -37,   -37,   -37,
-     -37,   -37,    83,   -13,    83,    83,    47,    16,    58,    83,
-      29,   -37,   -37,   -37,    -6,   -37,   -37,    32,    39,   -37,
-     -37,   -37,   -37,    83,    52,   192,    27,   -37,   -37,   -37,
-      83,    43,   200,   273,    44,    83,    82,    60,    62,   -37,
-     -37,    34,    71,    71,   124,   172,   -37,    71,    71,    71,
-      71,    71,    71,    71,    71,    71,    71,    -2,    -2,    83,
-      71,    76,     1,    71,    71,    71,    71,    71,    71,    71,
-      71,    -2,    -2,    -2,    -2,    -2,    -2,     1,    77,   108,
-      89,    83,   104,    71,    86,   141,    71,   -37,   -16,   -16,
-     231,   237,   242,    78,    78,   -37,   -37,   -37,    -2,   -27,
-     -27,   166,   -37,   166,   -37,   -37,   192,   192,   192,   192,
-     192,   192,   192,   192,    27,    27,    27,    27,    27,    27,
-     -37,   131,    93,     1,    95,   -37,    71,   -37,   -37,    98,
-      82,   -37,   110,   155,     1,   -37,   -37,   -37,   -37
+       4,   176,   339,    12,   -26,    29,    38,    -7,    41,    60,
+      92,    81,     4,   134,   -51,     4,     4,   -51,   -51,   -51,
+     124,   -51,   -51,   -51,   -51,   -51,   -51,    49,   -51,   101,
+     102,   -51,   147,   148,   -51,   -51,   -51,   187,   117,   -51,
+     251,    86,   -51,   -51,   104,   111,   112,   113,   114,   116,
+     123,   125,   176,    37,   187,   187,   144,   166,   180,   -51,
+     -51,   176,   135,   -51,   -51,   -51,    22,   -51,   -51,   141,
+     196,   196,   -51,   -51,    -5,   214,    67,   -51,   196,   196,
+     196,   196,   196,   196,   196,   196,   196,   196,     6,     6,
+     187,   196,   176,   176,   176,   176,   176,   176,   176,   176,
+     150,   -51,    31,   176,   304,   251,    86,   318,   183,   187,
+     142,   149,   151,   -51,   -51,   124,   -51,   -51,   -23,   196,
+      61,   225,   196,   -51,    99,    99,   262,   274,   288,    89,
+      89,   -51,   -51,   -51,     6,    76,    76,   199,   -51,   199,
+     159,   161,   163,   165,   175,   178,   195,   203,   -51,   208,
+      -7,    36,   204,   196,   196,   187,   187,   187,   187,   187,
+     187,    -7,    -7,   -30,   338,   187,   198,   212,   -51,   176,
+     196,   -51,   -51,   -51,   -51,   -51,   -51,   -51,   -51,   -51,
+     -51,   -51,   -51,    -7,   222,   -51,   251,   251,   251,    86,
+     251,    86,   251,    86,   251,    86,   251,    86,   251,    86,
+     -51,   -51,   245,   326,   -16,   -51,   -51,   237,   -51,   246,
+     226,   249,    77,   235,   -51,   -13,     4,   -51,   -51,    -7,
+     -51,   -51,   236,   -51,   -51,   -51,   -51,     4,   -51,   -51,
+     -51,   -51
 };
 
 /* YYDEFACT[STATE-NUM] -- Default reduction number in state STATE-NUM.
@@ -649,36 +682,46 @@ static const yytype_int16 yypact[] =
    means the default is an error.  */
 static const yytype_int8 yydefact[] =
 {
-       5,     0,     0,     0,     0,     0,     0,     0,     0,     5,
-       0,     2,     5,     5,    14,    10,    11,    12,    13,     9,
-       8,     7,     0,     0,     0,     0,     0,     0,     0,     0,
-       0,     1,     4,     3,     0,    72,    73,     0,     0,    70,
-      68,    71,    69,     0,     0,    44,    45,    60,    67,    25,
-       0,     0,    42,    43,     0,     0,    24,     0,     0,     6,
-      18,    17,     0,     0,     0,     0,    27,     0,     0,     0,
+       5,     0,     0,     0,     0,     0,     0,     0,     0,     0,
+       0,     0,     5,     0,     2,     5,     5,    16,    15,    14,
+      10,    11,    12,    13,     9,     8,     7,   103,   104,     0,
+       0,   101,     0,     0,    99,   102,   100,     0,     0,    66,
+      64,    65,    89,    96,     0,     0,     0,     0,     0,     0,
+       0,     0,     0,     0,     0,     0,     0,     0,     0,    17,
+      18,     0,     0,     1,     4,     3,     0,    85,    88,     0,
+       0,     0,    86,    87,   103,     0,     0,    25,     0,     0,
        0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
        0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
+       0,    37,     0,     0,     0,    62,    63,     0,     0,     0,
+       0,     0,     0,     6,    29,    28,    68,    70,     0,     0,
+       0,     0,    77,    93,    80,    81,    82,    84,    83,    71,
+      72,    73,    74,    75,     0,    94,    95,    91,    90,    92,
+       0,     0,     0,     0,     0,     0,     0,     0,    39,     0,
        0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
-       0,     0,     0,     0,     0,     0,    52,    64,    55,    56,
-      57,    59,    58,    46,    47,    48,    49,    50,     0,    65,
-      66,    62,    61,    63,    26,    16,    29,    28,    30,    32,
-      33,    31,    34,    35,    36,    38,    39,    37,    40,    41,
-      20,     0,     0,     0,     0,    15,     0,    54,    51,     0,
-      24,    22,     0,     0,     0,    23,    21,    53,    19
+       0,     0,     0,     0,     0,     0,     0,     0,    67,     0,
+       0,    79,    76,    46,    47,    45,    40,    41,    42,    43,
+      44,    36,    34,     0,     0,    38,    49,    48,    50,    56,
+      52,    58,    53,    59,    51,    57,    54,    60,    55,    61,
+      27,    31,     0,     0,     0,    26,    69,     0,    33,     0,
+       0,     0,     0,     0,    20,     0,     5,    78,    35,     0,
+      32,   103,     0,    97,    98,    24,    19,     5,    21,    30,
+      23,    22
 };
 
 /* YYPGOTO[NTERM-NUM].  */
-static const yytype_int8 yypgoto[] =
+static const yytype_int16 yypgoto[] =
 {
-     -37,   -37,    91,    -7,   -37,   -37,   112,   -37,   -37,   -37,
-     -37,     0,   125,    11,   -22,   -19,   -21,    49,   -37,   -37
+     -51,   -51,   -12,    -6,   -51,   -51,   -51,    83,   -51,   -51,
+     233,   -51,   -51,   -51,   -51,   -51,   252,   105,   -50,   -31,
+     -51,   -51,   -35,     3,   -51,    97,    98
 };
 
 /* YYDEFGOTO[NTERM-NUM].  */
-static const yytype_int8 yydefgoto[] =
+static const yytype_uint8 yydefgoto[] =
 {
-       0,    10,    11,    12,    13,    14,    15,    16,    17,    18,
-      19,   100,    20,    21,    51,    44,    52,    53,    47,    48
+       0,    13,    14,    15,    16,    17,   215,   216,    18,    19,
+      20,    21,    22,    23,    24,   151,    25,    26,   104,    38,
+      39,   118,    40,    41,   222,    42,    43
 };
 
 /* YYTABLE[YYPACT[STATE-NUM]] -- What to do in state STATE-NUM.  If
@@ -686,120 +729,152 @@ static const yytype_int8 yydefgoto[] =
    number is the opposite.  If YYTABLE_NINF, syntax error.  */
 static const yytype_uint8 yytable[] =
 {
-      28,    45,    36,    54,     3,     1,    79,    80,    45,    22,
-      58,     2,     3,    23,     4,     5,    49,    72,    73,    74,
-      75,    76,    64,    24,     6,     7,    25,    60,    27,    45,
-       8,    81,    50,    98,    77,    78,     9,    26,    29,   118,
-      31,   104,   105,     9,     9,    34,   108,   109,   110,   111,
-     112,   113,   114,   115,   116,   117,     2,    56,   121,   123,
-      79,    80,   126,   127,   128,   129,   130,   131,   132,   133,
-      57,    46,    59,    62,    35,   125,    37,    38,    46,   144,
-      63,    66,    64,    82,    97,   148,    35,    36,    37,    38,
-     140,    99,    65,    67,    68,    39,    40,    41,    42,    46,
-      30,   101,   102,    32,    33,   124,   141,    39,    40,    41,
-      42,   142,   103,    74,    75,    76,    69,    70,    71,    72,
-      73,    74,    75,    76,    43,   153,   119,   120,   122,   143,
-     146,    67,    68,   145,     1,   152,   151,   150,   154,   156,
-     134,   135,   136,   137,   138,   139,    61,   158,    67,    68,
-     155,    55,   149,     0,    69,    70,    71,    72,    73,    74,
-      75,    76,    67,    68,   106,     0,     0,    65,     0,     0,
-       0,    69,    70,    71,    72,    73,    74,    75,    76,    77,
-      78,   147,     0,     0,     0,    69,    70,    71,    72,    73,
-      74,    75,    76,     0,     0,   157,    69,    70,    71,    67,
-      68,    74,    75,    76,     0,    79,    80,    67,    68,     0,
-       0,     0,   107,     0,    83,    84,    85,    86,    87,    88,
-      89,    90,    69,    70,    71,    72,    73,    74,    75,    76,
-      69,    70,    71,    72,    73,    74,    75,    76,    67,    68,
-       0,     0,     0,     0,    67,    68,     0,     0,     0,    67,
-      68,     0,     0,     0,     0,     0,     0,     0,     0,     0,
-       0,     0,    70,    71,    72,    73,    74,    75,    76,    71,
-      72,    73,    74,    75,    76,    72,    73,    74,    75,    76,
-      77,    78,     0,     0,     0,     0,     0,     0,     0,    91,
-      92,    93,    94,    95,    96,     0,     0,     0,     0,     0,
-       0,     0,     0,     0,     0,     0,    79,    80
+      62,    57,    75,    64,    65,   107,   101,     1,     2,   212,
+     213,    28,   212,   213,     3,     4,    53,     5,     6,   105,
+     105,   100,    54,   103,   168,    67,    68,     7,     8,   169,
+     112,     9,    10,     4,   214,   120,   121,   226,   117,    11,
+      76,   149,    12,   124,   125,   126,   127,   128,   129,   130,
+     131,   132,   133,    12,   134,   137,   139,   106,   106,   164,
+     114,   140,   141,   142,   143,   144,   145,   146,   147,    78,
+      79,    12,   152,   101,   105,    88,    89,    55,   150,    67,
+      68,   221,    28,   183,    75,   102,    56,   172,   184,    58,
+     103,   135,   136,   138,    88,    89,    59,    69,    80,    81,
+      82,    83,    84,    85,    86,    87,    31,    90,    91,    34,
+      35,    36,   106,   170,   123,   203,    90,    91,   186,   187,
+     188,   190,   192,   194,   196,   198,    90,    91,    60,    61,
+     105,    85,    86,    87,    63,   207,    66,    76,   206,    83,
+      84,    85,    86,    87,   182,    27,    28,    29,    30,    70,
+      71,    72,    73,    77,   108,   200,   201,    92,   189,   191,
+     193,   195,   197,   199,    93,    94,    95,    96,   106,    97,
+      31,    32,    33,    34,    35,    36,    98,   208,    99,   110,
+      27,    28,    29,    30,   111,   113,   148,   163,   116,    37,
+     165,    74,    28,    29,    30,   173,   166,   174,   167,   175,
+      74,   176,    29,    30,   228,    31,    32,    33,    34,    35,
+      36,   177,   181,   229,   178,   231,    31,    32,    33,    34,
+      35,    36,    78,    79,    37,    31,    32,    33,    34,    35,
+      36,   179,   209,    78,    79,    37,    80,    81,    82,   180,
+     185,    85,    86,    87,   119,    78,    79,   204,   205,     2,
+     218,    80,    81,    82,    83,    84,    85,    86,    87,    78,
+      79,   122,    80,    81,    82,    83,    84,    85,    86,    87,
+      78,    79,   171,   219,    80,    81,    82,    83,    84,    85,
+      86,    87,    78,    79,   217,   220,   225,   230,    80,    81,
+      82,    83,    84,    85,    86,    87,    78,    79,   227,   115,
+      81,    82,    83,    84,    85,    86,    87,   210,   109,   223,
+     224,     0,     0,    82,    83,    84,    85,    86,    87,   153,
+     154,   155,   156,   157,   158,   159,   160,     0,    83,    84,
+      85,    86,    87,   153,   154,   155,   156,   157,   158,   159,
+     160,   153,   154,   155,   156,   157,   158,   159,   160,     0,
+       0,   161,     0,   153,   154,   155,   156,   157,   158,   159,
+     160,     0,     0,     0,     0,   162,     0,     0,     0,     0,
+       0,     0,     0,   211,   202,     0,    44,    45,    46,    47,
+      48,    49,    50,    51,     0,     0,     0,     0,     0,     0,
+       0,     0,    52
 };
 
 static const yytype_int16 yycheck[] =
 {
-       7,    22,     4,    25,    10,     3,    33,    34,    29,    45,
-      29,     9,    10,     3,    12,    13,    29,    33,    34,    35,
-      36,    37,    43,    41,    22,    23,    41,    34,     3,    50,
-      28,    50,    45,    55,     7,     8,    42,    41,    41,    41,
-       0,    62,    63,    42,    42,    11,    67,    68,    69,    70,
-      71,    72,    73,    74,    75,    76,     9,    41,    79,    80,
-      33,    34,    83,    84,    85,    86,    87,    88,    89,    90,
-      12,    22,    43,    41,     3,    82,     5,     6,    29,   101,
-      41,    29,   103,    40,    40,   106,     3,     4,     5,     6,
-      97,     9,    43,     7,     8,    24,    25,    26,    27,    50,
-       9,    41,    40,    12,    13,    29,    29,    24,    25,    26,
-      27,     3,    41,    35,    36,    37,    30,    31,    32,    33,
-      34,    35,    36,    37,    41,   146,    77,    78,    79,    40,
-      44,     7,     8,    29,     3,    40,   143,    44,    40,    29,
-      91,    92,    93,    94,    95,    96,    34,   154,     7,     8,
-     150,    26,   141,    -1,    30,    31,    32,    33,    34,    35,
-      36,    37,     7,     8,    40,    -1,    -1,   118,    -1,    -1,
-      -1,    30,    31,    32,    33,    34,    35,    36,    37,     7,
-       8,    40,    -1,    -1,    -1,    30,    31,    32,    33,    34,
-      35,    36,    37,    -1,    -1,    40,    30,    31,    32,     7,
-       8,    35,    36,    37,    -1,    33,    34,     7,     8,    -1,
-      -1,    -1,    40,    -1,    14,    15,    16,    17,    18,    19,
-      20,    21,    30,    31,    32,    33,    34,    35,    36,    37,
-      30,    31,    32,    33,    34,    35,    36,    37,     7,     8,
-      -1,    -1,    -1,    -1,     7,     8,    -1,    -1,    -1,     7,
-       8,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
-      -1,    -1,    31,    32,    33,    34,    35,    36,    37,    32,
-      33,    34,    35,    36,    37,    33,    34,    35,    36,    37,
-       7,     8,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    16,
-      17,    18,    19,    20,    21,    -1,    -1,    -1,    -1,    -1,
-      -1,    -1,    -1,    -1,    -1,    -1,    33,    34
+      12,     7,    37,    15,    16,    55,    36,     3,     4,    25,
+      26,     5,    25,    26,    10,    11,     4,    13,    14,    54,
+      55,    52,    48,    53,    47,    30,    31,    23,    24,    52,
+      61,    27,    28,    11,    50,    70,    71,    50,    69,    35,
+      37,    10,    49,    78,    79,    80,    81,    82,    83,    84,
+      85,    86,    87,    49,    48,    90,    91,    54,    55,   109,
+      66,    92,    93,    94,    95,    96,    97,    98,    99,     8,
+       9,    49,   103,    36,   109,     8,     9,    48,    47,    30,
+      31,     4,     5,    47,   119,    48,    48,   122,    52,    48,
+      53,    88,    89,    90,     8,     9,    36,    48,    37,    38,
+      39,    40,    41,    42,    43,    44,    29,    40,    41,    32,
+      33,    34,   109,    52,    47,   165,    40,    41,   153,   154,
+     155,   156,   157,   158,   159,   160,    40,    41,    36,    48,
+     165,    42,    43,    44,     0,   170,    12,   134,   169,    40,
+      41,    42,    43,    44,   150,     4,     5,     6,     7,    48,
+      48,     4,     4,    36,    10,   161,   162,    53,   155,   156,
+     157,   158,   159,   160,    53,    53,    53,    53,   165,    53,
+      29,    30,    31,    32,    33,    34,    53,   183,    53,    13,
+       4,     5,     6,     7,     4,    50,    36,     4,    47,    48,
+      48,     4,     5,     6,     7,    36,    47,    36,    47,    36,
+       4,    36,     6,     7,   216,    29,    30,    31,    32,    33,
+      34,    36,     4,   219,    36,   227,    29,    30,    31,    32,
+      33,    34,     8,     9,    48,    29,    30,    31,    32,    33,
+      34,    36,    10,     8,     9,    48,    37,    38,    39,    36,
+      36,    42,    43,    44,    48,     8,     9,    49,    36,     4,
+       4,    37,    38,    39,    40,    41,    42,    43,    44,     8,
+       9,    47,    37,    38,    39,    40,    41,    42,    43,    44,
+       8,     9,    47,    47,    37,    38,    39,    40,    41,    42,
+      43,    44,     8,     9,    47,    36,    51,    51,    37,    38,
+      39,    40,    41,    42,    43,    44,     8,     9,   215,    66,
+      38,    39,    40,    41,    42,    43,    44,   202,    56,   212,
+     212,    -1,    -1,    39,    40,    41,    42,    43,    44,    15,
+      16,    17,    18,    19,    20,    21,    22,    -1,    40,    41,
+      42,    43,    44,    15,    16,    17,    18,    19,    20,    21,
+      22,    15,    16,    17,    18,    19,    20,    21,    22,    -1,
+      -1,    47,    -1,    15,    16,    17,    18,    19,    20,    21,
+      22,    -1,    -1,    -1,    -1,    47,    -1,    -1,    -1,    -1,
+      -1,    -1,    -1,    47,    36,    -1,    37,    38,    39,    40,
+      41,    42,    43,    44,    -1,    -1,    -1,    -1,    -1,    -1,
+      -1,    -1,    53
 };
 
 /* YYSTOS[STATE-NUM] -- The symbol kind of the accessing symbol of
    state STATE-NUM.  */
 static const yytype_int8 yystos[] =
 {
-       0,     3,     9,    10,    12,    13,    22,    23,    28,    42,
-      47,    48,    49,    50,    51,    52,    53,    54,    55,    56,
-      58,    59,    45,     3,    41,    41,    41,     3,    49,    41,
-      48,     0,    48,    48,    11,     3,     4,     5,     6,    24,
-      25,    26,    27,    41,    61,    62,    63,    64,    65,    29,
-      45,    60,    62,    63,    60,    58,    41,    12,    61,    43,
-      49,    52,    41,    41,    62,    63,    29,     7,     8,    30,
-      31,    32,    33,    34,    35,    36,    37,     7,     8,    33,
-      34,    61,    40,    14,    15,    16,    17,    18,    19,    20,
-      21,    16,    17,    18,    19,    20,    21,    40,    60,     9,
-      57,    41,    40,    41,    62,    62,    40,    40,    62,    62,
-      62,    62,    62,    62,    62,    62,    62,    62,    41,    63,
-      63,    62,    63,    62,    29,    49,    62,    62,    62,    62,
-      62,    62,    62,    62,    63,    63,    63,    63,    63,    63,
-      49,    29,     3,    40,    60,    29,    44,    40,    62,    59,
-      44,    49,    40,    62,    40,    57,    29,    40,    49
+       0,     3,     4,    10,    11,    13,    14,    23,    24,    27,
+      28,    35,    49,    55,    56,    57,    58,    59,    62,    63,
+      64,    65,    66,    67,    68,    70,    71,     4,     5,     6,
+       7,    29,    30,    31,    32,    33,    34,    48,    73,    74,
+      76,    77,    79,    80,    37,    38,    39,    40,    41,    42,
+      43,    44,    53,     4,    48,    48,    48,    57,    48,    36,
+      36,    48,    56,     0,    56,    56,    12,    30,    31,    48,
+      48,    48,     4,     4,     4,    76,    77,    36,     8,     9,
+      37,    38,    39,    40,    41,    42,    43,    44,     8,     9,
+      40,    41,    53,    53,    53,    53,    53,    53,    53,    53,
+      73,    36,    48,    53,    72,    76,    77,    72,    10,    70,
+      13,     4,    73,    50,    57,    64,    47,    73,    75,    48,
+      76,    76,    47,    47,    76,    76,    76,    76,    76,    76,
+      76,    76,    76,    76,    48,    77,    77,    76,    77,    76,
+      73,    73,    73,    73,    73,    73,    73,    73,    36,    10,
+      47,    69,    73,    15,    16,    17,    18,    19,    20,    21,
+      22,    47,    47,     4,    72,    48,    47,    47,    47,    52,
+      52,    47,    76,    36,    36,    36,    36,    36,    36,    36,
+      36,     4,    57,    47,    52,    36,    76,    76,    76,    77,
+      76,    77,    76,    77,    76,    77,    76,    77,    76,    77,
+      57,    57,    36,    72,    49,    36,    73,    76,    57,    10,
+      71,    47,    25,    26,    50,    60,    61,    47,     4,    47,
+      36,     4,    78,    79,    80,    51,    50,    61,    56,    57,
+      51,    56
 };
 
 /* YYR1[RULE-NUM] -- Symbol kind of the left-hand side of rule RULE-NUM.  */
 static const yytype_int8 yyr1[] =
 {
-       0,    46,    47,    48,    48,    48,    49,    50,    50,    50,
-      50,    50,    50,    50,    50,    51,    52,    52,    52,    53,
-      54,    55,    56,    57,    57,    58,    58,    59,    60,    60,
-      60,    60,    60,    60,    60,    60,    60,    60,    60,    60,
-      60,    60,    60,    60,    61,    61,    62,    62,    62,    62,
-      62,    62,    62,    62,    62,    62,    62,    62,    62,    62,
-      62,    63,    63,    63,    63,    63,    63,    63,    64,    64,
-      64,    64,    64,    65
+       0,    54,    55,    56,    56,    56,    57,    58,    58,    58,
+      58,    58,    58,    58,    58,    58,    58,    58,    58,    59,
+      59,    60,    60,    61,    61,    62,    63,    64,    64,    64,
+      65,    66,    67,    68,    68,    69,    69,    70,    70,    71,
+      71,    71,    71,    71,    71,    71,    71,    71,    72,    72,
+      72,    72,    72,    72,    72,    72,    72,    72,    72,    72,
+      72,    72,    72,    72,    73,    73,    73,    74,    74,    75,
+      75,    76,    76,    76,    76,    76,    76,    76,    76,    76,
+      76,    76,    76,    76,    76,    76,    76,    76,    76,    76,
+      77,    77,    77,    77,    77,    77,    77,    78,    78,    79,
+      79,    79,    79,    79,    80
 };
 
 /* YYR2[RULE-NUM] -- Number of symbols on the right-hand side of rule RULE-NUM.  */
 static const yytype_int8 yyr2[] =
 {
        0,     2,     1,     2,     2,     0,     3,     1,     1,     1,
-       1,     1,     1,     1,     1,     5,     5,     3,     3,     8,
-       5,     7,     6,     4,     0,     3,     5,     4,     3,     3,
+       1,     1,     1,     1,     1,     1,     1,     2,     2,     7,
+       6,     2,     3,     3,     2,     3,     5,     5,     3,     3,
+       8,     5,     7,     6,     5,     4,     2,     3,     5,     4,
+       5,     5,     5,     5,     5,     5,     5,     5,     3,     3,
        3,     3,     3,     3,     3,     3,     3,     3,     3,     3,
-       3,     3,     1,     1,     1,     1,     3,     3,     3,     3,
-       3,     4,     3,     6,     4,     3,     3,     3,     3,     3,
-       1,     3,     3,     3,     3,     3,     3,     1,     1,     1,
-       1,     1,     1,     1
+       3,     3,     1,     1,     1,     1,     1,     4,     3,     3,
+       1,     3,     3,     3,     3,     3,     4,     3,     6,     4,
+       3,     3,     3,     3,     3,     2,     2,     2,     2,     1,
+       3,     3,     3,     3,     3,     3,     1,     1,     1,     1,
+       1,     1,     1,     1,     1
 };
 
 
@@ -1263,420 +1338,654 @@ yyreduce:
   switch (yyn)
     {
   case 2: /* Program: Sentences  */
-#line 62 "lex-yacc/parser.ypp"
+#line 71 "lex-yacc/parser.ypp"
                     {
     ScopeNode* scopeNode = new ScopeNode((yyvsp[0].Node));
     scopeNode->run();
 }
-#line 1272 "src/parser.tab.cpp"
+#line 1347 "src/parser.tab.cpp"
     break;
 
   case 3: /* Sentences: Sentence Sentences  */
-#line 69 "lex-yacc/parser.ypp"
+#line 77 "lex-yacc/parser.ypp"
                                 { (yyval.Node) = (yyvsp[-1].Node)->setNext((yyvsp[0].Node)); }
-#line 1278 "src/parser.tab.cpp"
+#line 1353 "src/parser.tab.cpp"
     break;
 
   case 4: /* Sentences: Scope Sentences  */
-#line 71 "lex-yacc/parser.ypp"
+#line 79 "lex-yacc/parser.ypp"
                                 { (yyval.Node) = (yyvsp[-1].Node)->setNext((yyvsp[0].Node)); }
-#line 1284 "src/parser.tab.cpp"
+#line 1359 "src/parser.tab.cpp"
     break;
 
   case 5: /* Sentences: %empty  */
-#line 73 "lex-yacc/parser.ypp"
+#line 81 "lex-yacc/parser.ypp"
                                 { (yyval.Node) = nullptr; }
-#line 1290 "src/parser.tab.cpp"
+#line 1365 "src/parser.tab.cpp"
     break;
 
   case 6: /* Scope: '{' Sentences '}'  */
-#line 75 "lex-yacc/parser.ypp"
+#line 83 "lex-yacc/parser.ypp"
                                 { (yyval.Node) = new ScopeNode((yyvsp[-1].Node)); }
-#line 1296 "src/parser.tab.cpp"
+#line 1371 "src/parser.tab.cpp"
     break;
 
   case 7: /* Sentence: VariableAssignment  */
-#line 78 "lex-yacc/parser.ypp"
+#line 87 "lex-yacc/parser.ypp"
                                 { (yyval.Node) = (yyvsp[0].Node); }
-#line 1302 "src/parser.tab.cpp"
+#line 1377 "src/parser.tab.cpp"
     break;
 
   case 8: /* Sentence: VariableDeclaration  */
-#line 79 "lex-yacc/parser.ypp"
+#line 88 "lex-yacc/parser.ypp"
                                 { (yyval.Node) = (yyvsp[0].Node); }
-#line 1308 "src/parser.tab.cpp"
+#line 1383 "src/parser.tab.cpp"
     break;
 
   case 9: /* Sentence: FunctionDefinition  */
-#line 80 "lex-yacc/parser.ypp"
-                                { (yyval.Node) = new ScopeNode(); }
-#line 1314 "src/parser.tab.cpp"
+#line 89 "lex-yacc/parser.ypp"
+                                { (yyval.Node) = (yyvsp[0].Node); }
+#line 1389 "src/parser.tab.cpp"
     break;
 
   case 10: /* Sentence: IFSentence  */
-#line 81 "lex-yacc/parser.ypp"
+#line 90 "lex-yacc/parser.ypp"
                                 { (yyval.Node) = (yyvsp[0].Node); }
-#line 1320 "src/parser.tab.cpp"
+#line 1395 "src/parser.tab.cpp"
     break;
 
   case 11: /* Sentence: ForSentence  */
-#line 82 "lex-yacc/parser.ypp"
+#line 91 "lex-yacc/parser.ypp"
                                 { (yyval.Node) = (yyvsp[0].Node); }
-#line 1326 "src/parser.tab.cpp"
+#line 1401 "src/parser.tab.cpp"
     break;
 
   case 12: /* Sentence: WhileSentence  */
-#line 83 "lex-yacc/parser.ypp"
+#line 92 "lex-yacc/parser.ypp"
                                 { (yyval.Node) = (yyvsp[0].Node); }
-#line 1332 "src/parser.tab.cpp"
+#line 1407 "src/parser.tab.cpp"
     break;
 
   case 13: /* Sentence: DoWhileSentence  */
-#line 84 "lex-yacc/parser.ypp"
+#line 93 "lex-yacc/parser.ypp"
                                 { (yyval.Node) = (yyvsp[0].Node); }
-#line 1338 "src/parser.tab.cpp"
+#line 1413 "src/parser.tab.cpp"
     break;
 
   case 14: /* Sentence: PrintSentence  */
-#line 85 "lex-yacc/parser.ypp"
-                                { (yyval.Node) = (yyvsp[0].Node); }
-#line 1344 "src/parser.tab.cpp"
-    break;
-
-  case 15: /* PrintSentence: PRINT '(' Operation ')' ';'  */
-#line 88 "lex-yacc/parser.ypp"
-                                {
-        (yyval.Node) = new PrintNode((yyvsp[-2].Exp));
-    }
-#line 1352 "src/parser.tab.cpp"
-    break;
-
-  case 16: /* IFSentence: IF '(' Condition ')' Scope  */
-#line 93 "lex-yacc/parser.ypp"
-                                   { (yyval.Node) = new IfNode((yyvsp[-2].Exp), (yyvsp[0].Node));   }
-#line 1358 "src/parser.tab.cpp"
-    break;
-
-  case 17: /* IFSentence: IFSentence ELSE IFSentence  */
 #line 94 "lex-yacc/parser.ypp"
-                                   { (yyval.Node) = dynamic_cast<IfNode*>((yyvsp[-2].Node))->setElse((yyvsp[0].Node));  }
-#line 1364 "src/parser.tab.cpp"
+                                { (yyval.Node) = (yyvsp[0].Node); }
+#line 1419 "src/parser.tab.cpp"
     break;
 
-  case 18: /* IFSentence: IFSentence ELSE Scope  */
+  case 15: /* Sentence: ReturnSentence  */
 #line 95 "lex-yacc/parser.ypp"
-                                   { (yyval.Node) = dynamic_cast<IfNode*>((yyvsp[-2].Node))->setElse((yyvsp[0].Node));  }
-#line 1370 "src/parser.tab.cpp"
+                                { (yyval.Node) = (yyvsp[0].Node); }
+#line 1425 "src/parser.tab.cpp"
     break;
 
-  case 19: /* ForSentence: FOR '(' VariableDeclaration Condition ';' VariableAssignment ')' Scope  */
+  case 16: /* Sentence: SwitchSentence  */
+#line 96 "lex-yacc/parser.ypp"
+                                { (yyval.Node) = (yyvsp[0].Node); }
+#line 1431 "src/parser.tab.cpp"
+    break;
+
+  case 17: /* Sentence: CONTINUE ';'  */
 #line 97 "lex-yacc/parser.ypp"
+                                { (yyval.Node) = new ContinueNode();}
+#line 1437 "src/parser.tab.cpp"
+    break;
+
+  case 18: /* Sentence: BREAK ';'  */
+#line 98 "lex-yacc/parser.ypp"
+                                { (yyval.Node) = new BreakNode();}
+#line 1443 "src/parser.tab.cpp"
+    break;
+
+  case 19: /* SwitchSentence: SWITCH '(' IDENTIFIER ')' '{' SwitchBody '}'  */
+#line 102 "lex-yacc/parser.ypp"
+                                                   { (yyval.Node) = new SwitchNode((yyvsp[-4].str), (yyvsp[-1].SB)); }
+#line 1449 "src/parser.tab.cpp"
+    break;
+
+  case 20: /* SwitchSentence: SWITCH '(' IDENTIFIER ')' '{' '}'  */
+#line 103 "lex-yacc/parser.ypp"
+                                                   { (yyval.Node) = new SwitchNode((yyvsp[-3].str), nullptr); }
+#line 1455 "src/parser.tab.cpp"
+    break;
+
+  case 21: /* SwitchBody: Case Sentences  */
+#line 106 "lex-yacc/parser.ypp"
+                                    { 
+        (yyval.SB) = new SwitchBody(dynamic_cast<CaseNode*>((yyvsp[-1].Node))->assignBody((yyvsp[0].Node))); 
+    }
+#line 1463 "src/parser.tab.cpp"
+    break;
+
+  case 22: /* SwitchBody: SwitchBody Case Sentences  */
+#line 109 "lex-yacc/parser.ypp"
+                                    { 
+        (yyval.SB) = dynamic_cast<SwitchBody*>((yyvsp[-2].SB))->addCase(dynamic_cast<CaseNode*>((yyvsp[-1].Node))->assignBody((yyvsp[0].Node))); 
+    }
+#line 1471 "src/parser.tab.cpp"
+    break;
+
+  case 23: /* Case: CASE Operand ':'  */
+#line 114 "lex-yacc/parser.ypp"
+                                    { (yyval.Node) = new CaseNode((yyvsp[-1].Exp)); }
+#line 1477 "src/parser.tab.cpp"
+    break;
+
+  case 24: /* Case: DEFAULT ':'  */
+#line 115 "lex-yacc/parser.ypp"
+                                    { (yyval.Node) = new CaseNode();}
+#line 1483 "src/parser.tab.cpp"
+    break;
+
+  case 25: /* ReturnSentence: RETURN Operation ';'  */
+#line 118 "lex-yacc/parser.ypp"
+                                    { (yyval.Node) = new ReturnNode((yyvsp[-1].Exp));}
+#line 1489 "src/parser.tab.cpp"
+    break;
+
+  case 26: /* PrintSentence: PRINT '(' Operation ')' ';'  */
+#line 121 "lex-yacc/parser.ypp"
+                                    {
+                                        (yyval.Node) = new PrintNode((yyvsp[-2].Exp));
+                                    }
+#line 1497 "src/parser.tab.cpp"
+    break;
+
+  case 27: /* IFSentence: IF '(' Condition ')' Scope  */
+#line 126 "lex-yacc/parser.ypp"
+                                   { (yyval.Node) = new IfNode((yyvsp[-2].Exp), (yyvsp[0].Node));   }
+#line 1503 "src/parser.tab.cpp"
+    break;
+
+  case 28: /* IFSentence: IFSentence ELSE IFSentence  */
+#line 127 "lex-yacc/parser.ypp"
+                                   { (yyval.Node) = dynamic_cast<IfNode*>((yyvsp[-2].Node))->setElse((yyvsp[0].Node));  }
+#line 1509 "src/parser.tab.cpp"
+    break;
+
+  case 29: /* IFSentence: IFSentence ELSE Scope  */
+#line 128 "lex-yacc/parser.ypp"
+                                   { (yyval.Node) = dynamic_cast<IfNode*>((yyvsp[-2].Node))->setElse((yyvsp[0].Node));  }
+#line 1515 "src/parser.tab.cpp"
+    break;
+
+  case 30: /* ForSentence: FOR '(' VariableDeclaration Condition ';' VariableAssignment ')' Scope  */
+#line 130 "lex-yacc/parser.ypp"
                                                                                     {
     (yyval.Node) = new ForNode(dynamic_cast<DefineNode*>((yyvsp[-5].Node)), (yyvsp[-4].Exp), dynamic_cast<AssignNode*>((yyvsp[-2].Node)), dynamic_cast<ScopeNode*>((yyvsp[0].Node)));
 }
-#line 1378 "src/parser.tab.cpp"
+#line 1523 "src/parser.tab.cpp"
     break;
 
-  case 20: /* WhileSentence: WHILE '(' Condition ')' Scope  */
-#line 101 "lex-yacc/parser.ypp"
+  case 31: /* WhileSentence: WHILE '(' Condition ')' Scope  */
+#line 134 "lex-yacc/parser.ypp"
                                              {
     (yyval.Node) = new WhileNode((yyvsp[-2].Exp), dynamic_cast<ScopeNode*>((yyvsp[0].Node)));
 }
-#line 1386 "src/parser.tab.cpp"
+#line 1531 "src/parser.tab.cpp"
     break;
 
-  case 21: /* DoWhileSentence: DO Scope WHILE '(' Condition ')' ';'  */
-#line 105 "lex-yacc/parser.ypp"
+  case 32: /* DoWhileSentence: DO Scope WHILE '(' Condition ')' ';'  */
+#line 138 "lex-yacc/parser.ypp"
                                                       {
     (yyval.Node) = new DoWhileNode((yyvsp[-2].Exp), dynamic_cast<ScopeNode*>((yyvsp[-5].Node)));
 }
-#line 1394 "src/parser.tab.cpp"
+#line 1539 "src/parser.tab.cpp"
     break;
 
-  case 25: /* VariableDeclaration: DATA_TYPE IDENTIFIER ';'  */
-#line 114 "lex-yacc/parser.ypp"
-                                                    { (yyval.Node) = new DefineNode((yyvsp[-2].str), (yyvsp[-1].str), nullptr); }
-#line 1400 "src/parser.tab.cpp"
+  case 33: /* FunctionDefinition: DATA_TYPE IDENTIFIER '(' FunctionParams ')' Scope  */
+#line 143 "lex-yacc/parser.ypp"
+                                                        { 
+        dynamic_cast<ScopeNode*>((yyvsp[0].Node))->returnable = true;
+        (yyval.Node) = new FunctionDefintionNode((yyvsp[-5].str), (yyvsp[-4].str), (yyvsp[-2].FP), dynamic_cast<ScopeNode*>((yyvsp[0].Node))); 
+    }
+#line 1548 "src/parser.tab.cpp"
     break;
 
-  case 26: /* VariableDeclaration: DATA_TYPE IDENTIFIER '=' Operation ';'  */
-#line 115 "lex-yacc/parser.ypp"
-                                                    { (yyval.Node) = new DefineNode((yyvsp[-4].str), (yyvsp[-3].str), (yyvsp[-1].Exp)); }
-#line 1406 "src/parser.tab.cpp"
-    break;
-
-  case 27: /* VariableAssignment: IDENTIFIER '=' Operation ';'  */
-#line 117 "lex-yacc/parser.ypp"
-                                                    { (yyval.Node) = new AssignNode((yyvsp[-3].str), (yyvsp[-1].Exp)); }
-#line 1412 "src/parser.tab.cpp"
-    break;
-
-  case 28: /* Condition: MathOperation OR MathOperation  */
-#line 120 "lex-yacc/parser.ypp"
-                                                    { (yyval.Exp) = new Expression((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_OR);  }
-#line 1418 "src/parser.tab.cpp"
-    break;
-
-  case 29: /* Condition: MathOperation AND MathOperation  */
-#line 121 "lex-yacc/parser.ypp"
-                                                    { (yyval.Exp) = new Expression((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_AND); }
-#line 1424 "src/parser.tab.cpp"
-    break;
-
-  case 30: /* Condition: MathOperation GTE MathOperation  */
-#line 122 "lex-yacc/parser.ypp"
-                                                    { (yyval.Exp) = new Expression((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_GE);  }
-#line 1430 "src/parser.tab.cpp"
-    break;
-
-  case 31: /* Condition: MathOperation GT MathOperation  */
-#line 123 "lex-yacc/parser.ypp"
-                                                    { (yyval.Exp) = new Expression((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_GT);  }
-#line 1436 "src/parser.tab.cpp"
-    break;
-
-  case 32: /* Condition: MathOperation LTE MathOperation  */
-#line 124 "lex-yacc/parser.ypp"
-                                                    { (yyval.Exp) = new Expression((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_LE);  }
-#line 1442 "src/parser.tab.cpp"
-    break;
-
-  case 33: /* Condition: MathOperation LT MathOperation  */
-#line 125 "lex-yacc/parser.ypp"
-                                                    { (yyval.Exp) = new Expression((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_LT);  }
-#line 1448 "src/parser.tab.cpp"
-    break;
-
-  case 34: /* Condition: MathOperation ISEQUAL MathOperation  */
-#line 126 "lex-yacc/parser.ypp"
-                                                    { (yyval.Exp) = new Expression((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_EQ);  }
-#line 1454 "src/parser.tab.cpp"
-    break;
-
-  case 35: /* Condition: MathOperation NOTEQUAL MathOperation  */
-#line 127 "lex-yacc/parser.ypp"
-                                                    { (yyval.Exp) = new Expression((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_NEQ); }
-#line 1460 "src/parser.tab.cpp"
-    break;
-
-  case 36: /* Condition: StringOperation GTE StringOperation  */
-#line 129 "lex-yacc/parser.ypp"
-                                                    { (yyval.Exp) = new StringContainer((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_GE);   }
-#line 1466 "src/parser.tab.cpp"
-    break;
-
-  case 37: /* Condition: StringOperation GT StringOperation  */
-#line 130 "lex-yacc/parser.ypp"
-                                                    { (yyval.Exp) = new StringContainer((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_GT);   }
-#line 1472 "src/parser.tab.cpp"
-    break;
-
-  case 38: /* Condition: StringOperation LTE StringOperation  */
-#line 131 "lex-yacc/parser.ypp"
-                                                    { (yyval.Exp) = new StringContainer((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_LE);   }
-#line 1478 "src/parser.tab.cpp"
-    break;
-
-  case 39: /* Condition: StringOperation LT StringOperation  */
-#line 132 "lex-yacc/parser.ypp"
-                                                    { (yyval.Exp) = new StringContainer((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_LT);   }
-#line 1484 "src/parser.tab.cpp"
-    break;
-
-  case 40: /* Condition: StringOperation ISEQUAL StringOperation  */
-#line 133 "lex-yacc/parser.ypp"
-                                                    { (yyval.Exp) = new StringContainer((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_EQ);   }
-#line 1490 "src/parser.tab.cpp"
-    break;
-
-  case 41: /* Condition: StringOperation NOTEQUAL StringOperation  */
-#line 134 "lex-yacc/parser.ypp"
-                                                    { (yyval.Exp) = new StringContainer((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_NEQ);  }
-#line 1496 "src/parser.tab.cpp"
-    break;
-
-  case 42: /* Condition: MathOperation  */
-#line 136 "lex-yacc/parser.ypp"
-                                                    { (yyval.Exp) = (yyvsp[0].Exp); }
-#line 1502 "src/parser.tab.cpp"
-    break;
-
-  case 43: /* Condition: StringOperation  */
-#line 137 "lex-yacc/parser.ypp"
-                                                    { (yyval.Exp) = (yyvsp[0].Exp); }
-#line 1508 "src/parser.tab.cpp"
-    break;
-
-  case 44: /* Operation: MathOperation  */
-#line 140 "lex-yacc/parser.ypp"
-                                                    { (yyval.Exp) = (yyvsp[0].Exp); /*std::cout << $1->getValue() << std::endl;*/ }
-#line 1514 "src/parser.tab.cpp"
-    break;
-
-  case 45: /* Operation: StringOperation  */
-#line 141 "lex-yacc/parser.ypp"
-                                                    { (yyval.Exp) = (yyvsp[0].Exp); /*std::cout << $1->getValue() << std::endl;*/ }
-#line 1520 "src/parser.tab.cpp"
-    break;
-
-  case 46: /* MathOperation: MathOperation '+' MathOperation  */
-#line 144 "lex-yacc/parser.ypp"
-                                                    { (yyval.Exp) = new Expression((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_ADD); }
-#line 1526 "src/parser.tab.cpp"
-    break;
-
-  case 47: /* MathOperation: MathOperation '-' MathOperation  */
-#line 145 "lex-yacc/parser.ypp"
-                                                    { (yyval.Exp) = new Expression((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_SUB); }
-#line 1532 "src/parser.tab.cpp"
-    break;
-
-  case 48: /* MathOperation: MathOperation '*' MathOperation  */
-#line 146 "lex-yacc/parser.ypp"
-                                                    { (yyval.Exp) = new Expression((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_MUL); }
-#line 1538 "src/parser.tab.cpp"
-    break;
-
-  case 49: /* MathOperation: MathOperation '/' MathOperation  */
+  case 34: /* FunctionDefinition: DATA_TYPE IDENTIFIER '(' ')' Scope  */
 #line 147 "lex-yacc/parser.ypp"
-                                                    { (yyval.Exp) = new Expression((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_DIV); }
-#line 1544 "src/parser.tab.cpp"
+                                                        { 
+        dynamic_cast<ScopeNode*>((yyvsp[0].Node))->returnable = true;
+        (yyval.Node) = new FunctionDefintionNode((yyvsp[-4].str), (yyvsp[-3].str), nullptr, dynamic_cast<ScopeNode*>((yyvsp[0].Node))); 
+    }
+#line 1557 "src/parser.tab.cpp"
     break;
 
-  case 50: /* MathOperation: MathOperation '%' MathOperation  */
-#line 148 "lex-yacc/parser.ypp"
-                                                    { (yyval.Exp) = new Expression((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_MOD); }
-#line 1550 "src/parser.tab.cpp"
-    break;
-
-  case 51: /* MathOperation: '(' MathOperation ')' MathOperation  */
-#line 149 "lex-yacc/parser.ypp"
-                                                    { (yyval.Exp) = new Expression((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_MUL); }
-#line 1556 "src/parser.tab.cpp"
-    break;
-
-  case 52: /* MathOperation: '(' MathOperation ')'  */
-#line 150 "lex-yacc/parser.ypp"
-                                                    {                   (yyval.Exp) = (yyvsp[-1].Exp);               }
-#line 1562 "src/parser.tab.cpp"
-    break;
-
-  case 53: /* MathOperation: POW '(' MathOperation ',' MathOperation ')'  */
-#line 151 "lex-yacc/parser.ypp"
-                                                    { (yyval.Exp) = new Expression((yyvsp[-3].Exp), (yyvsp[-1].Exp), OP_POW);  }
-#line 1568 "src/parser.tab.cpp"
-    break;
-
-  case 54: /* MathOperation: SQRT '(' MathOperation ')'  */
-#line 152 "lex-yacc/parser.ypp"
-                                                    { (yyval.Exp) = new Expression((yyvsp[-1].Exp), (yyvsp[-1].Exp), OP_SQRT); }
-#line 1574 "src/parser.tab.cpp"
-    break;
-
-  case 55: /* MathOperation: MathOperation SHL MathOperation  */
+  case 35: /* FunctionParams: FunctionParams ',' DATA_TYPE IDENTIFIER  */
 #line 153 "lex-yacc/parser.ypp"
-                                                    { (yyval.Exp) = new Expression((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_SHL); }
-#line 1580 "src/parser.tab.cpp"
+                                                    { (yyval.FP) = (yyvsp[-3].FP)->addParameter((yyvsp[-1].str), (yyvsp[0].str));}
+#line 1563 "src/parser.tab.cpp"
     break;
 
-  case 56: /* MathOperation: MathOperation SHR MathOperation  */
+  case 36: /* FunctionParams: DATA_TYPE IDENTIFIER  */
 #line 154 "lex-yacc/parser.ypp"
-                                                    { (yyval.Exp) = new Expression((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_SHR); }
-#line 1586 "src/parser.tab.cpp"
+                                                    { (yyval.FP) = new FunctionParametersNode((yyvsp[-1].str), (yyvsp[0].str));}
+#line 1569 "src/parser.tab.cpp"
     break;
 
-  case 57: /* MathOperation: MathOperation '|' MathOperation  */
-#line 155 "lex-yacc/parser.ypp"
-                                                    { (yyval.Exp) = new Expression((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_OR); }
-#line 1592 "src/parser.tab.cpp"
-    break;
-
-  case 58: /* MathOperation: MathOperation '&' MathOperation  */
-#line 156 "lex-yacc/parser.ypp"
-                                                    { (yyval.Exp) = new Expression((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_AND); }
-#line 1598 "src/parser.tab.cpp"
-    break;
-
-  case 59: /* MathOperation: MathOperation '^' MathOperation  */
+  case 37: /* VariableDeclaration: DATA_TYPE IDENTIFIER ';'  */
 #line 157 "lex-yacc/parser.ypp"
-                                                    { (yyval.Exp) = new Expression((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_XOR); }
-#line 1604 "src/parser.tab.cpp"
+                                                    { (yyval.Node) = new DefineNode((yyvsp[-2].str), (yyvsp[-1].str), nullptr); }
+#line 1575 "src/parser.tab.cpp"
     break;
 
-  case 61: /* StringOperation: StringOperation '+' StringOperation  */
+  case 38: /* VariableDeclaration: DATA_TYPE IDENTIFIER '=' Operation ';'  */
+#line 158 "lex-yacc/parser.ypp"
+                                                    { (yyval.Node) = new DefineNode((yyvsp[-4].str), (yyvsp[-3].str), (yyvsp[-1].Exp)); }
+#line 1581 "src/parser.tab.cpp"
+    break;
+
+  case 39: /* VariableAssignment: IDENTIFIER '=' Operation ';'  */
 #line 161 "lex-yacc/parser.ypp"
-                                                        { (yyval.Exp) =  new StringContainer((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_ADD); }
-#line 1610 "src/parser.tab.cpp"
+                                          { (yyval.Node) = new AssignNode((yyvsp[-3].str), (yyvsp[-1].Exp)); }
+#line 1587 "src/parser.tab.cpp"
     break;
 
-  case 62: /* StringOperation: StringOperation '+' MathOperation  */
-#line 162 "lex-yacc/parser.ypp"
-                                                        { (yyval.Exp) =  new StringContainer((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_ADD); }
-#line 1616 "src/parser.tab.cpp"
-    break;
-
-  case 63: /* StringOperation: StringOperation '-' MathOperation  */
+  case 40: /* VariableAssignment: IDENTIFIER '+' '=' Operation ';'  */
 #line 163 "lex-yacc/parser.ypp"
-                                                        { (yyval.Exp) =  new StringContainer((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_SUB); }
-#line 1622 "src/parser.tab.cpp"
+                                          { 
+        Expression* id = new IdentifierContainer((yyvsp[-4].str));
+        Expression* exp = new Expression(id, (yyvsp[-1].Exp), OP_ADD);
+        (yyval.Node) = new AssignNode((yyvsp[-4].str), exp); 
+    }
+#line 1597 "src/parser.tab.cpp"
     break;
 
-  case 64: /* StringOperation: '(' StringOperation ')'  */
-#line 164 "lex-yacc/parser.ypp"
-                                                        { (yyval.Exp) =  (yyvsp[-1].Exp); }
-#line 1628 "src/parser.tab.cpp"
+  case 41: /* VariableAssignment: IDENTIFIER '-' '=' Operation ';'  */
+#line 169 "lex-yacc/parser.ypp"
+                                          { 
+        Expression* id = new IdentifierContainer((yyvsp[-4].str));
+        Expression* exp = new Expression(id, (yyvsp[-1].Exp), OP_SUB);
+        (yyval.Node) = new AssignNode((yyvsp[-4].str), exp); 
+    }
+#line 1607 "src/parser.tab.cpp"
     break;
 
-  case 65: /* StringOperation: StringOperation SHL StringOperation  */
-#line 166 "lex-yacc/parser.ypp"
-                                                            { (yyval.Exp) =  new StringContainer((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_SHL); }
-#line 1634 "src/parser.tab.cpp"
-    break;
-
-  case 66: /* StringOperation: StringOperation SHR StringOperation  */
-#line 167 "lex-yacc/parser.ypp"
-                                                            { (yyval.Exp) =  new StringContainer((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_SHR); }
-#line 1640 "src/parser.tab.cpp"
-    break;
-
-  case 68: /* MathOperand: INTEGER  */
-#line 171 "lex-yacc/parser.ypp"
-                        { (yyval.Exp) = new Expression((yyvsp[0].str), TINT);}
-#line 1646 "src/parser.tab.cpp"
-    break;
-
-  case 69: /* MathOperand: FLOAT  */
-#line 173 "lex-yacc/parser.ypp"
-                        { (yyval.Exp) = new Expression((yyvsp[0].str), TFLOAT);}
-#line 1652 "src/parser.tab.cpp"
-    break;
-
-  case 70: /* MathOperand: CHARACTER  */
+  case 42: /* VariableAssignment: IDENTIFIER '*' '=' Operation ';'  */
 #line 175 "lex-yacc/parser.ypp"
-                        { (yyval.Exp) = new Expression((yyvsp[0].str), TCHAR);}
-#line 1658 "src/parser.tab.cpp"
+                                          { 
+        Expression* id = new IdentifierContainer((yyvsp[-4].str));
+        Expression* exp = new Expression(id, (yyvsp[-1].Exp), OP_MUL);
+        (yyval.Node) = new AssignNode((yyvsp[-4].str), exp); 
+    }
+#line 1617 "src/parser.tab.cpp"
     break;
 
-  case 71: /* MathOperand: BOOLEAN  */
-#line 177 "lex-yacc/parser.ypp"
-                        { (yyval.Exp) = new Expression((yyvsp[0].str), TBOOLEAN);}
-#line 1664 "src/parser.tab.cpp"
-    break;
-
-  case 72: /* MathOperand: IDENTIFIER  */
-#line 179 "lex-yacc/parser.ypp"
-                        { (yyval.Exp) = new IdentifierContainer((yyvsp[0].str)); }
-#line 1670 "src/parser.tab.cpp"
-    break;
-
-  case 73: /* StringOperand: STRING  */
+  case 43: /* VariableAssignment: IDENTIFIER '/' '=' Operation ';'  */
 #line 181 "lex-yacc/parser.ypp"
+                                          { 
+        Expression* id = new IdentifierContainer((yyvsp[-4].str));
+        Expression* exp = new Expression(id, (yyvsp[-1].Exp), OP_DIV);
+        (yyval.Node) = new AssignNode((yyvsp[-4].str), exp); 
+    }
+#line 1627 "src/parser.tab.cpp"
+    break;
+
+  case 44: /* VariableAssignment: IDENTIFIER '%' '=' Operation ';'  */
+#line 187 "lex-yacc/parser.ypp"
+                                          { 
+        Expression* id = new IdentifierContainer((yyvsp[-4].str));
+        Expression* exp = new Expression(id, (yyvsp[-1].Exp), OP_MOD);
+        (yyval.Node) = new AssignNode((yyvsp[-4].str), exp); 
+    }
+#line 1637 "src/parser.tab.cpp"
+    break;
+
+  case 45: /* VariableAssignment: IDENTIFIER '&' '=' Operation ';'  */
+#line 193 "lex-yacc/parser.ypp"
+                                          { 
+        Expression* id = new IdentifierContainer((yyvsp[-4].str));
+        Expression* exp = new Expression(id, (yyvsp[-1].Exp), OP_AND);
+        (yyval.Node) = new AssignNode((yyvsp[-4].str), exp); 
+    }
+#line 1647 "src/parser.tab.cpp"
+    break;
+
+  case 46: /* VariableAssignment: IDENTIFIER '|' '=' Operation ';'  */
+#line 199 "lex-yacc/parser.ypp"
+                                          { 
+        Expression* id = new IdentifierContainer((yyvsp[-4].str));
+        Expression* exp = new Expression(id, (yyvsp[-1].Exp), OP_OR);
+        (yyval.Node) = new AssignNode((yyvsp[-4].str), exp); 
+    }
+#line 1657 "src/parser.tab.cpp"
+    break;
+
+  case 47: /* VariableAssignment: IDENTIFIER '^' '=' Operation ';'  */
+#line 205 "lex-yacc/parser.ypp"
+                                          { 
+        Expression* id = new IdentifierContainer((yyvsp[-4].str));
+        Expression* exp = new Expression(id, (yyvsp[-1].Exp), OP_XOR);
+        (yyval.Node) = new AssignNode((yyvsp[-4].str), exp); 
+    }
+#line 1667 "src/parser.tab.cpp"
+    break;
+
+  case 48: /* Condition: Condition OR MathOperation  */
+#line 213 "lex-yacc/parser.ypp"
+                                                    { (yyval.Exp) = new Expression((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_OR);  }
+#line 1673 "src/parser.tab.cpp"
+    break;
+
+  case 49: /* Condition: Condition AND MathOperation  */
+#line 214 "lex-yacc/parser.ypp"
+                                                    { (yyval.Exp) = new Expression((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_AND); }
+#line 1679 "src/parser.tab.cpp"
+    break;
+
+  case 50: /* Condition: Condition GTE MathOperation  */
+#line 215 "lex-yacc/parser.ypp"
+                                                    { (yyval.Exp) = new Expression((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_GE);  }
+#line 1685 "src/parser.tab.cpp"
+    break;
+
+  case 51: /* Condition: Condition GT MathOperation  */
+#line 216 "lex-yacc/parser.ypp"
+                                                    { (yyval.Exp) = new Expression((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_GT);  }
+#line 1691 "src/parser.tab.cpp"
+    break;
+
+  case 52: /* Condition: Condition LTE MathOperation  */
+#line 217 "lex-yacc/parser.ypp"
+                                                    { (yyval.Exp) = new Expression((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_LE);  }
+#line 1697 "src/parser.tab.cpp"
+    break;
+
+  case 53: /* Condition: Condition LT MathOperation  */
+#line 218 "lex-yacc/parser.ypp"
+                                                    { (yyval.Exp) = new Expression((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_LT);  }
+#line 1703 "src/parser.tab.cpp"
+    break;
+
+  case 54: /* Condition: Condition ISEQUAL MathOperation  */
+#line 219 "lex-yacc/parser.ypp"
+                                                    { (yyval.Exp) = new Expression((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_EQ);  }
+#line 1709 "src/parser.tab.cpp"
+    break;
+
+  case 55: /* Condition: Condition NOTEQUAL MathOperation  */
+#line 220 "lex-yacc/parser.ypp"
+                                                    { (yyval.Exp) = new Expression((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_NEQ); }
+#line 1715 "src/parser.tab.cpp"
+    break;
+
+  case 56: /* Condition: Condition GTE StringOperation  */
+#line 222 "lex-yacc/parser.ypp"
+                                                    { (yyval.Exp) = new StringContainer((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_GE);   }
+#line 1721 "src/parser.tab.cpp"
+    break;
+
+  case 57: /* Condition: Condition GT StringOperation  */
+#line 223 "lex-yacc/parser.ypp"
+                                                    { (yyval.Exp) = new StringContainer((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_GT);   }
+#line 1727 "src/parser.tab.cpp"
+    break;
+
+  case 58: /* Condition: Condition LTE StringOperation  */
+#line 224 "lex-yacc/parser.ypp"
+                                                    { (yyval.Exp) = new StringContainer((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_LE);   }
+#line 1733 "src/parser.tab.cpp"
+    break;
+
+  case 59: /* Condition: Condition LT StringOperation  */
+#line 225 "lex-yacc/parser.ypp"
+                                                    { (yyval.Exp) = new StringContainer((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_LT);   }
+#line 1739 "src/parser.tab.cpp"
+    break;
+
+  case 60: /* Condition: Condition ISEQUAL StringOperation  */
+#line 226 "lex-yacc/parser.ypp"
+                                                    { (yyval.Exp) = new StringContainer((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_EQ);   }
+#line 1745 "src/parser.tab.cpp"
+    break;
+
+  case 61: /* Condition: Condition NOTEQUAL StringOperation  */
+#line 227 "lex-yacc/parser.ypp"
+                                                    { (yyval.Exp) = new StringContainer((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_NEQ);  }
+#line 1751 "src/parser.tab.cpp"
+    break;
+
+  case 62: /* Condition: MathOperation  */
+#line 229 "lex-yacc/parser.ypp"
+                                                    { (yyval.Exp) = (yyvsp[0].Exp); }
+#line 1757 "src/parser.tab.cpp"
+    break;
+
+  case 63: /* Condition: StringOperation  */
+#line 230 "lex-yacc/parser.ypp"
+                                                    { (yyval.Exp) = (yyvsp[0].Exp); }
+#line 1763 "src/parser.tab.cpp"
+    break;
+
+  case 64: /* Operation: MathOperation  */
+#line 233 "lex-yacc/parser.ypp"
+                                                    { (yyval.Exp) = (yyvsp[0].Exp); }
+#line 1769 "src/parser.tab.cpp"
+    break;
+
+  case 65: /* Operation: StringOperation  */
+#line 234 "lex-yacc/parser.ypp"
+                                                    { (yyval.Exp) = (yyvsp[0].Exp); }
+#line 1775 "src/parser.tab.cpp"
+    break;
+
+  case 66: /* Operation: FunctionCall  */
+#line 235 "lex-yacc/parser.ypp"
+                                                    { (yyval.Exp) = (yyvsp[0].Exp); }
+#line 1781 "src/parser.tab.cpp"
+    break;
+
+  case 67: /* FunctionCall: IDENTIFIER '(' FunctionCallParams ')'  */
+#line 238 "lex-yacc/parser.ypp"
+                                                    { (yyval.Exp) = new FunctionCallNode( (yyvsp[-3].str), (yyvsp[-1].FCP) ); }
+#line 1787 "src/parser.tab.cpp"
+    break;
+
+  case 68: /* FunctionCall: IDENTIFIER '(' ')'  */
+#line 239 "lex-yacc/parser.ypp"
+                                                    { (yyval.Exp) = new FunctionCallNode( (yyvsp[-2].str), nullptr ); }
+#line 1793 "src/parser.tab.cpp"
+    break;
+
+  case 69: /* FunctionCallParams: FunctionCallParams ',' Operation  */
+#line 242 "lex-yacc/parser.ypp"
+                                                    { (yyval.FCP) = (yyvsp[-2].FCP)->addParameter((yyvsp[0].Exp)); }
+#line 1799 "src/parser.tab.cpp"
+    break;
+
+  case 70: /* FunctionCallParams: Operation  */
+#line 243 "lex-yacc/parser.ypp"
+                                                    { (yyval.FCP) = new FunctionCallParametersNode((yyvsp[0].Exp)); }
+#line 1805 "src/parser.tab.cpp"
+    break;
+
+  case 71: /* MathOperation: MathOperation '+' MathOperation  */
+#line 246 "lex-yacc/parser.ypp"
+                                                    { (yyval.Exp) = new Expression((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_ADD); }
+#line 1811 "src/parser.tab.cpp"
+    break;
+
+  case 72: /* MathOperation: MathOperation '-' MathOperation  */
+#line 247 "lex-yacc/parser.ypp"
+                                                    { (yyval.Exp) = new Expression((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_SUB); }
+#line 1817 "src/parser.tab.cpp"
+    break;
+
+  case 73: /* MathOperation: MathOperation '*' MathOperation  */
+#line 248 "lex-yacc/parser.ypp"
+                                                    { (yyval.Exp) = new Expression((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_MUL); }
+#line 1823 "src/parser.tab.cpp"
+    break;
+
+  case 74: /* MathOperation: MathOperation '/' MathOperation  */
+#line 249 "lex-yacc/parser.ypp"
+                                                    { (yyval.Exp) = new Expression((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_DIV); }
+#line 1829 "src/parser.tab.cpp"
+    break;
+
+  case 75: /* MathOperation: MathOperation '%' MathOperation  */
+#line 250 "lex-yacc/parser.ypp"
+                                                    { (yyval.Exp) = new Expression((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_MOD); }
+#line 1835 "src/parser.tab.cpp"
+    break;
+
+  case 76: /* MathOperation: '(' MathOperation ')' MathOperation  */
+#line 251 "lex-yacc/parser.ypp"
+                                                    { (yyval.Exp) = new Expression((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_MUL); }
+#line 1841 "src/parser.tab.cpp"
+    break;
+
+  case 77: /* MathOperation: '(' MathOperation ')'  */
+#line 252 "lex-yacc/parser.ypp"
+                                                    {                   (yyval.Exp) = (yyvsp[-1].Exp);               }
+#line 1847 "src/parser.tab.cpp"
+    break;
+
+  case 78: /* MathOperation: POW '(' MathOperation ',' MathOperation ')'  */
+#line 253 "lex-yacc/parser.ypp"
+                                                    { (yyval.Exp) = new Expression((yyvsp[-3].Exp), (yyvsp[-1].Exp), OP_POW);  }
+#line 1853 "src/parser.tab.cpp"
+    break;
+
+  case 79: /* MathOperation: SQRT '(' MathOperation ')'  */
+#line 254 "lex-yacc/parser.ypp"
+                                                    { (yyval.Exp) = new Expression((yyvsp[-1].Exp), (yyvsp[-1].Exp), OP_SQRT); }
+#line 1859 "src/parser.tab.cpp"
+    break;
+
+  case 80: /* MathOperation: MathOperation SHL MathOperation  */
+#line 255 "lex-yacc/parser.ypp"
+                                                    { (yyval.Exp) = new Expression((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_SHL); }
+#line 1865 "src/parser.tab.cpp"
+    break;
+
+  case 81: /* MathOperation: MathOperation SHR MathOperation  */
+#line 256 "lex-yacc/parser.ypp"
+                                                    { (yyval.Exp) = new Expression((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_SHR); }
+#line 1871 "src/parser.tab.cpp"
+    break;
+
+  case 82: /* MathOperation: MathOperation '|' MathOperation  */
+#line 257 "lex-yacc/parser.ypp"
+                                                    { (yyval.Exp) = new Expression((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_OR); }
+#line 1877 "src/parser.tab.cpp"
+    break;
+
+  case 83: /* MathOperation: MathOperation '&' MathOperation  */
+#line 258 "lex-yacc/parser.ypp"
+                                                    { (yyval.Exp) = new Expression((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_AND); }
+#line 1883 "src/parser.tab.cpp"
+    break;
+
+  case 84: /* MathOperation: MathOperation '^' MathOperation  */
+#line 259 "lex-yacc/parser.ypp"
+                                                    { (yyval.Exp) = new Expression((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_XOR); }
+#line 1889 "src/parser.tab.cpp"
+    break;
+
+  case 85: /* MathOperation: IDENTIFIER INCREMENT  */
+#line 260 "lex-yacc/parser.ypp"
+                                                      { (yyval.Exp) = new IdentifierContainer((yyvsp[-1].str), OP_POST_ADD); }
+#line 1895 "src/parser.tab.cpp"
+    break;
+
+  case 86: /* MathOperation: INCREMENT IDENTIFIER  */
+#line 261 "lex-yacc/parser.ypp"
+                                                      { (yyval.Exp) = new IdentifierContainer((yyvsp[0].str), OP_PRE_ADD); }
+#line 1901 "src/parser.tab.cpp"
+    break;
+
+  case 87: /* MathOperation: DECREMENT IDENTIFIER  */
+#line 262 "lex-yacc/parser.ypp"
+                                                      { (yyval.Exp) = new IdentifierContainer((yyvsp[0].str), OP_PRE_SUB); }
+#line 1907 "src/parser.tab.cpp"
+    break;
+
+  case 88: /* MathOperation: IDENTIFIER DECREMENT  */
+#line 263 "lex-yacc/parser.ypp"
+                                                      { (yyval.Exp) = new IdentifierContainer((yyvsp[-1].str), OP_POST_ADD); }
+#line 1913 "src/parser.tab.cpp"
+    break;
+
+  case 90: /* StringOperation: StringOperation '+' StringOperation  */
+#line 267 "lex-yacc/parser.ypp"
+                                                        { (yyval.Exp) =  new StringContainer((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_ADD); }
+#line 1919 "src/parser.tab.cpp"
+    break;
+
+  case 91: /* StringOperation: StringOperation '+' MathOperation  */
+#line 268 "lex-yacc/parser.ypp"
+                                                        { (yyval.Exp) =  new StringContainer((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_ADD); }
+#line 1925 "src/parser.tab.cpp"
+    break;
+
+  case 92: /* StringOperation: StringOperation '-' MathOperation  */
+#line 269 "lex-yacc/parser.ypp"
+                                                        { (yyval.Exp) =  new StringContainer((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_SUB); }
+#line 1931 "src/parser.tab.cpp"
+    break;
+
+  case 93: /* StringOperation: '(' StringOperation ')'  */
+#line 270 "lex-yacc/parser.ypp"
+                                                        { (yyval.Exp) =  (yyvsp[-1].Exp); }
+#line 1937 "src/parser.tab.cpp"
+    break;
+
+  case 94: /* StringOperation: StringOperation SHL StringOperation  */
+#line 272 "lex-yacc/parser.ypp"
+                                                            { (yyval.Exp) =  new StringContainer((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_SHL); }
+#line 1943 "src/parser.tab.cpp"
+    break;
+
+  case 95: /* StringOperation: StringOperation SHR StringOperation  */
+#line 273 "lex-yacc/parser.ypp"
+                                                            { (yyval.Exp) =  new StringContainer((yyvsp[-2].Exp), (yyvsp[0].Exp), OP_SHR); }
+#line 1949 "src/parser.tab.cpp"
+    break;
+
+  case 99: /* MathOperand: INTEGER  */
+#line 279 "lex-yacc/parser.ypp"
+                        { (yyval.Exp) = new Expression((yyvsp[0].str), TINT);}
+#line 1955 "src/parser.tab.cpp"
+    break;
+
+  case 100: /* MathOperand: FLOAT  */
+#line 281 "lex-yacc/parser.ypp"
+                        { (yyval.Exp) = new Expression((yyvsp[0].str), TFLOAT);}
+#line 1961 "src/parser.tab.cpp"
+    break;
+
+  case 101: /* MathOperand: CHARACTER  */
+#line 283 "lex-yacc/parser.ypp"
+                        { (yyval.Exp) = new Expression((yyvsp[0].str), TCHAR);}
+#line 1967 "src/parser.tab.cpp"
+    break;
+
+  case 102: /* MathOperand: BOOLEAN  */
+#line 285 "lex-yacc/parser.ypp"
+                        { (yyval.Exp) = new Expression((yyvsp[0].str), TBOOLEAN);}
+#line 1973 "src/parser.tab.cpp"
+    break;
+
+  case 103: /* MathOperand: IDENTIFIER  */
+#line 287 "lex-yacc/parser.ypp"
+                        { (yyval.Exp) = new IdentifierContainer((yyvsp[0].str)); }
+#line 1979 "src/parser.tab.cpp"
+    break;
+
+  case 104: /* StringOperand: STRING  */
+#line 289 "lex-yacc/parser.ypp"
                         { (yyval.Exp) = new StringContainer((yyvsp[0].str)); }
-#line 1676 "src/parser.tab.cpp"
+#line 1985 "src/parser.tab.cpp"
     break;
 
 
-#line 1680 "src/parser.tab.cpp"
+#line 1989 "src/parser.tab.cpp"
 
       default: break;
     }
@@ -1869,7 +2178,7 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 183 "lex-yacc/parser.ypp"
+#line 291 "lex-yacc/parser.ypp"
 
 
 

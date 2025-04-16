@@ -54,32 +54,39 @@ extern int yydebug;
     YYEOF = 0,                     /* "end of file"  */
     YYerror = 256,                 /* error  */
     YYUNDEF = 257,                 /* "invalid token"  */
-    IDENTIFIER = 258,              /* IDENTIFIER  */
-    STRING = 259,                  /* STRING  */
-    POW = 260,                     /* POW  */
-    SQRT = 261,                    /* SQRT  */
-    SHL = 262,                     /* SHL  */
-    SHR = 263,                     /* SHR  */
-    DATA_TYPE = 264,               /* DATA_TYPE  */
-    IF = 265,                      /* IF  */
-    ELSE = 266,                    /* ELSE  */
-    WHILE = 267,                   /* WHILE  */
-    FOR = 268,                     /* FOR  */
-    AND = 269,                     /* AND  */
-    OR = 270,                      /* OR  */
-    GTE = 271,                     /* GTE  */
-    LTE = 272,                     /* LTE  */
-    LT = 273,                      /* LT  */
-    GT = 274,                      /* GT  */
-    ISEQUAL = 275,                 /* ISEQUAL  */
-    NOTEQUAL = 276,                /* NOTEQUAL  */
-    FUNCTIONDEF = 277,             /* FUNCTIONDEF  */
+    RETURN = 258,                  /* RETURN  */
+    IDENTIFIER = 259,              /* IDENTIFIER  */
+    STRING = 260,                  /* STRING  */
+    POW = 261,                     /* POW  */
+    SQRT = 262,                    /* SQRT  */
+    SHL = 263,                     /* SHL  */
+    SHR = 264,                     /* SHR  */
+    DATA_TYPE = 265,               /* DATA_TYPE  */
+    IF = 266,                      /* IF  */
+    ELSE = 267,                    /* ELSE  */
+    WHILE = 268,                   /* WHILE  */
+    FOR = 269,                     /* FOR  */
+    AND = 270,                     /* AND  */
+    OR = 271,                      /* OR  */
+    GTE = 272,                     /* GTE  */
+    LTE = 273,                     /* LTE  */
+    LT = 274,                      /* LT  */
+    GT = 275,                      /* GT  */
+    ISEQUAL = 276,                 /* ISEQUAL  */
+    NOTEQUAL = 277,                /* NOTEQUAL  */
     DO = 278,                      /* DO  */
-    CHARACTER = 279,               /* CHARACTER  */
-    INTEGER = 280,                 /* INTEGER  */
-    BOOLEAN = 281,                 /* BOOLEAN  */
-    FLOAT = 282,                   /* FLOAT  */
-    PRINT = 283                    /* PRINT  */
+    SWITCH = 279,                  /* SWITCH  */
+    CASE = 280,                    /* CASE  */
+    DEFAULT = 281,                 /* DEFAULT  */
+    CONTINUE = 282,                /* CONTINUE  */
+    BREAK = 283,                   /* BREAK  */
+    CHARACTER = 284,               /* CHARACTER  */
+    INCREMENT = 285,               /* INCREMENT  */
+    DECREMENT = 286,               /* DECREMENT  */
+    INTEGER = 287,                 /* INTEGER  */
+    BOOLEAN = 288,                 /* BOOLEAN  */
+    FLOAT = 289,                   /* FLOAT  */
+    PRINT = 290                    /* PRINT  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -88,13 +95,16 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 21 "lex-yacc/parser.ypp"
+#line 24 "lex-yacc/parser.ypp"
 
     ProgramNode*    Node;
     Expression*     Exp;
+    FunctionParametersNode* FP;
+    FunctionCallParametersNode* FCP;
+    SwitchBody* SB;
     char* str;
 
-#line 98 "include/parser.tab.hpp"
+#line 108 "include/parser.tab.hpp"
 
 };
 typedef union YYSTYPE YYSTYPE;

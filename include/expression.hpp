@@ -3,8 +3,8 @@
 #include "math.h"
 
 enum OperationType { 
-    OP_ADD, OP_SUB, OP_MUL, OP_DIV, OP_MOD, 
-    OP_EQ, OP_NEQ, OP_LT, OP_LE, OP_GT, OP_GE, 
+    OP_ADD, OP_PRE_ADD, OP_POST_ADD, OP_SUB, OP_MUL, OP_DIV, OP_MOD, 
+    OP_EQ, OP_PRE_SUB, OP_POST_SUB, OP_NEQ, OP_LT, OP_LE, OP_GT, OP_GE, 
     OP_AND, OP_OR, OP_XOR, OP_NOT, OP_SHL, OP_SHR,
     OP_POW, OP_SQRT, OP_NONE
 };
@@ -25,6 +25,8 @@ class Expression {
         OperandType getType() { return nodeValue.type; }
     
         OperandType inferResultType(OperandType type1, OperandType type2) {
+            if (type1 == TVOID || type2 == TVOID) { return TUNDEFINED; }
+
             if (type1 > type2) {
                 OperandType temp = type1;
                 type1 = type2;
@@ -53,6 +55,10 @@ class Expression {
         virtual Operand calculateNodeValue(Expression* left, Expression* right, Scope* scope) { 
             Operand op1 = left->getValue(scope);
             Operand op2 = right->getValue(scope);
+
+            if (op1.type == TVOID || op2.type == TVOID) {
+                throw std::runtime_error("Invalid Operand Type");
+            }
 
             if (op == OP_SQRT) {
                 float res = sqrt((float)op1);
@@ -169,6 +175,10 @@ class StringContainer : public Expression {
         { 
             Operand op1 = left->getValue(scope);
             Operand op2 = right->getValue(scope);
+
+            if (op1.type == TVOID || op2.type == TVOID) {
+                throw("void operation is not supported for string");
+            }
             
             std::string result = "";
             switch (op) {
@@ -219,15 +229,29 @@ class StringContainer : public Expression {
 
 class IdentifierContainer : public Expression {
     std::string varName;
+    OperationType op;
     public:
-        IdentifierContainer(std::string varName) : Expression(nullptr, TUNDEFINED), varName(varName) {}
+        IdentifierContainer(std::string varName, OperationType op = OP_NONE) 
+        : Expression(nullptr, TUNDEFINED), varName(varName), op(op)  {}
         
         Operand getValue(Scope* scope = nullptr) { 
-            if (scope == nullptr) {
-                std::cout << "Skill Issues" << std::endl;
+            Operand value = scope->valueOf(this->varName);
+            switch (op) {
+                case OP_PRE_ADD: 
+                    scope->assignVariable(varName, value + 1);
+                    return value + 1; 
+                case OP_POST_ADD:
+                    scope->assignVariable(varName, value + 1);
+                    return value;
+                case OP_PRE_SUB: 
+                    scope->assignVariable(varName, value + -1);
+                    return value + -1; 
+                case OP_POST_SUB:
+                    scope->assignVariable(varName, value + -1);
+                    return value;
+                default:
+                    return value;
             }
-
-            return scope->valueOf(this->varName);
         }
 
         friend std::ostream& operator<<(std::ostream& os, const IdentifierContainer& node) {
@@ -235,3 +259,5 @@ class IdentifierContainer : public Expression {
             return os;
         }
 };
+
+

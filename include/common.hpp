@@ -1,14 +1,25 @@
 #pragma once
+#include <cstring>
 #include <iostream>
 #include <string>
+#include <vector>
 #include <unordered_map>
 
-enum OperandType { TBOOLEAN, TINT, TCHAR, TFLOAT, TSTRING, TUNDEFINED };
+class ScopeNode;
+class Expression;
+
+enum OperandType { TBOOLEAN, TINT, TCHAR, TFLOAT, TSTRING, TVOID, TUNDEFINED };
 
 class Operand {
     public:
         void* content;
         OperandType type;
+
+        Operand() { content = nullptr; type = TUNDEFINED; }
+        Operand(OperandType type, void* content) { this->type = type; this->content = content; }
+
+        static Operand undefined() { return Operand(TUNDEFINED, nullptr); }
+        static Operand voidValue() { return Operand(TVOID, nullptr); }
 
         void init(const char* value, OperandType type) {
             this->type = type;
@@ -17,10 +28,10 @@ class Operand {
             if (type == TSTRING) { 
                 type = TSTRING;
                 content = (void*) new std::string(value); 
-                return;
+            } else if (type != TVOID && type != TUNDEFINED) {
+                content = malloc(typeToSize(type));
             }
 
-            content = malloc(typeToSize(type));
             switch (type) {
                 case TINT:
                     *(int*)content = atoi(value); break;
@@ -28,6 +39,8 @@ class Operand {
                     *(float*)content = atof(value); break;
                 case TCHAR:
                     *(char*)content = value[0]; break;
+                case TBOOLEAN:
+                    *(int*)content = strcmp(value, "true") ? 0 : 1; break;
                 default: break;
             }
         }
@@ -44,6 +57,8 @@ class Operand {
                     return "boolean";
                 case TSTRING:
                     return "string";
+                case TVOID:
+                    return "void";
                 default:
                     return "undefined";
             }
@@ -121,6 +136,19 @@ class Operand {
             }
         }
 
+        Operand operator+(int that) const {
+            switch (type) {
+                case TINT: case TBOOLEAN: case TCHAR:
+                    return Operand(TINT, (void*) new int((int) *(int*)content + that));
+                case TFLOAT:
+                    return Operand(TFLOAT, (void*) new float((float) *(float*)content + (float)that));
+                case TSTRING:
+                    return Operand(TSTRING, (void*) new std::string(*(std::string*)content + std::to_string(that)));
+                default:
+                    return Operand(TVOID, nullptr);
+            }
+        }
+
         template<typename T>
         bool operator>(const T& that) const {
             switch (type) {
@@ -139,11 +167,24 @@ class Operand {
         bool operator==(const T& that) const {
             switch (type) {
                 case TINT: case TBOOLEAN: case TCHAR:
-                    return (int) *(int*)content == that;
+                    return (int) *(int*)content == (int)that;
                 case TFLOAT:
                     return (float) *(float*)content == (float)that;
                 case TSTRING:
                     return *(std::string*)content == std::to_string(that);
+                default:
+                    return false;
+            }
+        }
+
+        bool operator==(const Operand& that) const {
+            switch (type) {
+                case TINT: case TBOOLEAN: case TCHAR:
+                    return (int) *(int*)content == (int)that;
+                case TFLOAT:
+                    return (float) *(float*)content == (float)that;
+                case TSTRING:
+                    return *(std::string*)content == that.toString();
                 default:
                     return false;
             }
@@ -187,13 +228,71 @@ class Operand {
         }
 };
 
+class FunctionParametersNode {
+    public:
+        std::vector<OperandType> types;
+        std::vector<std::string> names;
+
+        FunctionParametersNode() {}
+
+        FunctionParametersNode( std::string type, std::string name ) {            
+            this->names.push_back(name);
+            if (type == "int")          this->types.push_back(TINT);
+            else if (type == "float")   this->types.push_back(TFLOAT);
+            else if (type == "char")    this->types.push_back(TCHAR);
+            else if (type == "bool") this->types.push_back(TBOOLEAN);
+            else if (type == "string")  this->types.push_back(TSTRING);
+            else if (type == "void")    this->types.push_back(TVOID);
+            else                        this->types.push_back(TUNDEFINED);
+        }
+
+        FunctionParametersNode* addParameter( std::string type, std::string name ) {
+            this->names.push_back(name);
+
+            if (type == "int")          this->types.push_back(TINT);
+            else if (type == "float")   this->types.push_back(TFLOAT);
+            else if (type == "char")    this->types.push_back(TCHAR);
+            else if (type == "bool") this->types.push_back(TBOOLEAN);
+            else if (type == "string")  this->types.push_back(TSTRING);
+            else if (type == "void")    this->types.push_back(TVOID);
+            else                        this->types.push_back(TUNDEFINED);
+
+            return this;
+        }
+};
+
+
+class FunctionCallParametersNode {
+    public:
+        std::vector<Expression*> params;
+        FunctionCallParametersNode() {}
+        FunctionCallParametersNode( Expression* param ) { 
+            params.push_back(param);
+        }   
+        FunctionCallParametersNode* addParameter( Expression* param ) {
+            params.push_back(param);
+            return this;
+        }
+};
+
 class Scope {
     private:
         Scope* parent = nullptr;
+
         std::unordered_map<std::string, std::pair<OperandType, Operand>> variables;
+
+        std::unordered_map<std::string, std::tuple<OperandType, FunctionParametersNode*, ScopeNode*>> functions;
     public:
-        Scope() { this->parent = nullptr; }
-        Scope(Scope* parent) { this->parent = parent; }
+        Scope() { 
+            this->parent = nullptr; 
+            this->defineVariable("return", TUNDEFINED, Operand::undefined());
+        }
+
+        Scope(Scope* parent) { 
+            this->parent = parent; 
+            this->defineVariable("return", TUNDEFINED, Operand::undefined());
+        }
+
         Scope* getParent() { return parent; }
         void setParent(Scope* parent) { this->parent = parent; }
 
@@ -205,9 +304,32 @@ class Scope {
             }
         }    
 
+        void defineFunction( OperandType returnType, std::string functionName, FunctionParametersNode* parameters, ScopeNode* scope) {
+            if (functions.find(functionName) == functions.end()) {
+                functions[functionName] = std::make_tuple(returnType, parameters, scope);
+            } else {
+                throw std::runtime_error("Function " + functionName + " has already been declared");
+            }
+        }
+
         void reset() {
             variables.clear();
+            this->defineVariable("return", TUNDEFINED, Operand::undefined());
         }
+
+        void assignReturn(Operand value) {
+            variables["return"] = {value.type, value};
+        }
+
+        void breakScope() { variables["break"] = { TUNDEFINED, Operand::undefined() }; }
+
+        void contScope() { variables["continue"] = { TUNDEFINED, Operand::undefined() }; }
+
+        bool returned() { return variables["return"].first != TUNDEFINED; }
+
+        bool isBroke() { return variables.find("break") != variables.end(); }
+
+        bool isContinued() { return variables.find("continue") != variables.end(); }
 
         void assignVariable(std::string varName, Operand value) {
             const auto& it = variables.find(varName);
@@ -234,6 +356,37 @@ class Scope {
             } else {
                 throw std::runtime_error("Variable " + varName + " not found");
                 return Operand();
+            }
+        }
+
+        ScopeNode* scopeOf(std::string functionName) {
+            if (functions.find(functionName) != functions.end()) {
+                ScopeNode* body = std::get<2>(functions[functionName]);
+                return body;
+            } else if (parent != nullptr) {
+                return parent->scopeOf(functionName);
+            } else {
+                throw std::runtime_error("Function " + functionName + " not found");
+                return nullptr;
+            }
+        }
+
+        FunctionParametersNode* getFunctionParameters(std::string functionName) {
+            if (functions.find(functionName) != functions.end()) {
+                return std::get<1>(functions[functionName]);
+            } else if (parent != nullptr) {
+                return parent->getFunctionParameters(functionName);
+            } else {
+                throw std::runtime_error("Function " + functionName + " not found");
+                return new FunctionParametersNode();
+            }
+        }
+
+        OperandType getFunctionReturnType(std::string functionName) {
+            if (functions.find(functionName) != functions.end()) {
+                return std::get<0>(functions[functionName]);
+            } else {
+                return TUNDEFINED;
             }
         }
 

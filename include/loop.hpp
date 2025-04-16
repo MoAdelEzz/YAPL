@@ -19,10 +19,17 @@ class ForNode : public ProgramNode {
 
         void run(Scope* scope = nullptr) {
             preLoop->run(scope);
+            body->breakable = true;
+            body->continuable = true;
+
             while (condition->getValue(scope) != 0) {
                 body->run(scope);
                 postLoop->run(scope);
                 body->resetScope();
+
+                if (body->getScope()->isBroke()) {
+                    break;
+                }
             }
         }
 };
@@ -39,9 +46,16 @@ class WhileNode : public ProgramNode {
         }
 
         void run(Scope* scope = nullptr) {
+            body->breakable = true;
+            body->continuable = true;
+
             while (condition->getValue(scope) != 0) {
                 body->run(scope);
                 body->resetScope();
+
+                if (body->getScope()->isBroke()) {
+                    break;
+                }
             }
         }
 };
@@ -58,9 +72,15 @@ class DoWhileNode: public ProgramNode {
         }
 
         void run(Scope* scope = nullptr) {
+            body->breakable = true;
+            body->continuable = true;
+
             do {
                 body->run(scope);
                 body->resetScope();
+                if (body->getScope()->isBroke()) {
+                    break;
+                }
             } while (condition->getValue(scope) != 0);
         }
 };

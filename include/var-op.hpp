@@ -1,4 +1,5 @@
 #pragma once
+#include "common.hpp"
 #include "program.hpp"
 #include "expression.hpp"
 
@@ -16,6 +17,7 @@ class DefineNode : public ProgramNode {
             else if (type == "char") { this->type = TCHAR; }
             else if (type == "string") { this->type = TSTRING; }
             else if (type == "bool") { this->type = TBOOLEAN; }
+            else if (type == "void") { this->type = TVOID; }
         }
 
         void run(Scope* scope = nullptr) {

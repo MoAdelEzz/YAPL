@@ -17,32 +17,39 @@
 
 
 %%
-true|false {
-    yylval.str = strdup(yytext);
-    return BOOLEAN;
-}
+return              { return RETURN; }
+switch              { return SWITCH; }
+case                { return CASE; }
+default             { return DEFAULT;}
+continue            { return CONTINUE; }
+break               { return BREAK;}
+true|false          {
+                        yylval.str = strdup(yytext);
+                        return BOOLEAN;
+                    }
 
-\<\<        { return SHL;   }
-\>\>        { return SHR;   }
-pow         { return POW;   }
-sqrt        { return SQRT;  }
-if          { return IF;    }
-else        { return ELSE;  }
-while       { return WHILE; }
-do          { return DO;    }
-for         { return FOR;   }
-yee         { return PRINT; }
-&&          { return AND;   }
-\|\|        { return OR;    }
-\>\=        { return GTE;   }
-\<\=        { return LTE;   }
-\<          { return LT;    }
-\>          { return GT;    }
-\=\=        { return ISEQUAL;}
-\!\=        { return NOTEQUAL;}
-func        { return FUNCTIONDEF;}
+\<\<                { return SHL;   }
+\>\>                { return SHR;   }
+pow                 { return POW;   }
+sqrt                { return SQRT;  }
+if                  { return IF;    }
+else                { return ELSE;  }
+while               { return WHILE; }
+do                  { return DO;    }
+for                 { return FOR;   }
+print               { return PRINT; }
+&&                  { return AND;   }
+\|\|                { return OR;   }
+\>\=                { return GTE;   }
+\<\=                { return LTE;   }
+\<                  { return LT;    }
+\>                  { return GT;    }
+\=\=                { return ISEQUAL;}
+\!\=                { return NOTEQUAL;}
+\+\+                { return INCREMENT; }
+\-\-                { return DECREMENT; }
 
-int|float|bool|char|string { yylval.str = strdup(yytext); return DATA_TYPE; }
+int|float|bool|char|string|void { yylval.str = strdup(yytext); return DATA_TYPE; }
 
 [a-zA-Z_][a-zA-Z0-9_]* {
     // std::cout << "Variable" << " " << yytext <<  std::endl;
@@ -81,7 +88,7 @@ int|float|bool|char|string { yylval.str = strdup(yytext); return DATA_TYPE; }
 }
 
 
-\/\/.*\n ;
+\/\/.*\n? ;
 
 [ \t\n] ;
 

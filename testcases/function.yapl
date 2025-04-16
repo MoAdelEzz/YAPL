@@ -1,0 +1,6 @@
+void func(int x, bool y) {
+    int z = x + y;
+    print(z);
+}
+
+func(1, 2);
