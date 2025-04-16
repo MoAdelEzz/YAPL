@@ -17,7 +17,7 @@ class ReturnNode : public ProgramNode {
 
     void run(Scope* parentScope = nullptr) {
         if (parentScope == nullptr) {
-            throw "No parent scope to return";
+            throw std::runtime_error("No parent scope to return");
         } else if (value == nullptr) {
             parentScope->assignReturn(Operand::voidValue());
         } else {

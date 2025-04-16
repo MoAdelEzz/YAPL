@@ -8,7 +8,7 @@ class ProgramNode {
     public:
         ProgramNode() {}
         ProgramNode(ProgramNode* next) : next(next) {}
-        ProgramNode* setNext(ProgramNode* next) { 
+        virtual ProgramNode* setNext(ProgramNode* next) { 
             this->next = next; 
             return this; 
         }

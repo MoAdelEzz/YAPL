@@ -1,6 +1,9 @@
-void func(int x, bool y) {
+void func(int x, int y) {
     int z = x + y;
     print(z);
+    
 }
 
-func(1, 2);
+func(1, 5);
+
+func(4, 5);

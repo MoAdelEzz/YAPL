@@ -10,29 +10,61 @@ class Expression;
 
 enum OperandType { TBOOLEAN, TINT, TCHAR, TFLOAT, TSTRING, TVOID, TUNDEFINED };
 
+class DataType {
+    public:
+        OperandType type;
+        bool isConst;
+        DataType(std::string type, bool isConst = false) 
+        { 
+            if (type == "int") { this->type = TINT; }
+            else if (type == "float") { this->type = TFLOAT; }
+            else if (type == "char") { this->type = TCHAR; }
+            else if (type == "string") { this->type = TSTRING; }
+            else if (type == "bool") { this->type = TBOOLEAN; }
+            else if (type == "void") { this->type = TVOID; }
+            else this->type = TUNDEFINED;
+            this->isConst = isConst;
+        }
+
+        DataType(OperandType type) {
+            this->type = type;
+            isConst = false;
+        }
+
+        static DataType* Undefined()    { return new DataType("undef", false); }
+        static DataType* Void()         { return new DataType("void", false); }
+        static DataType* Int()          { return new DataType("int", false); }
+        static DataType* Float()        { return new DataType("float", false); }
+        static DataType* Char()         { return new DataType("char", false); }
+        static DataType* String()         { return new DataType("string", false); }
+        static DataType* Bool()         { return new DataType("bool", false); }
+
+
+};
+
 class Operand {
     public:
         void* content;
-        OperandType type;
+        DataType* dataType;
 
-        Operand() { content = nullptr; type = TUNDEFINED; }
-        Operand(OperandType type, void* content) { this->type = type; this->content = content; }
+        Operand() { content = nullptr; dataType = DataType::Undefined(); }
+        Operand(DataType* type, void* content) { this->dataType = type; this->content = content; }
 
-        static Operand undefined() { return Operand(TUNDEFINED, nullptr); }
-        static Operand voidValue() { return Operand(TVOID, nullptr); }
+        static Operand undefined() { return Operand(); }
+        static Operand voidValue() { return Operand(DataType::Void(), nullptr); }
 
-        void init(const char* value, OperandType type) {
-            this->type = type;
+        void init(const char* value, DataType* dataType) {
+            this->dataType = dataType;
             if (value == nullptr) { return; }
 
-            if (type == TSTRING) { 
-                type = TSTRING;
+            if (dataType->type == TSTRING) { 
+                dataType->type = TSTRING;
                 content = (void*) new std::string(value); 
-            } else if (type != TVOID && type != TUNDEFINED) {
-                content = malloc(typeToSize(type));
+            } else if (dataType->type != TVOID && dataType->type != TUNDEFINED) {
+                content = malloc(typeToSize(dataType->type));
             }
 
-            switch (type) {
+            switch (dataType->type) {
                 case TINT:
                     *(int*)content = atoi(value); break;
                 case TFLOAT:
@@ -80,7 +112,7 @@ class Operand {
         }
 
         std::string toString() const {
-            switch (type) {
+            switch (dataType->type) {
                 case TINT: case TBOOLEAN: case TCHAR:
                     return std::to_string((int) *(int*)content);
                 case TFLOAT:
@@ -93,7 +125,7 @@ class Operand {
         }
 
         operator int() const {
-            switch (type) {
+            switch (dataType->type) {
                 case TINT: case TBOOLEAN: case TCHAR:
                     return (int) *(int*)content;
                 case TFLOAT:
@@ -104,7 +136,7 @@ class Operand {
         }
 
         operator float() const {
-            switch (type) {
+            switch (dataType->type) {
                 case TINT: case TBOOLEAN: case TCHAR:
                     return (float) *(int*)content;
                 case TFLOAT:
@@ -115,7 +147,7 @@ class Operand {
         }
 
         operator char() const {
-            switch (type) {
+            switch (dataType->type) {
                 case TINT: case TBOOLEAN: case TCHAR:
                     return (char) (int) *(int*)content;
                 case TFLOAT:
@@ -126,7 +158,7 @@ class Operand {
         }
 
         operator bool() const {
-            switch (type) {
+            switch (dataType->type) {
                 case TINT: case TBOOLEAN: case TCHAR:
                     return *(int*)content != 0;
                 case TFLOAT:
@@ -137,21 +169,21 @@ class Operand {
         }
 
         Operand operator+(int that) const {
-            switch (type) {
+            switch (dataType->type) {
                 case TINT: case TBOOLEAN: case TCHAR:
-                    return Operand(TINT, (void*) new int((int) *(int*)content + that));
+                    return Operand(DataType::Int(), (void*) new int((int) *(int*)content + that));
                 case TFLOAT:
-                    return Operand(TFLOAT, (void*) new float((float) *(float*)content + (float)that));
+                    return Operand(DataType::Float(), (void*) new float((float) *(float*)content + (float)that));
                 case TSTRING:
-                    return Operand(TSTRING, (void*) new std::string(*(std::string*)content + std::to_string(that)));
+                    return Operand(DataType::String(), (void*) new std::string(*(std::string*)content + std::to_string(that)));
                 default:
-                    return Operand(TVOID, nullptr);
+                    return Operand(DataType::Float(), nullptr);
             }
         }
 
         template<typename T>
         bool operator>(const T& that) const {
-            switch (type) {
+            switch (dataType->type) {
                 case TINT: case TBOOLEAN: case TCHAR:
                     return (int) *(int*)content > that;
                 case TFLOAT:
@@ -165,7 +197,7 @@ class Operand {
 
         template<typename T>
         bool operator==(const T& that) const {
-            switch (type) {
+            switch (dataType->type) {
                 case TINT: case TBOOLEAN: case TCHAR:
                     return (int) *(int*)content == (int)that;
                 case TFLOAT:
@@ -178,7 +210,7 @@ class Operand {
         }
 
         bool operator==(const Operand& that) const {
-            switch (type) {
+            switch (dataType->type) {
                 case TINT: case TBOOLEAN: case TCHAR:
                     return (int) *(int*)content == (int)that;
                 case TFLOAT:
@@ -192,7 +224,7 @@ class Operand {
 
         template<typename T>
         bool operator!=(const T& that) const {
-            switch (type) {
+            switch (dataType->type) {
                 case TINT: case TBOOLEAN: case TCHAR:
                     return (int) *(int*)content != that;
                 case TFLOAT:
@@ -205,7 +237,7 @@ class Operand {
         }
 
         friend std::ostream& operator<<(std::ostream& os, const Operand& node) {
-            switch (node.type) {
+            switch (node.dataType->type) {
                 case TINT:
                     os << (int)node;
                     break;
@@ -222,7 +254,7 @@ class Operand {
                     os << *(std::string*)node.content;
                     break;
                 default:
-                    throw("WTF Bro");
+                    throw std::runtime_error("Unexpected Type Found While Printing");
             }
             return os;
         }
@@ -230,33 +262,19 @@ class Operand {
 
 class FunctionParametersNode {
     public:
-        std::vector<OperandType> types;
+        std::vector<DataType*> types;
         std::vector<std::string> names;
 
         FunctionParametersNode() {}
 
-        FunctionParametersNode( std::string type, std::string name ) {            
+        FunctionParametersNode( DataType* type, std::string name ) {            
             this->names.push_back(name);
-            if (type == "int")          this->types.push_back(TINT);
-            else if (type == "float")   this->types.push_back(TFLOAT);
-            else if (type == "char")    this->types.push_back(TCHAR);
-            else if (type == "bool") this->types.push_back(TBOOLEAN);
-            else if (type == "string")  this->types.push_back(TSTRING);
-            else if (type == "void")    this->types.push_back(TVOID);
-            else                        this->types.push_back(TUNDEFINED);
+            this->types.push_back(type);
         }
 
-        FunctionParametersNode* addParameter( std::string type, std::string name ) {
+        FunctionParametersNode* addParameter( DataType* type, std::string name ) {
             this->names.push_back(name);
-
-            if (type == "int")          this->types.push_back(TINT);
-            else if (type == "float")   this->types.push_back(TFLOAT);
-            else if (type == "char")    this->types.push_back(TCHAR);
-            else if (type == "bool") this->types.push_back(TBOOLEAN);
-            else if (type == "string")  this->types.push_back(TSTRING);
-            else if (type == "void")    this->types.push_back(TVOID);
-            else                        this->types.push_back(TUNDEFINED);
-
+            this->types.push_back(type);
             return this;
         }
 };
@@ -279,24 +297,24 @@ class Scope {
     private:
         Scope* parent = nullptr;
 
-        std::unordered_map<std::string, std::pair<OperandType, Operand>> variables;
+        std::unordered_map<std::string, std::pair<DataType*, Operand>> variables;
 
-        std::unordered_map<std::string, std::tuple<OperandType, FunctionParametersNode*, ScopeNode*>> functions;
+        std::unordered_map<std::string, std::tuple<DataType*, FunctionParametersNode*, ScopeNode*>> functions;
     public:
         Scope() { 
             this->parent = nullptr; 
-            this->defineVariable("return", TUNDEFINED, Operand::undefined());
+            this->defineVariable("return", DataType::Undefined(), Operand::undefined());
         }
 
         Scope(Scope* parent) { 
             this->parent = parent; 
-            this->defineVariable("return", TUNDEFINED, Operand::undefined());
+            this->defineVariable("return", DataType::Undefined(), Operand::undefined());
         }
 
         Scope* getParent() { return parent; }
         void setParent(Scope* parent) { this->parent = parent; }
 
-        void defineVariable(std::string varName, OperandType type, Operand value) { 
+        void defineVariable(std::string varName, DataType* type, Operand value) { 
             if (variables.find(varName) == variables.end()) {
                 variables[varName] = {type, value}; 
             } else {
@@ -304,7 +322,7 @@ class Scope {
             }
         }    
 
-        void defineFunction( OperandType returnType, std::string functionName, FunctionParametersNode* parameters, ScopeNode* scope) {
+        void defineFunction( DataType* returnType, std::string functionName, FunctionParametersNode* parameters, ScopeNode* scope) {
             if (functions.find(functionName) == functions.end()) {
                 functions[functionName] = std::make_tuple(returnType, parameters, scope);
             } else {
@@ -314,18 +332,18 @@ class Scope {
 
         void reset() {
             variables.clear();
-            this->defineVariable("return", TUNDEFINED, Operand::undefined());
+            this->defineVariable("return", DataType::Undefined(), Operand::undefined());
         }
 
         void assignReturn(Operand value) {
-            variables["return"] = {value.type, value};
+            variables["return"] = {value.dataType, value};
         }
 
-        void breakScope() { variables["break"] = { TUNDEFINED, Operand::undefined() }; }
+        void breakScope() { variables["break"] = { DataType::Undefined(), Operand::undefined() }; }
 
-        void contScope() { variables["continue"] = { TUNDEFINED, Operand::undefined() }; }
+        void contScope() { variables["continue"] = { DataType::Undefined(), Operand::undefined() }; }
 
-        bool returned() { return variables["return"].first != TUNDEFINED; }
+        bool returned() { return variables["return"].first->type != TUNDEFINED; }
 
         bool isBroke() { return variables.find("break") != variables.end(); }
 
@@ -335,12 +353,9 @@ class Scope {
             const auto& it = variables.find(varName);
             if (it != variables.end()) {
                 //TODO: change this later
-                if (variables[varName].first == value.type) {
-                    variables[varName].second = value;
-                } else {
-                    throw std::runtime_error("Variable " + varName + " type mismatch");
-                }
-                
+                if (variables[varName].first->type != value.dataType->type) throw std::runtime_error("Variable " + varName + " type mismatch");
+                else if (variables[varName].first->isConst) throw std::runtime_error("Variable " + varName + " is constant and cannot be assigned");
+                else variables[varName].second = value;
             } else if (parent != nullptr) {
                 parent->assignVariable(varName, value);
             } else {
@@ -384,7 +399,7 @@ class Scope {
 
         OperandType getFunctionReturnType(std::string functionName) {
             if (functions.find(functionName) != functions.end()) {
-                return std::get<0>(functions[functionName]);
+                return std::get<0>(functions[functionName])->type;
             } else {
                 return TUNDEFINED;
             }
@@ -392,7 +407,7 @@ class Scope {
 
         OperandType typeOf(std::string varName) {
             if (variables.find(varName) != variables.end()) {
-                return variables[varName].first;
+                return variables[varName].first->type;
             } else if (parent != nullptr) {
                 return parent->typeOf(varName);
             } else {

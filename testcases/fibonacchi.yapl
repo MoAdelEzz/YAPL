@@ -2,15 +2,13 @@ int N = 35;
 int prev = 1;
 int fibonacchi = 1;
 
-for (int i = 0; i < N - 2; i = i + 1;) {
+for (int i = 0; i < N - 2; i = i + 1) {
     int temp = fibonacchi;
     fibonacchi = fibonacchi + prev;
     prev = temp;
 }
 
-yee("Fibonacchi At Index " + N + " = " + fibonacchi);
-
-
+print("Fibonacchi At Index " + N + " = " + fibonacchi);
 
 int x = 10;
 {

@@ -27,19 +27,20 @@
     FunctionParametersNode* FP;
     FunctionCallParametersNode* FCP;
     SwitchBody* SB;
+    DataType* DT;
     char* str;
 }
 
 
 %token <str> RETURN IDENTIFIER STRING POW SQRT SHL SHR DATA_TYPE IF ELSE WHILE FOR AND OR GTE LTE LT GT ISEQUAL NOTEQUAL DO SWITCH CASE DEFAULT CONTINUE BREAK
-%token <str> CHARACTER INCREMENT DECREMENT
-%token <str> INTEGER BOOLEAN
-%token <str> FLOAT
+%token <str> CHARACTER INCREMENT DECREMENT PLUS_EQUAL MINUS_EQUAL DIV_EQUAL MOD_EQUAL AND_EQUAL OR_EQUAL 
+%token <str> INTEGER BOOLEAN XOR_EQUAL MUL_EQUAL
+%token <str> FLOAT CONST
 %token <str> PRINT
 
 %type <Node>   ForSentence WhileSentence DoWhileSentence FunctionDefinition Case
 %type <Node>   IFSentence VariableAssignment VariableDeclaration SwitchSentence
-%type <Node>   PrintSentence Scope Sentence Sentences ReturnSentence
+%type <Node>   PrintSentence Scope Sentence Sentences ReturnSentence ForPostSentence
 
 %type <Exp>  Operand MathOperand MathOperation Operation Condition
 %type <Exp>  StringOperation StringOperand FunctionCall
@@ -47,24 +48,24 @@
 %type <FP>  FunctionParams 
 %type <FCP> FunctionCallParams
 %type <SB>  SwitchBody
+%type <DT>  Type
 
-%left ';'
-%right ISEQUAL NOTEQUAL PRINT
-%left '|'
-%left '^'
-%left '&'
-%left SHL SHR
+%left ','
+%right '='
+%left '|'           
+%left '^'           
+%left '&'          
+%left ISEQUAL NOTEQUAL
 %left LT GT LTE GTE
+%left SHL SHR
 %left '+' '-'
 %left '*' '/' '%'
-%right '['
-%left ']'
-%left ')'
-%right '('
+%left '(' ')'
+%left '[' ']'
 %right IF
 %right ELSE
-
-%start Program
+%left ';'
+%left PRINT
 
 %%
 
@@ -84,8 +85,8 @@ Scope:  '{' Sentences '}'       { $$ = new ScopeNode($2); }
 
 
 Sentence: 
-      VariableAssignment        { $$ = $1; }
-    | VariableDeclaration       { $$ = $1; }   
+      VariableAssignment ';'    { $$ = $1; }
+    | VariableDeclaration ';'       { $$ = $1; }   
     | FunctionDefinition        { $$ = $1; }
     | IFSentence                { $$ = $1; }   
     | ForSentence               { $$ = $1; }
@@ -96,7 +97,6 @@ Sentence:
     | SwitchSentence            { $$ = $1; }
     | CONTINUE ';'              { $$ = new ContinueNode();}       
     | BREAK ';'                 { $$ = new BreakNode();}
-    /* | Operation ';'             { $$ = new ProgramNode($1); } */
 
 SwitchSentence:  
       SWITCH '(' IDENTIFIER ')' '{' SwitchBody '}' { $$ = new SwitchNode($3, $6); }
@@ -127,9 +127,13 @@ IFSentence:
     | IFSentence ELSE IFSentence   { $$ = dynamic_cast<IfNode*>($1)->setElse($3);  }
     | IFSentence ELSE Scope        { $$ = dynamic_cast<IfNode*>($1)->setElse($3);  }
 
-ForSentence: FOR '(' VariableDeclaration Condition ';' VariableAssignment ')' Scope {
-    $$ = new ForNode(dynamic_cast<DefineNode*>($3), $4, dynamic_cast<AssignNode*>($6), dynamic_cast<ScopeNode*>($8));
+ForSentence: FOR '(' VariableDeclaration ';' Condition ';' ForPostSentence ')' Scope {
+    $$ = new ForNode(dynamic_cast<DefineNode*>($3), $5, dynamic_cast<AssignNode*>($7), dynamic_cast<ScopeNode*>($9));
 }
+
+ForPostSentence:
+      VariableAssignment                         { $$ = $1;  }
+    | ForPostSentence ',' VariableAssignment     { $$ = dynamic_cast<AssignNode*>($1)->setNextAssignment($3); };
 
 WhileSentence: WHILE '(' Condition ')' Scope {
     $$ = new WhileNode($3, dynamic_cast<ScopeNode*>($5));
@@ -140,73 +144,81 @@ DoWhileSentence: DO Scope WHILE '(' Condition ')' ';' {
 }
 
 FunctionDefinition: 
-      DATA_TYPE IDENTIFIER '(' FunctionParams ')' Scope { 
+      Type IDENTIFIER '(' FunctionParams ')' Scope { 
         dynamic_cast<ScopeNode*>($6)->returnable = true;
         $$ = new FunctionDefintionNode($1, $2, $4, dynamic_cast<ScopeNode*>($6)); 
     }
-    | DATA_TYPE IDENTIFIER '(' ')' Scope                { 
+
+    | Type IDENTIFIER '(' ')' Scope                { 
         dynamic_cast<ScopeNode*>($5)->returnable = true;
         $$ = new FunctionDefintionNode($1, $2, nullptr, dynamic_cast<ScopeNode*>($5)); 
     }  
 
 FunctionParams: 
-      FunctionParams ',' DATA_TYPE IDENTIFIER       { $$ = $1->addParameter($3, $4);}
-    | DATA_TYPE IDENTIFIER                          { $$ = new FunctionParametersNode($1, $2);}
+      FunctionParams ',' Type IDENTIFIER                { $$ = $1->addParameter($3, $4);}
+    | Type IDENTIFIER                                   { $$ = new FunctionParametersNode($1, $2);}
 
 VariableDeclaration: 
-      DATA_TYPE IDENTIFIER ';'                      { $$ = new DefineNode($1, $2, nullptr); }
-    | DATA_TYPE IDENTIFIER '=' Operation ';'        { $$ = new DefineNode($1, $2, $4); }
+      Type IDENTIFIER                                   { $$ = new DefineNode($1, $2, nullptr); }
+    | Type IDENTIFIER '=' Operation                     { $$ = new DefineNode($1, $2, $4); }
+    | VariableDeclaration ',' IDENTIFIER                { $$ = dynamic_cast<DefineNode*>($1)->setNextDefine( new DefineNode($3, nullptr) ); }
+    | VariableDeclaration ',' IDENTIFIER '=' Operation  { $$ = dynamic_cast<DefineNode*>($1)->setNextDefine( new DefineNode($3, $5) ); }
 
 VariableAssignment: 
-      IDENTIFIER     '=' Operation ';'    { $$ = new AssignNode($1, $3); }        
+      IDENTIFIER     '=' Operation    { $$ = new AssignNode($1, $3); }        
 
-    | IDENTIFIER '+' '=' Operation ';'    { 
+    | Operation {
+        $$ = new AssignNode("", $1);
+    } 
+    
+    | IDENTIFIER PLUS_EQUAL Operation    { 
         Expression* id = new IdentifierContainer($1);
-        Expression* exp = new Expression(id, $4, OP_ADD);
+        Expression* exp = new Expression(id, $3, OP_ADD);
         $$ = new AssignNode($1, exp); 
     }
 
-    | IDENTIFIER '-' '=' Operation ';'    { 
+    | IDENTIFIER MINUS_EQUAL Operation    { 
         Expression* id = new IdentifierContainer($1);
-        Expression* exp = new Expression(id, $4, OP_SUB);
+        Expression* exp = new Expression(id, $3, OP_SUB);
         $$ = new AssignNode($1, exp); 
     }
 
-    | IDENTIFIER '*' '=' Operation ';'    { 
+    | IDENTIFIER MUL_EQUAL Operation    { 
         Expression* id = new IdentifierContainer($1);
-        Expression* exp = new Expression(id, $4, OP_MUL);
+        Expression* exp = new Expression(id, $3, OP_MUL);
         $$ = new AssignNode($1, exp); 
     }
 
-    | IDENTIFIER '/' '=' Operation ';'    { 
+    | IDENTIFIER DIV_EQUAL Operation    { 
         Expression* id = new IdentifierContainer($1);
-        Expression* exp = new Expression(id, $4, OP_DIV);
+        Expression* exp = new Expression(id, $3, OP_DIV);
         $$ = new AssignNode($1, exp); 
     }
 
-    | IDENTIFIER '%' '=' Operation ';'    { 
+    | IDENTIFIER MOD_EQUAL Operation    { 
         Expression* id = new IdentifierContainer($1);
-        Expression* exp = new Expression(id, $4, OP_MOD);
+        Expression* exp = new Expression(id, $3, OP_MOD);
         $$ = new AssignNode($1, exp); 
     }
 
-    | IDENTIFIER '&' '=' Operation ';'    { 
+    | IDENTIFIER AND_EQUAL Operation    { 
         Expression* id = new IdentifierContainer($1);
-        Expression* exp = new Expression(id, $4, OP_AND);
+        Expression* exp = new Expression(id, $3, OP_AND);
         $$ = new AssignNode($1, exp); 
     }
 
-    | IDENTIFIER '|' '=' Operation ';'    { 
+    | IDENTIFIER OR_EQUAL Operation    { 
         Expression* id = new IdentifierContainer($1);
-        Expression* exp = new Expression(id, $4, OP_OR);
+        Expression* exp = new Expression(id, $3, OP_OR);
         $$ = new AssignNode($1, exp); 
     }
 
-    | IDENTIFIER '^' '=' Operation ';'    { 
+    | IDENTIFIER XOR_EQUAL Operation    { 
         Expression* id = new IdentifierContainer($1);
-        Expression* exp = new Expression(id, $4, OP_XOR);
+        Expression* exp = new Expression(id, $3, OP_XOR);
         $$ = new AssignNode($1, exp); 
     }
+
 
 
 Condition:
@@ -268,25 +280,28 @@ StringOperation:
     |   StringOperation '+' MathOperation               { $$ =  new StringContainer($1, $3, OP_ADD); } 
     |   StringOperation '-' MathOperation               { $$ =  new StringContainer($1, $3, OP_SUB); }    
     |   '(' StringOperation ')'                         { $$ =  $2; } 
-    /* |   StringOperand '[' INTEGER ':' INTEGER ']'    { $$ =  new StringContainer($1, $3, OP_SHR); }  */
-    |   StringOperation SHL StringOperation                 { $$ =  new StringContainer($1, $3, OP_SHL); } 
-    |   StringOperation SHR StringOperation                 { $$ =  new StringContainer($1, $3, OP_SHR); } 
+    |   StringOperation SHL StringOperation             { $$ =  new StringContainer($1, $3, OP_SHL); } 
+    |   StringOperation SHR StringOperation             { $$ =  new StringContainer($1, $3, OP_SHR); } 
     |   StringOperand   
 
 Operand: MathOperand | StringOperand;
 
 MathOperand:
-          INTEGER       { $$ = new Expression($1, TINT);}
+          INTEGER       { $$ = new Expression($1, DataType::Int());}
 
-        | FLOAT         { $$ = new Expression($1, TFLOAT);}
+        | FLOAT         { $$ = new Expression($1, DataType::Float());}
 
-        | CHARACTER     { $$ = new Expression($1, TCHAR);}
+        | CHARACTER     { $$ = new Expression($1, DataType::Char());}
 
-        | BOOLEAN       { $$ = new Expression($1, TBOOLEAN);}
+        | BOOLEAN       { $$ = new Expression($1, DataType::Bool());}
 
         | IDENTIFIER    { $$ = new IdentifierContainer($1); }
     
 StringOperand: STRING   { $$ = new StringContainer($1); }
+
+Type:
+      CONST DATA_TYPE   { $$ = new DataType($2, true);}
+    | DATA_TYPE         { $$ = new DataType($1, false);}
 
 %%
 

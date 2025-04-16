@@ -19,10 +19,9 @@ class Expression {
     public:
         Expression(Expression *l, Expression *r, OperationType op) : left(l), right(r), op(op) { }
 
-        Expression(const char* value, OperandType type) { nodeValue.init(value, type); }
+        Expression(const char* value, DataType* type) { nodeValue.init(value, type); }
 
-        
-        OperandType getType() { return nodeValue.type; }
+        OperandType getType() { return nodeValue.dataType->type; }
     
         OperandType inferResultType(OperandType type1, OperandType type2) {
             if (type1 == TVOID || type2 == TVOID) { return TUNDEFINED; }
@@ -56,23 +55,23 @@ class Expression {
             Operand op1 = left->getValue(scope);
             Operand op2 = right->getValue(scope);
 
-            if (op1.type == TVOID || op2.type == TVOID) {
+            if (op1.dataType->type == TVOID || op2.dataType->type == TVOID) {
                 throw std::runtime_error("Invalid Operand Type");
             }
 
             if (op == OP_SQRT) {
                 float res = sqrt((float)op1);
-                nodeValue.init(std::to_string(res).c_str(), TFLOAT);
+                nodeValue.init(std::to_string(res).c_str(), DataType::Float());
                 return nodeValue;
             }
 
             if (op == OP_POW) {
                 float res = pow((float)op1, (float)op2);
-                nodeValue.init(std::to_string(res).c_str(), TFLOAT);
+                nodeValue.init(std::to_string(res).c_str(), DataType::Float());
                 return nodeValue;
             }
             
-            OperandType resType = inferResultType(op1.type, op2.type);
+            OperandType resType = inferResultType(op1.dataType->type, op2.dataType->type);
             if (resType == TINT || resType == TBOOLEAN || resType == TCHAR) {
                 int result = 0;
                 switch (op) {
@@ -113,7 +112,7 @@ class Expression {
                     default:
                         break;
                 }
-                nodeValue.init(std::to_string(result).c_str(), resType);
+                nodeValue.init(std::to_string(result).c_str(), new DataType(resType));
             } else {
                 float result = 0;
                 switch (op) {
@@ -126,10 +125,10 @@ class Expression {
                     case OP_DIV:
                         result = (float)op1 / (float)op2;   break;
                     case OP_MOD:
-                        throw("mod operation is not supported for float");
+                        throw std::runtime_error("mod operation is not supported for float");
                         break;
                     case OP_AND: case OP_OR: case OP_XOR: case OP_SHL: case OP_SHR:
-                        throw("bitwise operation is not supported for float");
+                        throw std::runtime_error("bitwise operation is not supported for float");
                         break;
                     case OP_EQ:
                         result = (float)op1 == (float)op2;  break;
@@ -144,9 +143,10 @@ class Expression {
                     case OP_GE:
                         result = (float)op1 >= (float)op2;  break;
                     default:
+                        throw std::runtime_error("unknown operation");
                         break;
                 }
-                nodeValue.init(std::to_string(result).c_str(), resType);
+                nodeValue.init(std::to_string(result).c_str(), new DataType(resType));
             }
             
             return nodeValue;
@@ -169,15 +169,15 @@ class Expression {
 class StringContainer : public Expression {
     public:
         StringContainer(Expression *left, Expression *right, OperationType op) : Expression(left, right, op) {}
-        StringContainer(const char* value) : Expression(value, TSTRING) {}
+        StringContainer(const char* value) : Expression(value, DataType::String()) {}
         
         Operand calculateNodeValue(Expression* left, Expression* right, Scope* scope) 
         { 
             Operand op1 = left->getValue(scope);
             Operand op2 = right->getValue(scope);
 
-            if (op1.type == TVOID || op2.type == TVOID) {
-                throw("void operation is not supported for string");
+            if (op1.dataType->type == TVOID || op2.dataType->type == TVOID) {
+                throw std::runtime_error("void operation is not supported for string");
             }
             
             std::string result = "";
@@ -196,6 +196,13 @@ class StringContainer : public Expression {
                 case OP_MUL:
                     result = op1.toString();
                     for (int i = 0; i < (int)op2; i++) { result += op1.toString(); }
+                    break;
+
+                case OP_SHL:
+                    result = op2.toString() + " " + op1.toString(); break;
+
+                case OP_SHR:
+                    result = op1.toString() + " " + op2.toString(); break;
 
                 case OP_EQ:
                     result = op1.toString() == op2.toString();  break;
@@ -217,7 +224,7 @@ class StringContainer : public Expression {
 
                 default: break;
             }
-            nodeValue.init(result.c_str(), TSTRING);
+            nodeValue.init(result.c_str(), DataType::String());
             return nodeValue;
         }
 
@@ -232,7 +239,7 @@ class IdentifierContainer : public Expression {
     OperationType op;
     public:
         IdentifierContainer(std::string varName, OperationType op = OP_NONE) 
-        : Expression(nullptr, TUNDEFINED), varName(varName), op(op)  {}
+        : Expression(nullptr, DataType::Undefined()), varName(varName), op(op)  {}
         
         Operand getValue(Scope* scope = nullptr) { 
             Operand value = scope->valueOf(this->varName);

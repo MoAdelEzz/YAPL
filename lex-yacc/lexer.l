@@ -23,6 +23,7 @@ case                { return CASE; }
 default             { return DEFAULT;}
 continue            { return CONTINUE; }
 break               { return BREAK;}
+const               { return CONST; }
 true|false          {
                         yylval.str = strdup(yytext);
                         return BOOLEAN;
@@ -48,6 +49,14 @@ print               { return PRINT; }
 \!\=                { return NOTEQUAL;}
 \+\+                { return INCREMENT; }
 \-\-                { return DECREMENT; }
+\+\=                { return PLUS_EQUAL; }
+\-\=                { return MINUS_EQUAL; }
+\*\=                { return MUL_EQUAL; }
+\/\=                { return DIV_EQUAL; }
+\%\=                { return MOD_EQUAL; }
+\&\=                { return AND_EQUAL; }
+\|\=                { return OR_EQUAL; }
+\^\=                { return XOR_EQUAL; }
 
 int|float|bool|char|string|void { yylval.str = strdup(yytext); return DATA_TYPE; }
 

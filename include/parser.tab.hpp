@@ -83,10 +83,19 @@ extern int yydebug;
     CHARACTER = 284,               /* CHARACTER  */
     INCREMENT = 285,               /* INCREMENT  */
     DECREMENT = 286,               /* DECREMENT  */
-    INTEGER = 287,                 /* INTEGER  */
-    BOOLEAN = 288,                 /* BOOLEAN  */
-    FLOAT = 289,                   /* FLOAT  */
-    PRINT = 290                    /* PRINT  */
+    PLUS_EQUAL = 287,              /* PLUS_EQUAL  */
+    MINUS_EQUAL = 288,             /* MINUS_EQUAL  */
+    DIV_EQUAL = 289,               /* DIV_EQUAL  */
+    MOD_EQUAL = 290,               /* MOD_EQUAL  */
+    AND_EQUAL = 291,               /* AND_EQUAL  */
+    OR_EQUAL = 292,                /* OR_EQUAL  */
+    INTEGER = 293,                 /* INTEGER  */
+    BOOLEAN = 294,                 /* BOOLEAN  */
+    XOR_EQUAL = 295,               /* XOR_EQUAL  */
+    MUL_EQUAL = 296,               /* MUL_EQUAL  */
+    FLOAT = 297,                   /* FLOAT  */
+    CONST = 298,                   /* CONST  */
+    PRINT = 299                    /* PRINT  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -102,9 +111,10 @@ union YYSTYPE
     FunctionParametersNode* FP;
     FunctionCallParametersNode* FCP;
     SwitchBody* SB;
+    DataType* DT;
     char* str;
 
-#line 108 "include/parser.tab.hpp"
+#line 118 "include/parser.tab.hpp"
 
 };
 typedef union YYSTYPE YYSTYPE;

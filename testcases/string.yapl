@@ -1,5 +1,11 @@
-x = "mohamed " + "adel";
-x = "MoAdelEzz" - 3;
-x = "Nigga" << "Move";
-x = "Move" >> "Nigga";
-x = "Fox Osama Nigger"[4:11];
+string x = "Team " + "7";
+print(x);
+
+x = "MoAozKe" - 3;
+print(x);
+
+x = "Move" << "Please";
+print(x);
+
+x = "Move" >> "Please";
+print(x);

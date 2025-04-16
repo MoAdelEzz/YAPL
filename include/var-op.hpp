@@ -4,40 +4,80 @@
 #include "expression.hpp"
 
 class DefineNode : public ProgramNode {
+    DataType* type;
     Expression* value;
     std::string name;
-    OperandType type;
-    
+    DefineNode* nextDefine = nullptr;
+
+
     public:
-        DefineNode( std::string type, std::string name, Expression* value) {            
+        DefineNode( DataType* type, std::string name, Expression* value) {            
             this->name = name;
             this->value = value;
-            if (type == "int") { this->type = TINT; }
-            else if (type == "float") { this->type = TFLOAT; }
-            else if (type == "char") { this->type = TCHAR; }
-            else if (type == "string") { this->type = TSTRING; }
-            else if (type == "bool") { this->type = TBOOLEAN; }
-            else if (type == "void") { this->type = TVOID; }
+            this->type = type;
         }
 
-        void run(Scope* scope = nullptr) {
+        DefineNode( std::string name, Expression* value) {
+            this->name = name;
+            this->value = value;
+            this->type = DataType::Undefined();
+        }
+
+        void setType(DataType* t) { type = t; }
+
+        ProgramNode* setNextDefine(DefineNode* next) { 
+            next->setType(type);
+
+            if (this->nextDefine) {
+                this->nextDefine->setNextDefine(next);
+            } else {
+                this->nextDefine = next;
+            } 
+
+            return this;
+        }
+
+
+        void run(Scope* scope = nullptr) override {
             scope->defineVariable(name, type, value->getValue(scope));
+            if (nextDefine) { nextDefine->run(scope); }
+        }
+
+        std::string nodeName() override {
+            return "DefineNode";
         }
 };
 
 class AssignNode: public ProgramNode {
     Expression* value;
     std::string name;
+
+    ProgramNode* nextAssign;
     
     public:
-        AssignNode( std::string name, Expression* value ) {            
+        AssignNode( std::string name, Expression* value) {   
             this->name = name;
             this->value = value;
             this->setNext(nullptr);
         }
 
+        ProgramNode* setNextAssignment(ProgramNode* nextAssign) { 
+            if (this->nextAssign) {
+                this->nextAssign->setNext(nextAssign);
+            } else {
+                this->nextAssign = nextAssign;
+            } 
+            return this;
+        }
+
         void run(Scope* scope = nullptr) {
-            scope->assignVariable(name,  value->getValue(scope));
+            if (name.size() == 0) {
+                value->getValue(scope);
+            } else {
+                scope->assignVariable(name,  value->getValue(scope));
+            }
+
+            if (nextAssign) { nextAssign->run(scope); }
             // std::cout << "Assigning " << name << " = " << scope->valueOf(name) << std::endl;
         }
 };

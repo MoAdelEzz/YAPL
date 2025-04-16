@@ -6,24 +6,18 @@
 #include <vector>
 
 class FunctionDefintionNode : public ProgramNode {
-    OperandType returnType;
+    DataType* returnType;
     std::string name;
     FunctionParametersNode* parameters;
     ScopeNode* body;
     
     public:
 
-        FunctionDefintionNode( std::string returnType, std::string name, FunctionParametersNode* params, ScopeNode* body) {   
+        FunctionDefintionNode( DataType* returnType, std::string name, FunctionParametersNode* params, ScopeNode* body) {   
             this->name = name;
             this->parameters = params ? params : new FunctionParametersNode();
             this->body = body;
-
-            if (returnType == "int") { this->returnType = TINT; }
-            else if (returnType == "float") { this->returnType = TFLOAT; }
-            else if (returnType == "char") { this->returnType = TCHAR; }
-            else if (returnType == "string") { this->returnType = TSTRING; }
-            else if (returnType == "bool") { this->returnType = TBOOLEAN; }
-            else if (returnType == "void") { this->returnType = TVOID; }
+            this->returnType = returnType;
         }
 
         void run(Scope* scope = nullptr) {
@@ -37,7 +31,7 @@ class FunctionCallNode : public Expression {
     FunctionCallParametersNode* arguments;
     
     public:
-        FunctionCallNode(std::string name, FunctionCallParametersNode* arguments) : Expression(nullptr, TUNDEFINED) {   
+        FunctionCallNode(std::string name, FunctionCallParametersNode* arguments) : Expression(nullptr, DataType::Undefined()) {   
             this->name = name;
             this->arguments = arguments ? arguments : new FunctionCallParametersNode();
         }
@@ -48,7 +42,7 @@ class FunctionCallNode : public Expression {
 
             for (int i = 0; i < functionParameters->names.size(); i++) { 
                 // TODO: you can relax this a lil bit if we just look if the type can be matched instead of being exactly the same
-                if (arguments->params[i]->getType() != functionParameters->types[i]) { 
+                if (arguments->params[i]->getType() != functionParameters->types[i]->type) { 
                     throw std::runtime_error("Argument type mismatch"); 
                 }
 
@@ -62,11 +56,11 @@ class FunctionCallNode : public Expression {
             Operand returnValue = functionScope->valueOf("return");
             functionScope->getScope()->reset();
 
-            if (returnValue.type != scope->getFunctionReturnType(name)) {
+            if (returnValue.dataType->type != scope->getFunctionReturnType(name)) {
                 std::cout << "Mismatch in return type" << std::endl;
-                throw "Return Type Mismatch";
+                throw std::runtime_error("Return Type Mismatch");
                 return Operand::undefined();
-            } else if (returnValue.type == TVOID) {
+            } else if (returnValue.dataType->type == TVOID) {
                 return Operand::voidValue();
             } else {
                 return returnValue;

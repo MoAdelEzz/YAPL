@@ -18,16 +18,17 @@ class ForNode : public ProgramNode {
         }
 
         void run(Scope* scope = nullptr) {
-            preLoop->run(scope);
-            body->breakable = true;
-            body->continuable = true;
+            ScopeNode* forScope = new ScopeNode(scope);
+            preLoop->run(forScope->getScope());
+            forScope->breakable = true;
+            forScope->continuable = true;
 
-            while (condition->getValue(scope) != 0) {
-                body->run(scope);
-                postLoop->run(scope);
+            while (condition->getValue(forScope->getScope()) != 0) {
+                body->run(forScope->getScope());
+                postLoop->run(forScope->getScope());
                 body->resetScope();
 
-                if (body->getScope()->isBroke()) {
+                if (forScope->getScope()->isBroke()) {
                     break;
                 }
             }

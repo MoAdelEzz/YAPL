@@ -16,7 +16,7 @@ switch (x) {
             }
             print("should break i guess");
         } else {
-            print("ok this is sussy");
+            print("ok this is sus");
         }
         print("Yes Yes Yes Yes Yes");
 
