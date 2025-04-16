@@ -177,7 +177,7 @@ enum yysymbol_kind_t
   YYSYMBOL_56_ = 56,                       /* ')'  */
   YYSYMBOL_57_ = 57,                       /* '['  */
   YYSYMBOL_58_ = 58,                       /* ']'  */
-  YYSYMBOL_59_ = 59,                       /* '~'  */
+  YYSYMBOL_59_ = 59,                       /* '!'  */
   YYSYMBOL_60_ = 60,                       /* ';'  */
   YYSYMBOL_61_ = 61,                       /* '{'  */
   YYSYMBOL_62_ = 62,                       /* '}'  */
@@ -567,7 +567,7 @@ static const yytype_int8 yytranslate[] =
        0,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
-       2,     2,     2,     2,     2,     2,     2,    54,    49,     2,
+       2,     2,     2,    59,     2,     2,     2,    54,    49,     2,
       55,    56,    52,    50,    45,    51,     2,    53,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,    63,    60,
        2,    46,     2,     2,     2,     2,     2,     2,     2,     2,
@@ -576,7 +576,7 @@ static const yytype_int8 yytranslate[] =
        2,    57,     2,    58,    48,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
-       2,     2,     2,    61,    47,    62,    59,     2,     2,     2,
+       2,     2,     2,    61,    47,    62,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
@@ -635,7 +635,7 @@ static const char *const yytname[] =
   "DIV_EQUAL", "MOD_EQUAL", "AND_EQUAL", "OR_EQUAL", "INTEGER", "BOOLEAN",
   "XOR_EQUAL", "MUL_EQUAL", "FLOAT", "CONST", "PRINT", "','", "'='", "'|'",
   "'^'", "'&'", "'+'", "'-'", "'*'", "'/'", "'%'", "'('", "')'", "'['",
-  "']'", "'~'", "';'", "'{'", "'}'", "':'", "$accept", "Program",
+  "']'", "'!'", "';'", "'{'", "'}'", "':'", "$accept", "Program",
   "Sentences", "Scope", "Sentence", "SwitchSentence", "SwitchBody", "Case",
   "ReturnSentence", "PrintSentence", "IFSentence", "ForSentence",
   "ForPostSentence", "WhileSentence", "DoWhileSentence",
@@ -1745,7 +1745,7 @@ yyreduce:
 #line 1746 "src/parser.tab.cpp"
     break;
 
-  case 55: /* Condition: '~' Condition  */
+  case 55: /* Condition: '!' Condition  */
 #line 228 "lex-yacc/parser.ypp"
                                                       { (yyval.Exp) = new Expression((yyvsp[0].Exp), (yyvsp[0].Exp), OP_NOT); }
 #line 1752 "src/parser.tab.cpp"

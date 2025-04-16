@@ -73,7 +73,7 @@ class Expression {
 
             OperandType resType = inferResultType(op1.dataType->type, op2.dataType->type);
 
-            if (op == OP_AND || op == OP_OR) {
+            if (op == OP_AND || op == OP_OR || op == OP_NOT) {
                 resType = TBOOLEAN;
             }
 

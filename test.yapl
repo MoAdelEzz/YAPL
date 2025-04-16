@@ -1,18 +1,9 @@
-const int foo() {
-    print("woo");
+int sum = 0;
 
-    return 5;
+bool found = false;
+
+for (int i = 0; i < 5 && !found; i++) {
+    sum += 2;
 }
 
-int n = 20, m = 10;
-
-
-int x = 0;
-
-for (int i = 0, j = 1; i < n && j < m; i++, j++) {
-    x++;
-}
-
-print(x);
-
-foo();
+print(sum);

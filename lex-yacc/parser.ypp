@@ -62,7 +62,7 @@
 %left '*' '/' '%'
 %left '(' ')'
 %left '[' ']'
-%right '~' OR AND
+%right '!' OR AND
 %right IF
 %right ELSE
 %left ';'
@@ -225,7 +225,7 @@ VariableAssignment:
 Condition:
         Condition     OR       Condition              { $$ = new Expression($1, $3, OP_OR);  }
     |   Condition     AND      Condition              { $$ = new Expression($1, $3, OP_AND); } 
-    |   '~' Condition                                 { $$ = new Expression($2, $2, OP_NOT); }
+    |   '!' Condition                                 { $$ = new Expression($2, $2, OP_NOT); }
 
     |     MathOperation GTE      MathOperation          { $$ = new Expression($1, $3, OP_GE);  } 
     |     MathOperation GT       MathOperation          { $$ = new Expression($1, $3, OP_GT);  } 

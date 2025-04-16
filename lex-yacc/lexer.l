@@ -91,7 +91,7 @@ int|float|bool|char|string|void { yylval.str = strdup(yytext); return DATA_TYPE;
     return STRING;
 }
 
-[~=();+\-*/%,&|^\[\]:\}\{] {
+[~!=();+\-*/%,&|^\[\]:\}\{] {
     // std::cout << "symbol " << yytext << std::endl;
     return yytext[0];
 }
