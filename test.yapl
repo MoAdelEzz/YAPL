@@ -1,31 +1,18 @@
-int x = 10;
-switch (x) {
-    case 12:
-        x = 0;
-        print("No No No No No");
+const int foo() {
+    print("woo");
 
-    case 10:
-        x = 12;
-        if (true) {
-            if (false) {
-                print("moa");
-            } 
-            else {
-                print("here");
-                break;
-            }
-            print("should break i guess");
-        } else {
-            print("ok this is sus");
-        }
-        print("Yes Yes Yes Yes Yes");
-
-    case 9:
-        x = 9;
-        print("Hm Hm Hm Hm HM");
-
-    default:
-        print("GGGG");
+    return 5;
 }
 
-print("x = " + x);
+int n = 20, m = 10;
+
+
+int x = 0;
+
+for (int i = 0, j = 1; i < n && j < m; i++, j++) {
+    x++;
+}
+
+print(x);
+
+foo();

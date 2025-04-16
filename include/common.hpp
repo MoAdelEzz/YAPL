@@ -72,7 +72,7 @@ class Operand {
                 case TCHAR:
                     *(char*)content = value[0]; break;
                 case TBOOLEAN:
-                    *(int*)content = strcmp(value, "true") ? 0 : 1; break;
+                    *(int*)content = strcmp(value, "true") && strcmp(value, "1") ? 0 : 1; break;
                 default: break;
             }
         }

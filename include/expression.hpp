@@ -5,7 +5,7 @@
 enum OperationType { 
     OP_ADD, OP_PRE_ADD, OP_POST_ADD, OP_SUB, OP_MUL, OP_DIV, OP_MOD, 
     OP_EQ, OP_PRE_SUB, OP_POST_SUB, OP_NEQ, OP_LT, OP_LE, OP_GT, OP_GE, 
-    OP_AND, OP_OR, OP_XOR, OP_NOT, OP_SHL, OP_SHR,
+    OP_AND, OP_BW_AND, OP_OR, OP_BW_OR, OP_NOT, OP_BW_NOT, OP_XOR, OP_SHL, OP_SHR,
     OP_POW, OP_SQRT, OP_NONE
 };
 
@@ -17,7 +17,7 @@ class Expression {
 
         Operand nodeValue;
     public:
-        Expression(Expression *l, Expression *r, OperationType op) : left(l), right(r), op(op) { }
+        Expression(Expression *l, Expression *r, OperationType op) : left(l), right(r), op(op) {}
 
         Expression(const char* value, DataType* type) { nodeValue.init(value, type); }
 
@@ -70,8 +70,13 @@ class Expression {
                 nodeValue.init(std::to_string(res).c_str(), DataType::Float());
                 return nodeValue;
             }
-            
+
             OperandType resType = inferResultType(op1.dataType->type, op2.dataType->type);
+
+            if (op == OP_AND || op == OP_OR) {
+                resType = TBOOLEAN;
+            }
+
             if (resType == TINT || resType == TBOOLEAN || resType == TCHAR) {
                 int result = 0;
                 switch (op) {
@@ -88,9 +93,17 @@ class Expression {
                     case OP_MOD:
                         result = (int)op1 % (int)op2;   break;
                     case OP_AND:
-                        result = (int)op1 & (int)op2;  break;
+                        result = (int)op1 && (int)op2;  break;
+                    case OP_BW_AND:
+                        result = (int)op1 && (int)op2;  break;
+                    case OP_BW_OR:
+                        result = (int)op1 | (int)op2;   break;
+                    case OP_NOT:
+                        result = !(int)op1;             break;
+                    case OP_BW_NOT:
+                        result = ~(int)op1;             break;
                     case OP_OR: 
-                        result = (int)op1 | (int)op2;  break;
+                        result = (int)op1 || (int)op2;  break;
                     case OP_XOR:
                         result = (int)op1 ^ (int)op2;  break;
                     case OP_EQ:
@@ -127,7 +140,11 @@ class Expression {
                     case OP_MOD:
                         throw std::runtime_error("mod operation is not supported for float");
                         break;
-                    case OP_AND: case OP_OR: case OP_XOR: case OP_SHL: case OP_SHR:
+                    case OP_AND:
+                        result = (float)op1 && (float)op2;  break;
+                    case OP_NOT:
+                        result = !(float)op1;               break;
+                    case OP_BW_AND: case OP_BW_OR: case OP_BW_NOT: case OP_XOR: case OP_SHL: case OP_SHR:
                         throw std::runtime_error("bitwise operation is not supported for float");
                         break;
                     case OP_EQ:

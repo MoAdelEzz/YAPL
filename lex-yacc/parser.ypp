@@ -62,6 +62,7 @@
 %left '*' '/' '%'
 %left '(' ')'
 %left '[' ']'
+%right '~' OR AND
 %right IF
 %right ELSE
 %left ';'
@@ -222,21 +223,23 @@ VariableAssignment:
 
 
 Condition:
-        Condition OR MathOperation                  { $$ = new Expression($1, $3, OP_OR);  }
-    |   Condition AND MathOperation                 { $$ = new Expression($1, $3, OP_AND); } 
-    |   Condition GTE MathOperation                 { $$ = new Expression($1, $3, OP_GE);  } 
-    |   Condition GT MathOperation                  { $$ = new Expression($1, $3, OP_GT);  } 
-    |   Condition LTE MathOperation                 { $$ = new Expression($1, $3, OP_LE);  } 
-    |   Condition LT MathOperation                  { $$ = new Expression($1, $3, OP_LT);  } 
-    |   Condition ISEQUAL MathOperation             { $$ = new Expression($1, $3, OP_EQ);  } 
-    |   Condition NOTEQUAL MathOperation            { $$ = new Expression($1, $3, OP_NEQ); } 
+        Condition     OR       Condition              { $$ = new Expression($1, $3, OP_OR);  }
+    |   Condition     AND      Condition              { $$ = new Expression($1, $3, OP_AND); } 
+    |   '~' Condition                                 { $$ = new Expression($2, $2, OP_NOT); }
 
-    |   Condition GTE StringOperation               { $$ = new StringContainer($1, $3, OP_GE);   }
-    |   Condition GT StringOperation                { $$ = new StringContainer($1, $3, OP_GT);   }
-    |   Condition LTE StringOperation               { $$ = new StringContainer($1, $3, OP_LE);   }
-    |   Condition LT StringOperation                { $$ = new StringContainer($1, $3, OP_LT);   }
-    |   Condition ISEQUAL StringOperation           { $$ = new StringContainer($1, $3, OP_EQ);   }
-    |   Condition NOTEQUAL StringOperation          { $$ = new StringContainer($1, $3, OP_NEQ);  }
+    |     MathOperation GTE      MathOperation          { $$ = new Expression($1, $3, OP_GE);  } 
+    |     MathOperation GT       MathOperation          { $$ = new Expression($1, $3, OP_GT);  } 
+    |     MathOperation LTE      MathOperation          { $$ = new Expression($1, $3, OP_LE);  } 
+    |     MathOperation LT       MathOperation          { $$ = new Expression($1, $3, OP_LT);  } 
+    |     MathOperation ISEQUAL  MathOperation          { $$ = new Expression($1, $3, OP_EQ);  } 
+    |     MathOperation NOTEQUAL MathOperation          { $$ = new Expression($1, $3, OP_NEQ); } 
+
+    |    StringOperation GTE      StringOperation          { $$ = new StringContainer($1, $3, OP_GE);   }
+    |    StringOperation GT       StringOperation          { $$ = new StringContainer($1, $3, OP_GT);   }
+    |    StringOperation LTE      StringOperation          { $$ = new StringContainer($1, $3, OP_LE);   }
+    |    StringOperation LT       StringOperation          { $$ = new StringContainer($1, $3, OP_LT);   }
+    |    StringOperation ISEQUAL  StringOperation          { $$ = new StringContainer($1, $3, OP_EQ);   }
+    |    StringOperation NOTEQUAL StringOperation          { $$ = new StringContainer($1, $3, OP_NEQ);  }
 
     |   MathOperation                               { $$ = $1; }
     |   StringOperation                             { $$ = $1; }
@@ -266,8 +269,8 @@ MathOperation:
     |   SQRT '(' MathOperation ')'                  { $$ = new Expression($3, $3, OP_SQRT); }
     |   MathOperation SHL MathOperation             { $$ = new Expression($1, $3, OP_SHL); } 
     |   MathOperation SHR MathOperation             { $$ = new Expression($1, $3, OP_SHR); } 
-    |   MathOperation '|' MathOperation             { $$ = new Expression($1, $3, OP_OR); }
-    |   MathOperation '&' MathOperation             { $$ = new Expression($1, $3, OP_AND); }
+    |   MathOperation '|' MathOperation             { $$ = new Expression($1, $3, OP_BW_OR); }
+    |   MathOperation '&' MathOperation             { $$ = new Expression($1, $3, OP_BW_AND); }
     |   MathOperation '^' MathOperation             { $$ = new Expression($1, $3, OP_XOR); }
     |   IDENTIFIER INCREMENT                          { $$ = new IdentifierContainer($1, OP_POST_ADD); }
     |   INCREMENT IDENTIFIER                          { $$ = new IdentifierContainer($2, OP_PRE_ADD); }
