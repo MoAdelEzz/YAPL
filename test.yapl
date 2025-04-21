@@ -1,4 +1,6 @@
-int x = 10;
+int x = "1";
+int y = 2;
+print( x + y );
 if ( x < 10 ) {
     print("here");
 } else {

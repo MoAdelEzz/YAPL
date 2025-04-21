@@ -1,8 +1,10 @@
 #pragma once
 #include "common.hpp"
+#include "errorHandler.hpp"
 #include "scoping.hpp"
 #include "program.hpp"
 #include "expression.hpp"
+#include <string>
 #include <vector>
 
 class FunctionDefintionNode : public ProgramNode {
@@ -12,28 +14,52 @@ class FunctionDefintionNode : public ProgramNode {
     ScopeNode* body;
     
     public:
+        std::string nodeName() override { return "FunctionDefintionNode"; }
 
-        FunctionDefintionNode( DataType* returnType, std::string name, FunctionParametersNode* params, ScopeNode* body) {   
+        FunctionDefintionNode( int line, DataType* returnType, std::string name, FunctionParametersNode* params, ScopeNode* body) 
+        : ProgramNode(line) {   
             this->name = name;
             this->parameters = params ? params : new FunctionParametersNode();
             this->body = body;
             this->returnType = returnType;
+            this->logLineInfo();
         }
 
-        void run(Scope* scope = nullptr) {
-            scope->defineFunction(returnType, name, parameters, body);
+        virtual void runSemanticChecker(Scope* scope = nullptr) override {
+            try {
+                scope->defineFunction(returnType, name, parameters, body);
+            } catch( ErrorDetail error ) {
+                error.setLine(line);
+                CompilerOrganizer::addError(error);
+            }
+        }
+
+
+        void run(Scope* scope = nullptr) override {
+            try {
+                scope->defineFunction(returnType, name, parameters, body);
+            } catch (ErrorDetail error) {
+                error.setLine(this->line);
+                CompilerOrganizer::addError(error);
+            }
         }
 };
 
 
 class FunctionCallNode : public Expression {
+    int line;
     std::string name;
     FunctionCallParametersNode* arguments;
     
     public:
-        FunctionCallNode(std::string name, FunctionCallParametersNode* arguments) : Expression(nullptr, DataType::Undefined()) {   
+        FunctionCallNode(int line, std::string name, FunctionCallParametersNode* arguments) : Expression(nullptr, DataType::Undefined()) {   
             this->name = name;
             this->arguments = arguments ? arguments : new FunctionCallParametersNode();
+            this->line = line;
+        }
+
+        virtual OperandType getExpectedType(Scope* scope = nullptr) {
+            return scope->getFunctionReturnType(name);
         }
 
         Operand getValue(Scope* scope = nullptr) { 

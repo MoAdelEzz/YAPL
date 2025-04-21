@@ -1,4 +1,5 @@
 #pragma once
+#include "errorHandler.hpp"
 #include "program.hpp"
 #include "expression.hpp"
 #include "scoping.hpp"
@@ -14,19 +15,39 @@ class IfNode : public ProgramNode {
             return "IfNode";
         }
 
-        IfNode( int line, Expression* condition, ProgramNode* accept ) : ProgramNode(false) {
+        IfNode( int line, Expression* condition, ProgramNode* accept ) : ProgramNode(line) {
             this->condition = condition;
             this->accept = accept;
-            this->setLine(line);
+            this->logLineInfo();
         }   
 
         IfNode* setElse(ProgramNode* reject) { this->reject = reject; return this; }
 
         void run(Scope* scope = nullptr) override {
-            if (condition->getValue(scope) != 0) {
-                accept->run(scope);
+            bool conditionResult;
+            try {
+                conditionResult = condition->getValue(scope) != 0;
+            } catch (ErrorDetail error) {
+                error.setLine(this->line);
+                CompilerOrganizer::addError(error);
+            }
+
+            if (conditionResult) {
+
+                try {
+                    accept->run(scope);
+                } catch (ErrorDetail error) {
+                    error.setLine(this->line);
+                    CompilerOrganizer::addError(error);
+                }
+
             } else if (reject) {
-                reject->run(scope);
+                try {
+                    reject->run(scope);
+                } catch (ErrorDetail error) {
+                    error.setLine(this->line);
+                    CompilerOrganizer::addError(error);
+                }
             }
         }
 };
@@ -41,20 +62,40 @@ class CaseNode : public ProgramNode {
             return "CaseNode";
         }
 
-        CaseNode( int line, Expression* condition = nullptr) : ProgramNode(false) {
+        CaseNode( int line, Expression* condition = nullptr) : ProgramNode(line) {
             this->condition = condition;
             this->body = nullptr;
-            this->setLine(line);
+            this->logLineInfo();
         }
 
         CaseNode* assignBody(ProgramNode* node) {
-            body = new ScopeNode(node);
+            body = new ScopeNode(-1, node);
             return this;
         }
 
+
+        void runSemanticChecker(Scope* scope = nullptr) override {
+            body->runSemanticChecker(scope); 
+        }
+
         void run(Scope *scope = nullptr, Expression* identifier = nullptr, bool forceMatch = false) {
-            if (forceMatch || condition == nullptr || condition->getValue(scope) == identifier->getValue(scope)) {
-                body->run(scope);
+            bool isSatisfied = false;
+
+            try {
+                isSatisfied = forceMatch || condition == nullptr || condition->getValue(scope) == identifier->getValue(scope);
+            } catch(ErrorDetail error) {
+                error.setLine(this->line);
+                CompilerOrganizer::addError(error);
+            }
+
+            if (isSatisfied) {
+                try {
+                    body->run(scope);
+                } catch (ErrorDetail error) {
+                    error.setLine(this->line);
+                    CompilerOrganizer::addError(error);
+                }
+                
                 isMatched = true;
             }
             else {
@@ -86,14 +127,26 @@ class SwitchNode : public ProgramNode {
             return "SwitchNode";
         }
         
-        SwitchNode( int line, std::string id, SwitchBody* body ) : ProgramNode(false) { 
+        SwitchNode( int line, std::string id, SwitchBody* body ) : ProgramNode(line) { 
             this->body = body;
             this->identifier = new IdentifierContainer(id);
-            this->setLine(line);
+            this->logLineInfo();
+        }
+
+        void runSemanticChecker(Scope* scope = nullptr) override {
+            ScopeNode* SwitchScope = new ScopeNode(-1, scope);
+            SwitchScope->breakable = true;
+
+            if (body) {
+                bool caseMatched = false;
+                for (CaseNode* caseNode : body->getCases()) {
+                    caseNode->runSemanticChecker(scope);
+                }
+            }
         }
 
         void run(Scope* scope = nullptr) override {
-            ScopeNode* SwitchScope = new ScopeNode(scope);
+            ScopeNode* SwitchScope = new ScopeNode(-1, scope);
             SwitchScope->breakable = true;
 
             if (body) {

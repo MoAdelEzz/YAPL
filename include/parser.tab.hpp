@@ -66,12 +66,12 @@ extern int yydebug;
     BREAK = 267,                   /* BREAK  */
     RETURN = 268,                  /* RETURN  */
     PRINT = 269,                   /* PRINT  */
-    IDENTIFIER = 270,              /* IDENTIFIER  */
-    INTEGER = 271,                 /* INTEGER  */
-    BOOLEAN = 272,                 /* BOOLEAN  */
-    FLOAT = 273,                   /* FLOAT  */
-    CONST = 274,                   /* CONST  */
-    DATA_TYPE = 275,               /* DATA_TYPE  */
+    DATA_TYPE = 270,               /* DATA_TYPE  */
+    IDENTIFIER = 271,              /* IDENTIFIER  */
+    INTEGER = 272,                 /* INTEGER  */
+    BOOLEAN = 273,                 /* BOOLEAN  */
+    FLOAT = 274,                   /* FLOAT  */
+    CONST = 275,                   /* CONST  */
     STRING = 276,                  /* STRING  */
     POW = 277,                     /* POW  */
     SQRT = 278,                    /* SQRT  */
@@ -95,7 +95,9 @@ extern int yydebug;
     AND_EQUAL = 296,               /* AND_EQUAL  */
     OR_EQUAL = 297,                /* OR_EQUAL  */
     XOR_EQUAL = 298,               /* XOR_EQUAL  */
-    MUL_EQUAL = 299                /* MUL_EQUAL  */
+    MUL_EQUAL = 299,               /* MUL_EQUAL  */
+    SCOPE_BEGIN = 300,             /* SCOPE_BEGIN  */
+    SCOPE_END = 301                /* SCOPE_END  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -104,7 +106,7 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 25 "lex-yacc/parser.ypp"
+#line 28 "lex-yacc/parser.ypp"
 
     ProgramNode*    Node;
     Expression*     Exp;
@@ -112,10 +114,13 @@ union YYSTYPE
     FunctionCallParametersNode* FCP;
     SwitchBody* SB;
     DataType* DT;
-    int line;
-    char* str;
 
-#line 119 "include/parser.tab.hpp"
+    struct {
+        int line;
+        char* str;
+    } data;
+
+#line 124 "include/parser.tab.hpp"
 
 };
 typedef union YYSTYPE YYSTYPE;

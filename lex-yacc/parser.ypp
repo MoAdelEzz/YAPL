@@ -12,6 +12,7 @@
     #include "functions.hpp"
     #include "controllers.hpp"
     #include "returnNode.hpp"
+    #include "errorHandler.hpp"
 
     #include "parser.tab.hpp"
     extern int yylex();
@@ -19,7 +20,9 @@
     void yyerror(const char* s) {
         std::cerr << "Error: " << s << std::endl;
     }
-    int ProgramNode::lineNumber = 0;
+    std::vector<ErrorDetail> CompilerOrganizer::errors;
+
+    int lineNumber = 1;
 %}
 
 %union  {
@@ -29,17 +32,18 @@
     FunctionCallParametersNode* FCP;
     SwitchBody* SB;
     DataType* DT;
-    int line;
-    char* str;
+
+    struct {
+        int line;
+        char* str;
+    } data;
 }
 
-%token <line> IF ELSE FOR WHILE DO SWITCH CASE DEFAULT CONTINUE BREAK RETURN PRINT
-
-%token <str>  IDENTIFIER INTEGER BOOLEAN FLOAT CONST 
-
-%token <str> DATA_TYPE STRING POW SQRT SHL SHR AND OR GTE LTE LT GT ISEQUAL NOTEQUAL 
-%token <str> CHARACTER INCREMENT DECREMENT PLUS_EQUAL MINUS_EQUAL DIV_EQUAL MOD_EQUAL AND_EQUAL OR_EQUAL 
-%token <str> XOR_EQUAL MUL_EQUAL
+%token <data> IF ELSE FOR WHILE DO SWITCH CASE DEFAULT CONTINUE BREAK RETURN PRINT DATA_TYPE
+%token <data>  IDENTIFIER INTEGER BOOLEAN FLOAT CONST 
+%token <data> STRING POW SQRT SHL SHR AND OR GTE LTE LT GT ISEQUAL NOTEQUAL 
+%token <data> CHARACTER INCREMENT DECREMENT PLUS_EQUAL MINUS_EQUAL DIV_EQUAL MOD_EQUAL AND_EQUAL OR_EQUAL 
+%token <data> XOR_EQUAL MUL_EQUAL SCOPE_BEGIN SCOPE_END
 
 %type <Node>   ForSentence WhileSentence DoWhileSentence FunctionDefinition Case
 %type <Node>   IFSentence VariableAssignment VariableDeclaration SwitchSentence
@@ -74,8 +78,14 @@
 %%
 
 Program: Sentences  {
-    ScopeNode* scopeNode = new ScopeNode($1);
-    scopeNode->run();
+    ScopeNode* scopeNode = new ScopeNode(-1, $1);
+    scopeNode->runSemanticChecker();
+
+    if (CompilerOrganizer::getErrorCount() == 0) {
+        scopeNode->run();
+    } else {
+        std::cout << "There Are " << CompilerOrganizer::getErrorCount()  << " Errors Found" << std::endl;
+    }
 }
 
 Sentences: 
@@ -85,7 +95,7 @@ Sentences:
 
     |                           { $$ = nullptr; }
 
-Scope:  '{' Sentences '}'       { $$ = new ScopeNode($2); }    
+Scope:  SCOPE_BEGIN Sentences SCOPE_END       { $$ = new ScopeNode($1.line, $2); }    
 
 
 Sentence: 
@@ -99,12 +109,70 @@ Sentence:
     | PrintSentence             { $$ = $1; }
     | ReturnSentence            { $$ = $1; }
     | SwitchSentence            { $$ = $1; }
-    | CONTINUE ';'              { $$ = new ContinueNode($1);}       
-    | BREAK ';'                 { $$ = new BreakNode($1);}
+    | CONTINUE ';'              { $$ = new ContinueNode($1.line);}       
+    | BREAK ';'                 { $$ = new BreakNode($1.line);}
+
+
+VariableAssignment: 
+      IDENTIFIER '=' Operation    { $$ = new AssignNode($1.line, $1.str, $3); }        
+
+    | Operation {
+        $$ = new AssignNode(lineNumber, "", $1);
+    } 
+    
+    | IDENTIFIER PLUS_EQUAL Operation    { 
+        Expression* id = new IdentifierContainer($1.str);
+        Expression* exp = new Expression(id, $3, OP_ADD);
+        $$ = new AssignNode($1.line, $1.str, exp); 
+    }
+
+    | IDENTIFIER MINUS_EQUAL Operation    { 
+        Expression* id = new IdentifierContainer($1.str);
+        Expression* exp = new Expression(id, $3, OP_SUB);
+        $$ = new AssignNode($1.line, $1.str, exp); 
+    }
+
+    | IDENTIFIER MUL_EQUAL Operation    { 
+        Expression* id = new IdentifierContainer($1.str);
+        Expression* exp = new Expression(id, $3, OP_MUL);
+        $$ = new AssignNode($1.line, $1.str, exp); 
+    }
+
+    | IDENTIFIER DIV_EQUAL Operation    { 
+        Expression* id = new IdentifierContainer($1.str);
+        Expression* exp = new Expression(id, $3, OP_DIV);
+        $$ = new AssignNode($1.line, $1.str, exp); 
+    }
+
+    | IDENTIFIER MOD_EQUAL Operation    { 
+        Expression* id = new IdentifierContainer($1.str);
+        Expression* exp = new Expression(id, $3, OP_MOD);
+        $$ = new AssignNode($1.line, $1.str, exp); 
+    }
+
+    | IDENTIFIER AND_EQUAL Operation    { 
+        Expression* id = new IdentifierContainer($1.str);
+        Expression* exp = new Expression(id, $3, OP_AND);
+        $$ = new AssignNode($1.line, $1.str, exp); 
+    }
+
+    | IDENTIFIER OR_EQUAL Operation    { 
+        Expression* id = new IdentifierContainer($1.str);
+        Expression* exp = new Expression(id, $3, OP_OR);
+        $$ = new AssignNode($1.line, $1.str, exp); 
+    }
+
+    | IDENTIFIER XOR_EQUAL Operation    { 
+        Expression* id = new IdentifierContainer($1.str);
+        Expression* exp = new Expression(id, $3, OP_XOR);
+        $$ = new AssignNode($1.line, $1.str, exp); 
+    }
+
+
 
 SwitchSentence:  
-      SWITCH '(' IDENTIFIER ')' '{' SwitchBody '}' { $$ = new SwitchNode($1, $3, $6); }
-    | SWITCH '(' IDENTIFIER ')' '{' '}'            { $$ = new SwitchNode($1, $3, nullptr); }
+      SWITCH '(' IDENTIFIER ')' SCOPE_BEGIN SwitchBody SCOPE_END { $$ = new SwitchNode($1.line, $3.str, $6); }
+    | SWITCH '(' IDENTIFIER ')' SCOPE_BEGIN SCOPE_END            { $$ = new SwitchNode($1.line, $3.str, nullptr); }
 
 SwitchBody:
       Case Sentences                { 
@@ -115,24 +183,22 @@ SwitchBody:
     }
 
 Case: 
-      CASE Operand ':'              { $$ = new CaseNode($1, $2); }
-    | DEFAULT ':'                   { $$ = new CaseNode($1);};
+      CASE Operand ':'              { $$ = new CaseNode($1.line, $2); }
+    | DEFAULT ':'                   { $$ = new CaseNode($1.line);};
 
 ReturnSentence:
-    RETURN Operation ';'            { $$ = new ReturnNode($1, $2);};
+    RETURN Operation ';'            { $$ = new ReturnNode($1.line, $2);};
 
 PrintSentence:  
-    PRINT '(' Operation ')' ';'     {
-                                        $$ = new PrintNode($1, $3);
-                                    }
+    PRINT '(' Operation ')' ';'     { $$ = new PrintNode($1.line, $3);  }
 
 IFSentence:
-      IF '(' Condition ')' Scope   { $$ = new IfNode($1, $3, $5);   }
+      IF '(' Condition ')' Scope   { $$ = new IfNode($1.line, $3, $5);   }
     | IFSentence ELSE IFSentence   { $$ = dynamic_cast<IfNode*>($1)->setElse($3);  }
     | IFSentence ELSE Scope        { $$ = dynamic_cast<IfNode*>($1)->setElse($3);  }
 
 ForSentence: FOR '(' VariableDeclaration ';' Condition ';' ForPostSentence ')' Scope {
-    $$ = new ForNode($1, dynamic_cast<DefineNode*>($3), $5, dynamic_cast<AssignNode*>($7), dynamic_cast<ScopeNode*>($9));
+    $$ = new ForNode($1.line, dynamic_cast<DefineNode*>($3), $5, dynamic_cast<AssignNode*>($7), dynamic_cast<ScopeNode*>($9));
 }
 
 ForPostSentence:
@@ -140,90 +206,33 @@ ForPostSentence:
     | ForPostSentence ',' VariableAssignment     { $$ = dynamic_cast<AssignNode*>($1)->setNextAssignment($3); };
 
 WhileSentence: WHILE '(' Condition ')' Scope {
-    $$ = new WhileNode($1, $3, dynamic_cast<ScopeNode*>($5));
+    $$ = new WhileNode($1.line, $3, dynamic_cast<ScopeNode*>($5));
 }
 
 DoWhileSentence: DO Scope WHILE '(' Condition ')' ';' {
-    $$ = new DoWhileNode($1, $5, dynamic_cast<ScopeNode*>($2));
+    $$ = new DoWhileNode($1.line, $5, dynamic_cast<ScopeNode*>($2));
 }
 
 FunctionDefinition: 
       Type IDENTIFIER '(' FunctionParams ')' Scope { 
         dynamic_cast<ScopeNode*>($6)->returnable = true;
-        $$ = new FunctionDefintionNode($1, $2, $4, dynamic_cast<ScopeNode*>($6)); 
+        $$ = new FunctionDefintionNode($2.line, $1, $2.str, $4, dynamic_cast<ScopeNode*>($6)); 
     }
 
     | Type IDENTIFIER '(' ')' Scope                { 
         dynamic_cast<ScopeNode*>($5)->returnable = true;
-        $$ = new FunctionDefintionNode($1, $2, nullptr, dynamic_cast<ScopeNode*>($5)); 
+        $$ = new FunctionDefintionNode($2.line, $1, $2.str, nullptr, dynamic_cast<ScopeNode*>($5)); 
     }  
 
 FunctionParams: 
-      FunctionParams ',' Type IDENTIFIER                { $$ = $1->addParameter($3, $4);}
-    | Type IDENTIFIER                                   { $$ = new FunctionParametersNode($1, $2);}
+      FunctionParams ',' Type IDENTIFIER                { $$ = $1->addParameter($3, $4.str);}
+    | Type IDENTIFIER                                   { $$ = new FunctionParametersNode($1, $2.str);}
 
 VariableDeclaration: 
-      Type IDENTIFIER                                   { $$ = new DefineNode($1, $2, nullptr); }
-    | Type IDENTIFIER '=' Operation                     { $$ = new DefineNode($1, $2, $4); }
-    | VariableDeclaration ',' IDENTIFIER                { $$ = dynamic_cast<DefineNode*>($1)->setNextDefine( new DefineNode($3, nullptr) ); }
-    | VariableDeclaration ',' IDENTIFIER '=' Operation  { $$ = dynamic_cast<DefineNode*>($1)->setNextDefine( new DefineNode($3, $5) ); }
-
-VariableAssignment: 
-      IDENTIFIER     '=' Operation    { $$ = new AssignNode($1, $3); }        
-
-    | Operation {
-        $$ = new AssignNode("", $1);
-    } 
-    
-    | IDENTIFIER PLUS_EQUAL Operation    { 
-        Expression* id = new IdentifierContainer($1);
-        Expression* exp = new Expression(id, $3, OP_ADD);
-        $$ = new AssignNode($1, exp); 
-    }
-
-    | IDENTIFIER MINUS_EQUAL Operation    { 
-        Expression* id = new IdentifierContainer($1);
-        Expression* exp = new Expression(id, $3, OP_SUB);
-        $$ = new AssignNode($1, exp); 
-    }
-
-    | IDENTIFIER MUL_EQUAL Operation    { 
-        Expression* id = new IdentifierContainer($1);
-        Expression* exp = new Expression(id, $3, OP_MUL);
-        $$ = new AssignNode($1, exp); 
-    }
-
-    | IDENTIFIER DIV_EQUAL Operation    { 
-        Expression* id = new IdentifierContainer($1);
-        Expression* exp = new Expression(id, $3, OP_DIV);
-        $$ = new AssignNode($1, exp); 
-    }
-
-    | IDENTIFIER MOD_EQUAL Operation    { 
-        Expression* id = new IdentifierContainer($1);
-        Expression* exp = new Expression(id, $3, OP_MOD);
-        $$ = new AssignNode($1, exp); 
-    }
-
-    | IDENTIFIER AND_EQUAL Operation    { 
-        Expression* id = new IdentifierContainer($1);
-        Expression* exp = new Expression(id, $3, OP_AND);
-        $$ = new AssignNode($1, exp); 
-    }
-
-    | IDENTIFIER OR_EQUAL Operation    { 
-        Expression* id = new IdentifierContainer($1);
-        Expression* exp = new Expression(id, $3, OP_OR);
-        $$ = new AssignNode($1, exp); 
-    }
-
-    | IDENTIFIER XOR_EQUAL Operation    { 
-        Expression* id = new IdentifierContainer($1);
-        Expression* exp = new Expression(id, $3, OP_XOR);
-        $$ = new AssignNode($1, exp); 
-    }
-
-
+      Type IDENTIFIER                                   { $$ = new DefineNode($2.line, $1, $2.str, nullptr); }
+    | Type IDENTIFIER '=' Operation                     { $$ = new DefineNode($2.line, $1, $2.str, $4); }
+    | VariableDeclaration ',' IDENTIFIER                { $$ = dynamic_cast<DefineNode*>($1)->setNextDefine( new DefineNode($3.line, $3.str, nullptr) ); }
+    | VariableDeclaration ',' IDENTIFIER '=' Operation  { $$ = dynamic_cast<DefineNode*>($1)->setNextDefine( new DefineNode($3.line, $3.str, $5) ); }
 
 Condition:
         Condition     OR       Condition              { $$ = new Expression($1, $3, OP_OR);  }
@@ -253,8 +262,8 @@ Operation:
     | FunctionCall                                  { $$ = $1; }
     
 FunctionCall:
-        IDENTIFIER '(' FunctionCallParams ')'       { $$ = new FunctionCallNode( $1, $3 ); }
-    |   IDENTIFIER '(' ')'                          { $$ = new FunctionCallNode( $1, nullptr ); }
+        IDENTIFIER '(' FunctionCallParams ')'       { $$ = new FunctionCallNode( $1.line, $1.str, $3 ); }
+    |   IDENTIFIER '(' ')'                          { $$ = new FunctionCallNode( $1.line, $1.str, nullptr ); }
 
 FunctionCallParams:
         FunctionCallParams ',' Operation            { $$ = $1->addParameter($3); }
@@ -275,10 +284,10 @@ MathOperation:
     |   MathOperation '|' MathOperation             { $$ = new Expression($1, $3, OP_BW_OR); }
     |   MathOperation '&' MathOperation             { $$ = new Expression($1, $3, OP_BW_AND); }
     |   MathOperation '^' MathOperation             { $$ = new Expression($1, $3, OP_XOR); }
-    |   IDENTIFIER INCREMENT                          { $$ = new IdentifierContainer($1, OP_POST_ADD); }
-    |   INCREMENT IDENTIFIER                          { $$ = new IdentifierContainer($2, OP_PRE_ADD); }
-    |   DECREMENT IDENTIFIER                          { $$ = new IdentifierContainer($2, OP_PRE_SUB); }
-    |   IDENTIFIER DECREMENT                          { $$ = new IdentifierContainer($1, OP_POST_ADD); }
+    |   IDENTIFIER INCREMENT                          { $$ = new IdentifierContainer($1.str, OP_POST_ADD); }
+    |   INCREMENT IDENTIFIER                          { $$ = new IdentifierContainer($2.str, OP_PRE_ADD); }
+    |   DECREMENT IDENTIFIER                          { $$ = new IdentifierContainer($2.str, OP_PRE_SUB); }
+    |   IDENTIFIER DECREMENT                          { $$ = new IdentifierContainer($1.str, OP_POST_ADD); }
     |   MathOperand                    
 
 StringOperation:
@@ -293,27 +302,27 @@ StringOperation:
 Operand: MathOperand | StringOperand;
 
 MathOperand:
-          INTEGER       { $$ = new Expression($1, DataType::Int());}
+          INTEGER       { $$ = new Expression($1.str, DataType::Int());}
 
-        | FLOAT         { $$ = new Expression($1, DataType::Float());}
+        | FLOAT         { $$ = new Expression($1.str, DataType::Float());}
 
-        | CHARACTER     { $$ = new Expression($1, DataType::Char());}
+        | CHARACTER     { $$ = new Expression($1.str, DataType::Char());}
 
-        | BOOLEAN       { $$ = new Expression($1, DataType::Bool());}
+        | BOOLEAN       { $$ = new Expression($1.str, DataType::Bool());}
 
-        | IDENTIFIER    { $$ = new IdentifierContainer($1); }
+        | IDENTIFIER    { $$ = new IdentifierContainer($1.str); }
     
-StringOperand: STRING   { $$ = new StringContainer($1); }
+StringOperand: STRING   { $$ = new StringContainer($1.str); }
 
 Type:
-      CONST DATA_TYPE   { $$ = new DataType($2, true);}
-    | DATA_TYPE         { $$ = new DataType($1, false);}
+      CONST DATA_TYPE   { $$ = new DataType($2.str, true);}
+    | DATA_TYPE         { $$ = new DataType($1.str, false);}
 
 %%
 
 
 int main() {
-    ScopeNode* x = new ScopeNode();
+    ScopeNode* x = new ScopeNode(-1);
     yyin = fopen("test.yapl", "r");
     yyparse();
     return 0;

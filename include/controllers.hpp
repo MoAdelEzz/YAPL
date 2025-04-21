@@ -7,8 +7,12 @@ class ContinueNode : public ProgramNode {
             return "ContinueNode";
         }
 
-        ContinueNode(int line) : ProgramNode(false) {
-            this->setLine(line);
+        ContinueNode(int line) : ProgramNode(line) {
+            this->logLineInfo();
+        }
+
+        void runSemanticChecker(Scope* scope = nullptr) override {
+            
         }
 
         void run(Scope* scope = nullptr) override {
@@ -24,12 +28,16 @@ class BreakNode : public ProgramNode {
             scope->breakScope();
         }
 
+        void runSemanticChecker(Scope* scope = nullptr) override {
+            
+        }
+
         std::string nodeName() override {
             return "BreakNode";
         }
         
-        BreakNode(int line) : ProgramNode(false) {
-            this->setLine(line);
+        BreakNode(int line) : ProgramNode(line) {
+            this->logLineInfo();
         }
 
 };

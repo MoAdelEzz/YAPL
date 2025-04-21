@@ -1,36 +1,52 @@
 #pragma once
+#include "errorHandler.hpp"
 #include "expression.hpp"
 #include <ostream>
 #include <fstream>
 
 class ProgramNode {
     protected:
-    ProgramNode* next = nullptr;
-    int line = -1;
-    public:
-        static int lineNumber;
+        ProgramNode* next = nullptr;
+        int line = -1;
 
+    public:
         void setLine(int lineNum) { 
             if (line == -1)
                 line = lineNum;
-            
+        }
+
+        void logLineInfo() {
+            return;
             std::ofstream logFile("log/line.txt", std::ios_base::app);
             this->print(logFile);
             logFile.close();
         }
 
-        ProgramNode(bool setLineNumber = true) { if (setLineNumber) setLine(lineNumber); }
-        ProgramNode(ProgramNode* next) : next(next) { setLine(lineNumber); }
+        ProgramNode( int line ) { setLine(line); }
+        ProgramNode(int line, ProgramNode* next) : next(next) { setLine(line); }
         virtual ProgramNode* setNext(ProgramNode* next) { 
             this->next = next; 
             return this; 
         }
         ProgramNode* getNext() { return next; }
 
+        virtual void runSemanticChecker(Scope* scope = nullptr) {
+            ProgramNode* it = next;
+            while (it) {
+                it->runSemanticChecker();
+                it = next->next;
+            }
+        }
+
         virtual void run(Scope* scope = nullptr) {
             ProgramNode* it = next;
             while (it) {
-                it->run(scope);
+                try {
+                    it->run(scope);
+                } catch (ErrorDetail error) {
+                    error.setLine(this->line);
+                    CompilerOrganizer::addError(error);
+                }
                 it = next->next;
             }
         }
@@ -40,8 +56,6 @@ class ProgramNode {
         }
 
         virtual void print(std::ostream& out) { out << line << ": " << nodeName() <<  std::endl; }
-
-        static void newLine() { lineNumber++; }
 };
 
 
@@ -52,12 +66,18 @@ class PrintNode : public ProgramNode {
             return "PrintNode";
         }
 
-        PrintNode( int line, Expression* body ) : ProgramNode(false) {
+        PrintNode( int line, Expression* body ) : ProgramNode(line) 
+        {
             this->body = body;
-            this->setLine(line);
+            this->logLineInfo();
         }   
 
         void run(Scope* scope = nullptr) override {
-            std::cout << body->getValue(scope) << std::endl;
+            try {
+                std::cout << body->getValue(scope) << std::endl;
+            } catch (ErrorDetail error) {
+                error.setLine(this->line);
+                CompilerOrganizer::addError(error);
+            }
         }
 };

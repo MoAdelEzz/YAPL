@@ -1,4 +1,5 @@
 #pragma once
+#include "errorHandler.hpp"
 #include "common.hpp"
 #include "program.hpp"
 #include "expression.hpp"
@@ -11,16 +12,26 @@ class DefineNode : public ProgramNode {
 
 
     public:
-        DefineNode( DataType* type, std::string name, Expression* value) {            
-            this->name = name;
-            this->value = value;
-            this->type = type;
+        std::string nodeName() override {
+            return "DefineNode";
         }
 
-        DefineNode( std::string name, Expression* value) {
-            this->name = name;
-            this->value = value;
-            this->type = DataType::Undefined();
+        DefineNode( int line, DataType* type, std::string name, Expression* value) 
+        : ProgramNode(line),
+          name(name),
+          value(value),
+          type(type)
+        {            
+            this->logLineInfo();
+        }
+
+        DefineNode( int line, std::string name, Expression* value ) 
+        : ProgramNode(line),
+          name(name),
+          value(value),
+          type(DataType::Undefined())
+        {            
+            this->logLineInfo();
         }
 
         void setType(DataType* t) { type = t; }
@@ -37,14 +48,28 @@ class DefineNode : public ProgramNode {
             return this;
         }
 
+        virtual void runSemanticChecker(Scope* scope = nullptr) override {
+            try {
+                scope->defineVariable(name, type, value->getValue(scope));
+            } 
+            catch (ErrorDetail error) {
+                error.setLine(this->line);
+                CompilerOrganizer::addError(error);
+            }
 
-        void run(Scope* scope = nullptr) override {
-            scope->defineVariable(name, type, value->getValue(scope));
             if (nextDefine) { nextDefine->run(scope); }
         }
 
-        std::string nodeName() override {
-            return "DefineNode";
+        void run(Scope* scope = nullptr) override {
+            try {
+                scope->defineVariable(name, type, value->getValue(scope));
+            } 
+            catch (ErrorDetail error) {
+                error.setLine(this->line);
+                CompilerOrganizer::addError(error);
+            }
+
+            if (nextDefine) { nextDefine->run(scope); }
         }
 };
 
@@ -55,12 +80,17 @@ class AssignNode: public ProgramNode {
     ProgramNode* nextAssign;
     
     public:
-        AssignNode( std::string name, Expression* value) {   
-            this->name = name;
-            this->value = value;
-            this->setNext(nullptr);
-        }
+        std::string nodeName() override { return "AssignNode"; }
 
+        AssignNode( int line, std::string name, Expression* value ) 
+        : ProgramNode(line),
+          name(name),
+          value(value)
+        {            
+            this->setNext(nullptr);
+            this->logLineInfo();
+        }
+        
         ProgramNode* setNextAssignment(ProgramNode* nextAssign) { 
             if (this->nextAssign) {
                 this->nextAssign->setNext(nextAssign);
@@ -70,14 +100,38 @@ class AssignNode: public ProgramNode {
             return this;
         }
 
-        void run(Scope* scope = nullptr) {
-            if (name.size() == 0) {
-                value->getValue(scope);
-            } else {
-                scope->assignVariable(name,  value->getValue(scope));
+        virtual void runSemanticChecker(Scope* scope = nullptr) override {
+            OperandType nodeType = value->getExpectedType(scope);
+
+            if (!Utils::isValidAssignment(scope->typeOf(name), nodeType)) {
+                ErrorDetail error(Severity::ERROR, "Type Mismatch For The Variable " + name);
+                error.setLine(this->line);
+                CompilerOrganizer::addError(error);
             }
 
             if (nextAssign) { nextAssign->run(scope); }
-            // std::cout << "Assigning " << name << " = " << scope->valueOf(name) << std::endl;
+        }
+
+        void run(Scope* scope = nullptr) override {
+            Operand nodeValue;
+            try {
+                nodeValue = value->getValue(scope);
+            }
+            catch (ErrorDetail error) {
+                error.setLine(this->line);
+                CompilerOrganizer::addError(error);
+            }
+
+            try {            
+                if (name.size() > 0) {
+                    scope->assignVariable(name,  nodeValue);
+                }
+            }
+            catch (ErrorDetail error) {
+                error.setLine(this->line);
+                CompilerOrganizer::addError(error);
+            }
+
+            if (nextAssign) { nextAssign->run(scope); }
         }
 };

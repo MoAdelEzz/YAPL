@@ -1,7 +1,9 @@
 #pragma once
+#include "errorHandler.hpp"
 #include <cstring>
 #include <iostream>
 #include <string>
+#include <utility>
 #include <vector>
 #include <unordered_map>
 
@@ -49,9 +51,56 @@ class Operand {
 
         Operand() { content = nullptr; dataType = DataType::Undefined(); }
         Operand(DataType* type, void* content) { this->dataType = type; this->content = content; }
+        Operand(DataType* convertedType, Operand& other) {
+            switch(other.dataType->type) {
+                case TBOOLEAN:
+                    this->init( std::to_string((bool)other).c_str(), convertedType ); break;
+                case TINT:
+                    this->init( std::to_string((int)other).c_str(), convertedType ); break;
+                case TFLOAT:
+                    this->init( std::to_string((float)other).c_str(), convertedType ); break;
+                case TSTRING:
+                    this->init( other.toString().c_str(), convertedType ); break;
+                case TVOID:
+                    this->init(nullptr, DataType::Void()); break;
+                case TCHAR:
+                    this->init(nullptr, convertedType); break;
+                case TUNDEFINED:
+                    break;
+            }
+        }
 
         static Operand undefined() { return Operand(); }
         static Operand voidValue() { return Operand(DataType::Void(), nullptr); }
+        static Operand intValue() { 
+            int* x = new int;
+            *x = 0;
+            return Operand( DataType::Int(), x); 
+        }
+
+        static Operand floatValue() {            
+            float* x = new float;
+            *x = 0.0;
+            return Operand( DataType::Float(), x); 
+        }
+
+        static Operand boolValue() {
+            int* x = new int;
+            x = 0;
+            return Operand( DataType::Bool(), x); 
+        }
+
+        static Operand stringValue() {
+            char* x = new char[1];
+            x[0] = '1';
+            return Operand( DataType::String(), x); 
+        }
+
+        static Operand charValue() {
+            char* x = new char[1];
+            x[0] = '1';
+            return Operand( DataType::Char(), x); 
+        }
 
         void init(const char* value, DataType* dataType) {
             this->dataType = dataType;
@@ -279,7 +328,6 @@ class FunctionParametersNode {
         }
 };
 
-
 class FunctionCallParametersNode {
     public:
         std::vector<Expression*> params;
@@ -290,6 +338,39 @@ class FunctionCallParametersNode {
         FunctionCallParametersNode* addParameter( Expression* param ) {
             params.push_back(param);
             return this;
+        }
+};
+
+class Utils {
+    public:
+
+        static OperandType operationType(OperandType op1, OperandType op2) {
+            if (op1 == TUNDEFINED || op2 == TUNDEFINED) return TUNDEFINED;
+            if (op1 == TVOID || op2 == TVOID)           return TUNDEFINED;
+
+            if (op1 < op2) std::swap(op1, op2);
+            
+            if (op1 == TSTRING)    return TSTRING;
+            if (op1 == TFLOAT)     return TFLOAT;
+            if (op1 == TCHAR)      return TCHAR;
+            if (op1 == TINT)       return TINT;
+            if (op1 == TBOOLEAN)   return TBOOLEAN;
+
+            return TUNDEFINED;
+        }
+
+
+        static bool isValidAssignment(OperandType lhs, OperandType rhs) {
+            if (lhs == TUNDEFINED || rhs == TUNDEFINED) return false;
+            if (lhs == TVOID    || rhs == TVOID)        return false;
+
+            if (lhs == TSTRING  && rhs != TVOID)    return true;
+            if (lhs == TBOOLEAN && rhs < TSTRING)   return true;
+            if (lhs == TINT     && rhs < TSTRING)   return true;
+            if (lhs == TCHAR    && rhs < TSTRING)   return true;
+            if (lhs == TFLOAT   && rhs < TSTRING)    return true;
+
+            return false;
         }
 };
 
@@ -316,9 +397,12 @@ class Scope {
 
         void defineVariable(std::string varName, DataType* type, Operand value) { 
             if (variables.find(varName) == variables.end()) {
-                variables[varName] = {type, value}; 
+                variables[varName] = { type, Operand::undefined() }; 
+
+                if (value.dataType->type != TUNDEFINED)
+                    assignVariable(varName, value);
             } else {
-                throw std::runtime_error("Variable " + varName + " has already been declared");
+                throw ErrorDetail(Severity::ERROR, "Variable " + varName + " has already been declared");
             }
         }    
 
@@ -326,12 +410,14 @@ class Scope {
             if (functions.find(functionName) == functions.end()) {
                 functions[functionName] = std::make_tuple(returnType, parameters, scope);
             } else {
-                throw std::runtime_error("Function " + functionName + " has already been declared");
+                throw ErrorDetail(Severity::ERROR, "Function " + functionName + " has already been declared");
             }
         }
 
         void reset() {
             variables.clear();
+            functions.clear();
+            parent = nullptr;
             this->defineVariable("return", DataType::Undefined(), Operand::undefined());
         }
 
@@ -349,17 +435,20 @@ class Scope {
 
         bool isContinued() { return variables.find("continue") != variables.end(); }
 
+        // TODO: make some exclusion for initializing constant variable
         void assignVariable(std::string varName, Operand value) {
             const auto& it = variables.find(varName);
             if (it != variables.end()) {
-                //TODO: change this later
-                if (variables[varName].first->type != value.dataType->type) throw std::runtime_error("Variable " + varName + " type mismatch");
-                else if (variables[varName].first->isConst) throw std::runtime_error("Variable " + varName + " is constant and cannot be assigned");
-                else variables[varName].second = value;
+                if (variables[varName].first->isConst) throw ErrorDetail(Severity::ERROR, "Variable " + varName + " is constant and cannot be assigned");
+
+                bool isValidAssignment = Utils::isValidAssignment(variables[varName].first->type, value.dataType->type);
+                if (!isValidAssignment) throw ErrorDetail(Severity::ERROR, "The right handside type doesn't match the expected type for the variable");
+
+                variables[varName].second = Operand(variables[varName].first, value);
             } else if (parent != nullptr) {
                 parent->assignVariable(varName, value);
             } else {
-                throw std::runtime_error("Variable " + varName + " not found");
+                throw ErrorDetail(Severity::ERROR, "Variable " + varName + " not found");
             }
         }
         

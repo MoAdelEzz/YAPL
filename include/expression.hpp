@@ -22,34 +22,6 @@ class Expression {
         Expression(const char* value, DataType* type) { nodeValue.init(value, type); }
 
         OperandType getType() { return nodeValue.dataType->type; }
-    
-        OperandType inferResultType(OperandType type1, OperandType type2) {
-            if (type1 == TVOID || type2 == TVOID) { return TUNDEFINED; }
-
-            if (type1 > type2) {
-                OperandType temp = type1;
-                type1 = type2;
-                type2 = temp;
-            }
-
-            if (type1 == TBOOLEAN && type2 <= TFLOAT) {
-                return TBOOLEAN;
-            }
-
-            if (type1 == TINT && type2 <= TFLOAT) {
-                return type1 > type2 ? type1 : type2;
-            }
-
-            if (type1 == TCHAR) {
-                return type2 == TFLOAT ? TFLOAT : TCHAR;
-            }
-
-            if (type1 == TFLOAT && type2 <= TFLOAT) {
-                return TFLOAT;
-            }
-
-            return TUNDEFINED;
-        }
 
         virtual Operand calculateNodeValue(Expression* left, Expression* right, Scope* scope) { 
             Operand op1 = left->getValue(scope);
@@ -71,7 +43,7 @@ class Expression {
                 return nodeValue;
             }
 
-            OperandType resType = inferResultType(op1.dataType->type, op2.dataType->type);
+            OperandType resType = Utils::operationType(op1.dataType->type, op2.dataType->type);
 
             if (op == OP_AND || op == OP_OR || op == OP_NOT) {
                 resType = TBOOLEAN;
@@ -181,6 +153,19 @@ class Expression {
             }
             return this->nodeValue;
         }
+
+        virtual OperandType getExpectedType(Scope* scope = nullptr) {
+            if (left == nullptr && right == nullptr) {
+                return nodeValue.dataType->type;
+            } else if (left != nullptr && right == nullptr) {
+                return left->getExpectedType(scope);
+            } else if (left == nullptr && right != nullptr) {
+                return right->getExpectedType(scope);
+            } else {
+                return Utils::operationType(left->getExpectedType(scope), right->getExpectedType(scope));
+            }
+            return TUNDEFINED;
+        }
 };
 
 class StringContainer : public Expression {
@@ -258,7 +243,7 @@ class IdentifierContainer : public Expression {
         IdentifierContainer(std::string varName, OperationType op = OP_NONE) 
         : Expression(nullptr, DataType::Undefined()), varName(varName), op(op)  {}
         
-        Operand getValue(Scope* scope = nullptr) { 
+        Operand getValue(Scope* scope = nullptr) override { 
             Operand value = scope->valueOf(this->varName);
             switch (op) {
                 case OP_PRE_ADD: 
@@ -276,6 +261,10 @@ class IdentifierContainer : public Expression {
                 default:
                     return value;
             }
+        }
+
+        OperandType getExpectedType(Scope* scope) override {
+            return scope->typeOf(varName);
         }
 
         friend std::ostream& operator<<(std::ostream& os, const IdentifierContainer& node) {

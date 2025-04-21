@@ -9,16 +9,15 @@ class ReturnNode : public ProgramNode {
         return "ReturnNode";
     } 
 
-    ReturnNode(int line, Expression* value) : ProgramNode(false) {
+    ReturnNode(int line, Expression* value) : ProgramNode(line) {
         this->value = value;
         this->setNext(nullptr);
         this->setLine(line);
     }
 
-    ReturnNode() {
+    ReturnNode(int line) : ProgramNode(line) {
         this->setNext(nullptr);
     }
-
 
     void run(Scope* parentScope = nullptr) {
         if (parentScope == nullptr) {
