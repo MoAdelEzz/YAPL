@@ -1,13 +1,26 @@
 #pragma once
 #include "expression.hpp"
+#include <ostream>
+#include <fstream>
 
 class ProgramNode {
     protected:
-        ProgramNode* next = nullptr;
-
+    ProgramNode* next = nullptr;
+    int line = -1;
     public:
-        ProgramNode() {}
-        ProgramNode(ProgramNode* next) : next(next) {}
+        static int lineNumber;
+
+        void setLine(int lineNum) { 
+            if (line == -1)
+                line = lineNum;
+            
+            std::ofstream logFile("log/line.txt", std::ios_base::app);
+            this->print(logFile);
+            logFile.close();
+        }
+
+        ProgramNode(bool setLineNumber = true) { if (setLineNumber) setLine(lineNumber); }
+        ProgramNode(ProgramNode* next) : next(next) { setLine(lineNumber); }
         virtual ProgramNode* setNext(ProgramNode* next) { 
             this->next = next; 
             return this; 
@@ -25,17 +38,26 @@ class ProgramNode {
         virtual std::string nodeName() {
             return "ProgramNode";
         }
+
+        virtual void print(std::ostream& out) { out << line << ": " << nodeName() <<  std::endl; }
+
+        static void newLine() { lineNumber++; }
 };
 
 
 class PrintNode : public ProgramNode {
     Expression* body;
     public:
-        PrintNode( Expression* body ) {
+        std::string nodeName() override {
+            return "PrintNode";
+        }
+
+        PrintNode( int line, Expression* body ) : ProgramNode(false) {
             this->body = body;
+            this->setLine(line);
         }   
 
-        void run(Scope* scope = nullptr) {
+        void run(Scope* scope = nullptr) override {
             std::cout << body->getValue(scope) << std::endl;
         }
 };

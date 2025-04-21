@@ -17,13 +17,13 @@
 
 
 %%
-return              { return RETURN; }
-switch              { return SWITCH; }
-case                { return CASE; }
-default             { return DEFAULT;}
-continue            { return CONTINUE; }
-break               { return BREAK;}
-const               { return CONST; }
+return              { yylval.line = ProgramNode::lineNumber; return RETURN; }
+switch              { yylval.line = ProgramNode::lineNumber; return SWITCH; }
+case                { yylval.line = ProgramNode::lineNumber; return CASE; }
+default             { yylval.line = ProgramNode::lineNumber; return DEFAULT;}
+continue            { yylval.line = ProgramNode::lineNumber; return CONTINUE; }
+break               { yylval.line = ProgramNode::lineNumber; return BREAK;}
+const               { yylval.line = ProgramNode::lineNumber; return CONST; }
 true|false          {
                         yylval.str = strdup(yytext);
                         return BOOLEAN;
@@ -33,12 +33,12 @@ true|false          {
 \>\>                { return SHR;   }
 pow                 { return POW;   }
 sqrt                { return SQRT;  }
-if                  { return IF;    }
-else                { return ELSE;  }
-while               { return WHILE; }
-do                  { return DO;    }
-for                 { return FOR;   }
-print               { return PRINT; }
+if                  { yylval.line = ProgramNode::lineNumber; return IF;    }
+else                { yylval.line = ProgramNode::lineNumber; return ELSE;  }
+while               { yylval.line = ProgramNode::lineNumber; return WHILE; }
+do                  { yylval.line = ProgramNode::lineNumber; return DO;    }
+for                 { yylval.line = ProgramNode::lineNumber; return FOR;   }
+print               { yylval.line = ProgramNode::lineNumber; return PRINT; }
 &&                  { return AND;   }
 \|\|                { return OR;   }
 \>\=                { return GTE;   }
@@ -58,10 +58,11 @@ print               { return PRINT; }
 \|\=                { return OR_EQUAL; }
 \^\=                { return XOR_EQUAL; }
 
-int|float|bool|char|string|void { yylval.str = strdup(yytext); return DATA_TYPE; }
+int|float|bool|char|string|void { yylval.line = ProgramNode::lineNumber; yylval.str = strdup(yytext); return DATA_TYPE; }
 
 [a-zA-Z_][a-zA-Z0-9_]* {
     // std::cout << "Variable" << " " << yytext <<  std::endl;
+    yylval.line = ProgramNode::lineNumber;
     yylval.str = strdup(yytext);
     return IDENTIFIER;
 }
@@ -96,6 +97,7 @@ int|float|bool|char|string|void { yylval.str = strdup(yytext); return DATA_TYPE;
     return yytext[0];
 }
 
+\n { ProgramNode::newLine(); }
 
 \/\/.*\n? ;
 

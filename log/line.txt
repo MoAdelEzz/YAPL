@@ -1,0 +1,8 @@
+0: ProgramNode
+0: ProgramNode
+2: PrintNode
+3: ProgramNode
+1: IfNode
+4: PrintNode
+5: ProgramNode
+5: ProgramNode

@@ -3,14 +3,18 @@
 
 class ContinueNode : public ProgramNode {
     public:
+        std::string nodeName() override {
+            return "ContinueNode";
+        }
+
+        ContinueNode(int line) : ProgramNode(false) {
+            this->setLine(line);
+        }
 
         void run(Scope* scope = nullptr) override {
             scope->contScope();
         }
 
-        std::string nodeName() override {
-            return "ContinueNode";
-        }
 };
 
 
@@ -23,4 +27,9 @@ class BreakNode : public ProgramNode {
         std::string nodeName() override {
             return "BreakNode";
         }
+        
+        BreakNode(int line) : ProgramNode(false) {
+            this->setLine(line);
+        }
+
 };

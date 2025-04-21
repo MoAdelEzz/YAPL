@@ -10,14 +10,17 @@ class ForNode : public ProgramNode {
     ScopeNode* body;
 
     public:
-        ForNode( DefineNode* preLoop, Expression* condition, ProgramNode* postLoop, ScopeNode* body ) {
+        std::string nodeName() override { return "ForNode"; }
+
+        ForNode( int line, DefineNode* preLoop, Expression* condition, ProgramNode* postLoop, ScopeNode* body ) : ProgramNode(false) {  
             this->preLoop = preLoop; 
             this->condition = condition; 
             this->postLoop = postLoop; 
             this->body = body; 
+            this->setLine(line);
         }
 
-        void run(Scope* scope = nullptr) {
+        void run(Scope* scope = nullptr) override {
             ScopeNode* forScope = new ScopeNode(scope);
             preLoop->run(forScope->getScope());
             forScope->breakable = true;
@@ -35,18 +38,20 @@ class ForNode : public ProgramNode {
         }
 };
 
-
 class WhileNode : public ProgramNode {
     Expression* condition;
     ScopeNode* body;
 
     public:
-        WhileNode( Expression* condition, ScopeNode* body ) {
+        std::string nodeName() override { return "WhileNode"; }
+
+        WhileNode( int line, Expression* condition, ScopeNode* body ) : ProgramNode(false) {
             this->condition = condition; 
             this->body = body; 
+            this->setLine(line);        
         }
 
-        void run(Scope* scope = nullptr) {
+        void run(Scope* scope = nullptr) override {
             body->breakable = true;
             body->continuable = true;
 
@@ -61,18 +66,20 @@ class WhileNode : public ProgramNode {
         }
 };
 
-
 class DoWhileNode: public ProgramNode {
     Expression* condition;
     ScopeNode* body;
 
     public:
-        DoWhileNode( Expression* condition, ScopeNode* body ) {
+        std::string nodeName() override { return "DoWhileNode"; }
+
+        DoWhileNode( int line, Expression* condition, ScopeNode* body ) : ProgramNode(false) {
             this->condition = condition; 
             this->body = body; 
+            this->setLine(line);
         }
 
-        void run(Scope* scope = nullptr) {
+        void run(Scope* scope = nullptr) override {
             body->breakable = true;
             body->continuable = true;
 

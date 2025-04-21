@@ -5,9 +5,14 @@
 class ReturnNode : public ProgramNode {
     Expression* value;
   public:
-    ReturnNode(Expression* value) {
+    std::string nodeName() {
+        return "ReturnNode";
+    } 
+
+    ReturnNode(int line, Expression* value) : ProgramNode(false) {
         this->value = value;
         this->setNext(nullptr);
+        this->setLine(line);
     }
 
     ReturnNode() {
@@ -24,8 +29,4 @@ class ReturnNode : public ProgramNode {
             parentScope->assignReturn(value->getValue(parentScope));
         }
     }
-
-    std::string nodeName() {
-        return "ReturnNode";
-    } 
 };

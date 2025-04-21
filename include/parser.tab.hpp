@@ -54,48 +54,48 @@ extern int yydebug;
     YYEOF = 0,                     /* "end of file"  */
     YYerror = 256,                 /* error  */
     YYUNDEF = 257,                 /* "invalid token"  */
-    RETURN = 258,                  /* RETURN  */
-    IDENTIFIER = 259,              /* IDENTIFIER  */
-    STRING = 260,                  /* STRING  */
-    POW = 261,                     /* POW  */
-    SQRT = 262,                    /* SQRT  */
-    SHL = 263,                     /* SHL  */
-    SHR = 264,                     /* SHR  */
-    DATA_TYPE = 265,               /* DATA_TYPE  */
-    IF = 266,                      /* IF  */
-    ELSE = 267,                    /* ELSE  */
-    WHILE = 268,                   /* WHILE  */
-    FOR = 269,                     /* FOR  */
-    AND = 270,                     /* AND  */
-    OR = 271,                      /* OR  */
-    GTE = 272,                     /* GTE  */
-    LTE = 273,                     /* LTE  */
-    LT = 274,                      /* LT  */
-    GT = 275,                      /* GT  */
-    ISEQUAL = 276,                 /* ISEQUAL  */
-    NOTEQUAL = 277,                /* NOTEQUAL  */
-    DO = 278,                      /* DO  */
-    SWITCH = 279,                  /* SWITCH  */
-    CASE = 280,                    /* CASE  */
-    DEFAULT = 281,                 /* DEFAULT  */
-    CONTINUE = 282,                /* CONTINUE  */
-    BREAK = 283,                   /* BREAK  */
-    CHARACTER = 284,               /* CHARACTER  */
-    INCREMENT = 285,               /* INCREMENT  */
-    DECREMENT = 286,               /* DECREMENT  */
-    PLUS_EQUAL = 287,              /* PLUS_EQUAL  */
-    MINUS_EQUAL = 288,             /* MINUS_EQUAL  */
-    DIV_EQUAL = 289,               /* DIV_EQUAL  */
-    MOD_EQUAL = 290,               /* MOD_EQUAL  */
-    AND_EQUAL = 291,               /* AND_EQUAL  */
-    OR_EQUAL = 292,                /* OR_EQUAL  */
-    INTEGER = 293,                 /* INTEGER  */
-    BOOLEAN = 294,                 /* BOOLEAN  */
-    XOR_EQUAL = 295,               /* XOR_EQUAL  */
-    MUL_EQUAL = 296,               /* MUL_EQUAL  */
-    FLOAT = 297,                   /* FLOAT  */
-    CONST = 298,                   /* CONST  */
-    PRINT = 299                    /* PRINT  */
+    IF = 258,                      /* IF  */
+    ELSE = 259,                    /* ELSE  */
+    FOR = 260,                     /* FOR  */
+    WHILE = 261,                   /* WHILE  */
+    DO = 262,                      /* DO  */
+    SWITCH = 263,                  /* SWITCH  */
+    CASE = 264,                    /* CASE  */
+    DEFAULT = 265,                 /* DEFAULT  */
+    CONTINUE = 266,                /* CONTINUE  */
+    BREAK = 267,                   /* BREAK  */
+    RETURN = 268,                  /* RETURN  */
+    PRINT = 269,                   /* PRINT  */
+    IDENTIFIER = 270,              /* IDENTIFIER  */
+    INTEGER = 271,                 /* INTEGER  */
+    BOOLEAN = 272,                 /* BOOLEAN  */
+    FLOAT = 273,                   /* FLOAT  */
+    CONST = 274,                   /* CONST  */
+    DATA_TYPE = 275,               /* DATA_TYPE  */
+    STRING = 276,                  /* STRING  */
+    POW = 277,                     /* POW  */
+    SQRT = 278,                    /* SQRT  */
+    SHL = 279,                     /* SHL  */
+    SHR = 280,                     /* SHR  */
+    AND = 281,                     /* AND  */
+    OR = 282,                      /* OR  */
+    GTE = 283,                     /* GTE  */
+    LTE = 284,                     /* LTE  */
+    LT = 285,                      /* LT  */
+    GT = 286,                      /* GT  */
+    ISEQUAL = 287,                 /* ISEQUAL  */
+    NOTEQUAL = 288,                /* NOTEQUAL  */
+    CHARACTER = 289,               /* CHARACTER  */
+    INCREMENT = 290,               /* INCREMENT  */
+    DECREMENT = 291,               /* DECREMENT  */
+    PLUS_EQUAL = 292,              /* PLUS_EQUAL  */
+    MINUS_EQUAL = 293,             /* MINUS_EQUAL  */
+    DIV_EQUAL = 294,               /* DIV_EQUAL  */
+    MOD_EQUAL = 295,               /* MOD_EQUAL  */
+    AND_EQUAL = 296,               /* AND_EQUAL  */
+    OR_EQUAL = 297,                /* OR_EQUAL  */
+    XOR_EQUAL = 298,               /* XOR_EQUAL  */
+    MUL_EQUAL = 299                /* MUL_EQUAL  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -104,7 +104,7 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 24 "lex-yacc/parser.ypp"
+#line 25 "lex-yacc/parser.ypp"
 
     ProgramNode*    Node;
     Expression*     Exp;
@@ -112,9 +112,10 @@ union YYSTYPE
     FunctionCallParametersNode* FCP;
     SwitchBody* SB;
     DataType* DT;
+    int line;
     char* str;
 
-#line 118 "include/parser.tab.hpp"
+#line 119 "include/parser.tab.hpp"
 
 };
 typedef union YYSTYPE YYSTYPE;

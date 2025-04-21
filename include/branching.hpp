@@ -10,14 +10,19 @@ class IfNode : public ProgramNode {
     ProgramNode* reject;
 
     public:
-        IfNode( Expression* condition, ProgramNode* accept ) {
+        std::string nodeName() override {
+            return "IfNode";
+        }
+
+        IfNode( int line, Expression* condition, ProgramNode* accept ) : ProgramNode(false) {
             this->condition = condition;
             this->accept = accept;
+            this->setLine(line);
         }   
 
         IfNode* setElse(ProgramNode* reject) { this->reject = reject; return this; }
 
-        void run(Scope* scope = nullptr) {
+        void run(Scope* scope = nullptr) override {
             if (condition->getValue(scope) != 0) {
                 accept->run(scope);
             } else if (reject) {
@@ -26,16 +31,20 @@ class IfNode : public ProgramNode {
         }
 };
 
-
 class CaseNode : public ProgramNode {
     Expression* condition;
     ScopeNode* body;
     public:
         bool isMatched = false;
 
-        CaseNode( Expression* condition = nullptr) {
+        std::string nodeName() override {
+            return "CaseNode";
+        }
+
+        CaseNode( int line, Expression* condition = nullptr) : ProgramNode(false) {
             this->condition = condition;
             this->body = nullptr;
+            this->setLine(line);
         }
 
         CaseNode* assignBody(ProgramNode* node) {
@@ -52,12 +61,9 @@ class CaseNode : public ProgramNode {
                 isMatched = false;
             }
         }
+        
 
         bool breakCalled() { return body->getScope()->isBroke(); }
-
-        std::string nodeName() override {
-            return "CaseNode";
-        }
 };
 
 class SwitchBody {
@@ -76,12 +82,17 @@ class SwitchNode : public ProgramNode {
     SwitchBody* body;
 
     public:
-        SwitchNode(std::string id, SwitchBody* body) { 
+        std::string nodeName() override {
+            return "SwitchNode";
+        }
+        
+        SwitchNode( int line, std::string id, SwitchBody* body ) : ProgramNode(false) { 
             this->body = body;
             this->identifier = new IdentifierContainer(id);
+            this->setLine(line);
         }
 
-        void run(Scope* scope = nullptr) {
+        void run(Scope* scope = nullptr) override {
             ScopeNode* SwitchScope = new ScopeNode(scope);
             SwitchScope->breakable = true;
 
