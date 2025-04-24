@@ -3,41 +3,21 @@
 
 class ContinueNode : public ProgramNode {
     public:
-        std::string nodeName() override {
-            return "ContinueNode";
-        }
+        ContinueNode(int line);
 
-        ContinueNode(int line) : ProgramNode(line) {
-            this->logLineInfo();
-        }
+        std::string nodeName() override;
 
-        void runSemanticChecker(Scope* scope = nullptr) override {
-            
-        }
-
-        void run(Scope* scope = nullptr) override {
-            scope->contScope();
-        }
-
+        void run(Scope* scope = nullptr) override;
+        void runSemanticChecker(Scope* scope = nullptr) override;
 };
 
 
 class BreakNode : public ProgramNode {
     public:
-        void run(Scope* scope = nullptr) override {
-            scope->breakScope();
-        }
+        BreakNode(int line);
 
-        void runSemanticChecker(Scope* scope = nullptr) override {
-            
-        }
+        std::string nodeName() override;
 
-        std::string nodeName() override {
-            return "BreakNode";
-        }
-        
-        BreakNode(int line) : ProgramNode(line) {
-            this->logLineInfo();
-        }
-
+        void run(Scope* scope = nullptr) override;
+        void runSemanticChecker(Scope* scope = nullptr) override;
 };

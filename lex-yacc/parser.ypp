@@ -12,7 +12,7 @@
     #include "functions.hpp"
     #include "controllers.hpp"
     #include "returnNode.hpp"
-    #include "errorHandler.hpp"
+    #include "organizer.hpp"
 
     #include "parser.tab.hpp"
     extern int yylex();
@@ -20,9 +20,12 @@
     void yyerror(const char* s) {
         std::cerr << "Error: " << s << std::endl;
     }
+    CompilerState CompilerOrganizer::state = VALIDATING;
     std::vector<ErrorDetail> CompilerOrganizer::errors;
+    std::vector<SymbolTableEntry> CompilerOrganizer::symbolTable;
 
     int lineNumber = 1;
+    int scopeDepth = 0;
 %}
 
 %union  {
@@ -82,10 +85,17 @@ Program: Sentences  {
     scopeNode->runSemanticChecker();
 
     if (CompilerOrganizer::getErrorCount() == 0) {
+        CompilerOrganizer::startRunning();
         scopeNode->run();
+        CompilerOrganizer::exitWithSuccess();
+        CompilerOrganizer::dumpSymbolTable();
     } else {
         std::cout << "There Are " << CompilerOrganizer::getErrorCount()  << " Errors Found" << std::endl;
+        CompilerOrganizer::dumpErrors();
+        CompilerOrganizer::exitWithFailure();
     }
+
+    delete scopeNode;
 }
 
 Sentences: 
@@ -187,7 +197,8 @@ Case:
     | DEFAULT ':'                   { $$ = new CaseNode($1.line);};
 
 ReturnSentence:
-    RETURN Operation ';'            { $$ = new ReturnNode($1.line, $2);};
+      RETURN Operation ';'            { $$ = new ReturnNode($1.line, $2);};
+    | RETURN ';'                      { $$ = new ReturnNode($1.line); }
 
 PrintSentence:  
     PRINT '(' Operation ')' ';'     { $$ = new PrintNode($1.line, $3);  }
@@ -215,12 +226,10 @@ DoWhileSentence: DO Scope WHILE '(' Condition ')' ';' {
 
 FunctionDefinition: 
       Type IDENTIFIER '(' FunctionParams ')' Scope { 
-        dynamic_cast<ScopeNode*>($6)->returnable = true;
         $$ = new FunctionDefintionNode($2.line, $1, $2.str, $4, dynamic_cast<ScopeNode*>($6)); 
     }
 
     | Type IDENTIFIER '(' ')' Scope                { 
-        dynamic_cast<ScopeNode*>($5)->returnable = true;
         $$ = new FunctionDefintionNode($2.line, $1, $2.str, nullptr, dynamic_cast<ScopeNode*>($5)); 
     }  
 

@@ -1,5 +1,8 @@
 %{
     #include <string>
+    #include <string.h>
+    #include <cstring>
+    #include <cstdlib>
     #include <iostream>
 
     #include "branching.hpp"
@@ -13,8 +16,6 @@
     #include "parser.tab.hpp"
 
     extern int lineNumber;
-
-
 %}
 
 %option noyywrap
@@ -112,13 +113,12 @@ int|float|bool|char|string|void { yylval.data.line = lineNumber; yylval.data.str
 }
 
 [~!=();+\-*/%,&|^\[\]:] {
-    // std::cout << "symbol " << yytext << std::endl;
     return yytext[0];
 }
 
 \n { lineNumber++; }
 
-\/\/.*\n? ;
+\/\/.*\n? { lineNumber++; }
 
 [ \t\n] ;
 

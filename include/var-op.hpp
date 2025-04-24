@@ -1,5 +1,5 @@
 #pragma once
-#include "errorHandler.hpp"
+#include "organizer.hpp"
 #include "common.hpp"
 #include "program.hpp"
 #include "expression.hpp"
@@ -34,6 +34,13 @@ class DefineNode : public ProgramNode {
             this->logLineInfo();
         }
 
+        
+        ~DefineNode() {
+            if (nextDefine) delete nextDefine;
+            if (value) delete value;
+            if (type) delete type;
+        }
+
         void setType(DataType* t) { type = t; }
 
         ProgramNode* setNextDefine(DefineNode* next) { 
@@ -50,7 +57,8 @@ class DefineNode : public ProgramNode {
 
         virtual void runSemanticChecker(Scope* scope = nullptr) override {
             try {
-                scope->defineVariable(name, type, value->getValue(scope));
+                Operand op = value ? value->getValue(scope) : Operand::undefined();
+                scope->defineVariable(name, type,  op);
             } 
             catch (ErrorDetail error) {
                 error.setLine(this->line);
@@ -62,7 +70,8 @@ class DefineNode : public ProgramNode {
 
         void run(Scope* scope = nullptr) override {
             try {
-                scope->defineVariable(name, type, value->getValue(scope));
+                Operand op = value ? value->getValue(scope) : Operand::undefined();
+                scope->defineVariable(name, type, op);
             } 
             catch (ErrorDetail error) {
                 error.setLine(this->line);
@@ -90,6 +99,11 @@ class AssignNode: public ProgramNode {
             this->setNext(nullptr);
             this->logLineInfo();
         }
+
+        ~AssignNode() {
+            if (nextAssign) delete nextAssign;
+            if (value) delete value;
+        }
         
         ProgramNode* setNextAssignment(ProgramNode* nextAssign) { 
             if (this->nextAssign) {
@@ -101,13 +115,29 @@ class AssignNode: public ProgramNode {
         }
 
         virtual void runSemanticChecker(Scope* scope = nullptr) override {
-            OperandType nodeType = value->getExpectedType(scope);
+            const bool validLHS = name.size() == 0 || scope->typeOf(name) != TUNDEFINED;
+            if ( ! validLHS ) {
+                ErrorDetail error(Severity::ERROR, "Variable " + name + " is not defined");
+                error.setLine(this->line);
+                CompilerOrganizer::addError(error);
+            }
 
-            if (!Utils::isValidAssignment(scope->typeOf(name), nodeType)) {
+            OperandType nodeType = TUNDEFINED;
+            try {
+                nodeType = value->getExpectedType(scope);
+            } catch(ErrorDetail error) {
+                error.setLine(this->line);
+                CompilerOrganizer::addError(error);
+            }
+            
+            if ( validLHS && name.size() > 0 && !Utils::isValidAssignment(scope->typeOf(name), nodeType) ) { 
                 ErrorDetail error(Severity::ERROR, "Type Mismatch For The Variable " + name);
                 error.setLine(this->line);
                 CompilerOrganizer::addError(error);
             }
+
+            if (name != "")
+                CompilerOrganizer::markSymbolAsInitialized(name);
 
             if (nextAssign) { nextAssign->run(scope); }
         }

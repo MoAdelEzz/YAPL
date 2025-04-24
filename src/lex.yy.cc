@@ -544,6 +544,9 @@ char *yytext;
 #line 1 "lex-yacc/lexer.l"
 #line 2 "lex-yacc/lexer.l"
     #include <string>
+    #include <string.h>
+    #include <cstring>
+    #include <cstdlib>
     #include <iostream>
 
     #include "branching.hpp"
@@ -557,10 +560,8 @@ char *yytext;
     #include "parser.tab.hpp"
 
     extern int lineNumber;
-
-
-#line 563 "src/lex.yy.cc"
 #line 564 "src/lex.yy.cc"
+#line 565 "src/lex.yy.cc"
 
 #define INITIAL 0
 
@@ -777,9 +778,9 @@ YY_DECL
 		}
 
 	{
-#line 23 "lex-yacc/lexer.l"
+#line 24 "lex-yacc/lexer.l"
 
-#line 783 "src/lex.yy.cc"
+#line 784 "src/lex.yy.cc"
 
 	while ( /*CONSTCOND*/1 )		/* loops until end-of-file is reached */
 		{
@@ -838,42 +839,42 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 24 "lex-yacc/lexer.l"
+#line 25 "lex-yacc/lexer.l"
 { yylval.data.line = lineNumber; return RETURN; }
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 25 "lex-yacc/lexer.l"
+#line 26 "lex-yacc/lexer.l"
 { yylval.data.line = lineNumber; return SWITCH; }
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 26 "lex-yacc/lexer.l"
+#line 27 "lex-yacc/lexer.l"
 { yylval.data.line = lineNumber; return CASE; }
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 27 "lex-yacc/lexer.l"
+#line 28 "lex-yacc/lexer.l"
 { yylval.data.line = lineNumber; return DEFAULT;}
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 28 "lex-yacc/lexer.l"
+#line 29 "lex-yacc/lexer.l"
 { yylval.data.line = lineNumber; return CONTINUE; }
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 29 "lex-yacc/lexer.l"
+#line 30 "lex-yacc/lexer.l"
 { yylval.data.line = lineNumber; return BREAK;}
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 30 "lex-yacc/lexer.l"
+#line 31 "lex-yacc/lexer.l"
 { yylval.data.line = lineNumber; return CONST; }
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 31 "lex-yacc/lexer.l"
+#line 32 "lex-yacc/lexer.l"
 {
                         yylval.data.str = strdup(yytext);
                         return BOOLEAN;
@@ -881,147 +882,147 @@ YY_RULE_SETUP
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 36 "lex-yacc/lexer.l"
+#line 37 "lex-yacc/lexer.l"
 { yylval.data.line = lineNumber; return SHL;   }
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 37 "lex-yacc/lexer.l"
+#line 38 "lex-yacc/lexer.l"
 { yylval.data.line = lineNumber; return SHR;   }
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 38 "lex-yacc/lexer.l"
+#line 39 "lex-yacc/lexer.l"
 { yylval.data.line = lineNumber; return POW;   }
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 39 "lex-yacc/lexer.l"
+#line 40 "lex-yacc/lexer.l"
 { yylval.data.line = lineNumber; return SQRT;  }
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 40 "lex-yacc/lexer.l"
+#line 41 "lex-yacc/lexer.l"
 { yylval.data.line = lineNumber; return IF;    }
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 41 "lex-yacc/lexer.l"
+#line 42 "lex-yacc/lexer.l"
 { yylval.data.line = lineNumber; return ELSE;  }
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 42 "lex-yacc/lexer.l"
+#line 43 "lex-yacc/lexer.l"
 { yylval.data.line = lineNumber; return WHILE; }
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 43 "lex-yacc/lexer.l"
+#line 44 "lex-yacc/lexer.l"
 { yylval.data.line = lineNumber; return DO;    }
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 44 "lex-yacc/lexer.l"
+#line 45 "lex-yacc/lexer.l"
 { yylval.data.line = lineNumber; return FOR;   }
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 45 "lex-yacc/lexer.l"
+#line 46 "lex-yacc/lexer.l"
 { yylval.data.line = lineNumber; return PRINT; }
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 46 "lex-yacc/lexer.l"
+#line 47 "lex-yacc/lexer.l"
 { yylval.data.line = lineNumber; return AND;   }
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 47 "lex-yacc/lexer.l"
+#line 48 "lex-yacc/lexer.l"
 { yylval.data.line = lineNumber; return OR;   }
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 48 "lex-yacc/lexer.l"
+#line 49 "lex-yacc/lexer.l"
 { yylval.data.line = lineNumber; return GTE;   }
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
-#line 49 "lex-yacc/lexer.l"
+#line 50 "lex-yacc/lexer.l"
 { yylval.data.line = lineNumber; return LTE;   }
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
-#line 50 "lex-yacc/lexer.l"
+#line 51 "lex-yacc/lexer.l"
 { yylval.data.line = lineNumber; return LT;    }
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
-#line 51 "lex-yacc/lexer.l"
+#line 52 "lex-yacc/lexer.l"
 { yylval.data.line = lineNumber; return GT;    }
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
-#line 52 "lex-yacc/lexer.l"
+#line 53 "lex-yacc/lexer.l"
 { yylval.data.line = lineNumber; return ISEQUAL;}
 	YY_BREAK
 case 26:
 YY_RULE_SETUP
-#line 53 "lex-yacc/lexer.l"
+#line 54 "lex-yacc/lexer.l"
 { yylval.data.line = lineNumber; return NOTEQUAL;}
 	YY_BREAK
 case 27:
 YY_RULE_SETUP
-#line 54 "lex-yacc/lexer.l"
+#line 55 "lex-yacc/lexer.l"
 { yylval.data.line = lineNumber; return INCREMENT; }
 	YY_BREAK
 case 28:
 YY_RULE_SETUP
-#line 55 "lex-yacc/lexer.l"
+#line 56 "lex-yacc/lexer.l"
 { yylval.data.line = lineNumber; return DECREMENT; }
 	YY_BREAK
 case 29:
 YY_RULE_SETUP
-#line 56 "lex-yacc/lexer.l"
+#line 57 "lex-yacc/lexer.l"
 { yylval.data.line = lineNumber; return PLUS_EQUAL; }
 	YY_BREAK
 case 30:
 YY_RULE_SETUP
-#line 57 "lex-yacc/lexer.l"
+#line 58 "lex-yacc/lexer.l"
 { yylval.data.line = lineNumber; return MINUS_EQUAL; }
 	YY_BREAK
 case 31:
 YY_RULE_SETUP
-#line 58 "lex-yacc/lexer.l"
+#line 59 "lex-yacc/lexer.l"
 { yylval.data.line = lineNumber; return MUL_EQUAL; }
 	YY_BREAK
 case 32:
 YY_RULE_SETUP
-#line 59 "lex-yacc/lexer.l"
+#line 60 "lex-yacc/lexer.l"
 { yylval.data.line = lineNumber; return DIV_EQUAL; }
 	YY_BREAK
 case 33:
 YY_RULE_SETUP
-#line 60 "lex-yacc/lexer.l"
+#line 61 "lex-yacc/lexer.l"
 { yylval.data.line = lineNumber; return MOD_EQUAL; }
 	YY_BREAK
 case 34:
 YY_RULE_SETUP
-#line 61 "lex-yacc/lexer.l"
+#line 62 "lex-yacc/lexer.l"
 { yylval.data.line = lineNumber; return AND_EQUAL; }
 	YY_BREAK
 case 35:
 YY_RULE_SETUP
-#line 62 "lex-yacc/lexer.l"
+#line 63 "lex-yacc/lexer.l"
 { yylval.data.line = lineNumber; return OR_EQUAL; }
 	YY_BREAK
 case 36:
 YY_RULE_SETUP
-#line 63 "lex-yacc/lexer.l"
+#line 64 "lex-yacc/lexer.l"
 { yylval.data.line = lineNumber; return XOR_EQUAL; }
 	YY_BREAK
 case 37:
 YY_RULE_SETUP
-#line 65 "lex-yacc/lexer.l"
+#line 66 "lex-yacc/lexer.l"
 {
     yylval.data.line = lineNumber;
     return SCOPE_BEGIN;
@@ -1029,7 +1030,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 38:
 YY_RULE_SETUP
-#line 70 "lex-yacc/lexer.l"
+#line 71 "lex-yacc/lexer.l"
 {
     yylval.data.line = lineNumber;
     return SCOPE_END;
@@ -1037,12 +1038,12 @@ YY_RULE_SETUP
 	YY_BREAK
 case 39:
 YY_RULE_SETUP
-#line 76 "lex-yacc/lexer.l"
+#line 77 "lex-yacc/lexer.l"
 { yylval.data.line = lineNumber; yylval.data.str = strdup(yytext); return DATA_TYPE; }
 	YY_BREAK
 case 40:
 YY_RULE_SETUP
-#line 78 "lex-yacc/lexer.l"
+#line 79 "lex-yacc/lexer.l"
 {
     // std::cout << "Variable" << " " << yytext <<  std::endl;
     yylval.data.line = lineNumber;
@@ -1052,7 +1053,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 41:
 YY_RULE_SETUP
-#line 86 "lex-yacc/lexer.l"
+#line 87 "lex-yacc/lexer.l"
 {
     // std::cout << "Integer " << yytext << std::endl;
     yylval.data.line = lineNumber;
@@ -1062,7 +1063,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 42:
 YY_RULE_SETUP
-#line 93 "lex-yacc/lexer.l"
+#line 94 "lex-yacc/lexer.l"
 {
     // std::cout << "FLOAT " << yytext << std::endl;
     yylval.data.line = lineNumber;
@@ -1072,7 +1073,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 43:
 YY_RULE_SETUP
-#line 100 "lex-yacc/lexer.l"
+#line 101 "lex-yacc/lexer.l"
 {
     // std::cout << "Character " << yytext << std::endl;
     yylval.data.line = lineNumber;
@@ -1083,7 +1084,7 @@ YY_RULE_SETUP
 case 44:
 /* rule 44 can match eol */
 YY_RULE_SETUP
-#line 107 "lex-yacc/lexer.l"
+#line 108 "lex-yacc/lexer.l"
 {
     yylval.data.line = lineNumber;
     yylval.data.str = strdup(yytext + 1);
@@ -1093,9 +1094,8 @@ YY_RULE_SETUP
 	YY_BREAK
 case 45:
 YY_RULE_SETUP
-#line 114 "lex-yacc/lexer.l"
+#line 115 "lex-yacc/lexer.l"
 {
-    // std::cout << "symbol " << yytext << std::endl;
     return yytext[0];
 }
 	YY_BREAK
@@ -1109,7 +1109,7 @@ case 47:
 /* rule 47 can match eol */
 YY_RULE_SETUP
 #line 121 "lex-yacc/lexer.l"
-;
+{ lineNumber++; }
 	YY_BREAK
 case 48:
 /* rule 48 can match eol */

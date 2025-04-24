@@ -1,15 +1,6 @@
 cmake_minimum_required(VERSION 3.28)
 project(YAPL)
 
-# add_custom_target(
-#         GenerateGrammar ALL
-#         COMMAND ${CMAKE_SOURCE_DIR}/grammar/generate.sh
-#         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-#         COMMENT "grammar generation..."
-# )
-
-# add_dependencies(Cmm GenerateGrammar)
-
 set(CMAKE_CXX_STANDARD 23)
 
 set(CMAKE_C_COMPILER "${CMAKE_CXX_COMPILER}")

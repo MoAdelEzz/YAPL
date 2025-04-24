@@ -1,16 +1,17 @@
 #pragma once
-#include "errorHandler.hpp"
+#include "organizer.hpp"
+#include "enums.hpp"
 #include <cstring>
 #include <iostream>
 #include <string>
 #include <utility>
 #include <vector>
 #include <unordered_map>
+extern int scopeDepth;
+
 
 class ScopeNode;
 class Expression;
-
-enum OperandType { TBOOLEAN, TINT, TCHAR, TFLOAT, TSTRING, TVOID, TUNDEFINED };
 
 class DataType {
     public:
@@ -18,30 +19,25 @@ class DataType {
         bool isConst;
         DataType(std::string type, bool isConst = false) 
         { 
-            if (type == "int") { this->type = TINT; }
-            else if (type == "float") { this->type = TFLOAT; }
-            else if (type == "char") { this->type = TCHAR; }
-            else if (type == "string") { this->type = TSTRING; }
-            else if (type == "bool") { this->type = TBOOLEAN; }
-            else if (type == "void") { this->type = TVOID; }
-            else this->type = TUNDEFINED;
+            if      (type == "int")     { this->type = TINT;        }
+            else if (type == "float")   { this->type = TFLOAT;      }
+            else if (type == "char")    { this->type = TCHAR;       }
+            else if (type == "string")  { this->type = TSTRING;     }
+            else if (type == "bool")    { this->type = TBOOLEAN;    }
+            else if (type == "void")    { this->type = TVOID;       }
+            else                        { this->type = TUNDEFINED;  }
             this->isConst = isConst;
         }
 
-        DataType(OperandType type) {
-            this->type = type;
-            isConst = false;
-        }
-
+        DataType(OperandType type)      { this->type = type, isConst = false; }
+        ~DataType()                     { }
         static DataType* Undefined()    { return new DataType("undef", false); }
         static DataType* Void()         { return new DataType("void", false); }
         static DataType* Int()          { return new DataType("int", false); }
         static DataType* Float()        { return new DataType("float", false); }
         static DataType* Char()         { return new DataType("char", false); }
-        static DataType* String()         { return new DataType("string", false); }
+        static DataType* String()       { return new DataType("string", false); }
         static DataType* Bool()         { return new DataType("bool", false); }
-
-
 };
 
 class Operand {
@@ -50,7 +46,27 @@ class Operand {
         DataType* dataType;
 
         Operand() { content = nullptr; dataType = DataType::Undefined(); }
+        Operand(const Operand& other) { 
+            this->dataType = new DataType(*other.dataType);
+            switch (other.dataType->type) {
+                case TINT: case TBOOLEAN: case TCHAR:
+                    this->content = malloc(sizeof(int));
+                    *(int*)this->content = *(int*)other.content;
+                    break;
+                case TFLOAT:
+                    this->content = malloc(sizeof(float));
+                    *(float*)this->content = *(float*)other.content;
+                    break;
+                case TSTRING:
+                    this->content = new std::string(*(std::string*)other.content);
+                    break;
+                default:
+                    break;
+            }
+
+        }
         Operand(DataType* type, void* content) { this->dataType = type; this->content = content; }
+
         Operand(DataType* convertedType, Operand& other) {
             switch(other.dataType->type) {
                 case TBOOLEAN:
@@ -67,6 +83,24 @@ class Operand {
                     this->init(nullptr, convertedType); break;
                 case TUNDEFINED:
                     break;
+            }
+        }
+
+        ~Operand() {
+            if (content && dataType) {
+                switch(dataType->type) {
+                    case TINT: case TBOOLEAN: case TCHAR:
+                        delete (int*)content;
+                        break;
+                    case TFLOAT:
+                        delete (float*)content;
+                        break;
+                    default:
+                        break;
+                }
+                delete dataType;
+                content = nullptr;
+                dataType = nullptr;
             }
         }
 
@@ -110,7 +144,7 @@ class Operand {
                 dataType->type = TSTRING;
                 content = (void*) new std::string(value); 
             } else if (dataType->type != TVOID && dataType->type != TUNDEFINED) {
-                content = malloc(typeToSize(dataType->type));
+                content = malloc(Utils::typeToSize(dataType->type));
             }
 
             switch (dataType->type) {
@@ -125,41 +159,7 @@ class Operand {
                 default: break;
             }
         }
-        
-        static std::string typeToString(OperandType type) {
-            switch (type) {
-                case TINT:
-                    return "int";
-                case TFLOAT:
-                    return "float";
-                case TCHAR:
-                    return "char";
-                case TBOOLEAN:
-                    return "boolean";
-                case TSTRING:
-                    return "string";
-                case TVOID:
-                    return "void";
-                default:
-                    return "undefined";
-            }
-        }
-        
-        static int typeToSize(OperandType type) {
-            switch (type) {
-                case TINT:
-                    return sizeof(int);
-                case TFLOAT:
-                    return sizeof(float);
-                case TCHAR:
-                    return sizeof(int);
-                case TBOOLEAN:
-                    return sizeof(int);
-                default:
-                    return 0;
-            }
-        }
-
+    
         std::string toString() const {
             switch (dataType->type) {
                 case TINT: case TBOOLEAN: case TCHAR:
@@ -307,6 +307,16 @@ class Operand {
             }
             return os;
         }
+
+        Operand operator=(const Operand& that) {
+            if (this != &that) {
+                Operand temp(that);
+
+                std::swap(this->content, temp.content);
+                std::swap(this->dataType, temp.dataType);
+            }
+            return *this;
+        }
 };
 
 class FunctionParametersNode {
@@ -314,64 +324,21 @@ class FunctionParametersNode {
         std::vector<DataType*> types;
         std::vector<std::string> names;
 
-        FunctionParametersNode() {}
+        FunctionParametersNode();
+        FunctionParametersNode( DataType* type, std::string name );
 
-        FunctionParametersNode( DataType* type, std::string name ) {            
-            this->names.push_back(name);
-            this->types.push_back(type);
-        }
-
-        FunctionParametersNode* addParameter( DataType* type, std::string name ) {
-            this->names.push_back(name);
-            this->types.push_back(type);
-            return this;
-        }
+        FunctionParametersNode* addParameter( DataType* type, std::string name );
+        
+        ~FunctionParametersNode();
 };
 
 class FunctionCallParametersNode {
     public:
         std::vector<Expression*> params;
-        FunctionCallParametersNode() {}
-        FunctionCallParametersNode( Expression* param ) { 
-            params.push_back(param);
-        }   
-        FunctionCallParametersNode* addParameter( Expression* param ) {
-            params.push_back(param);
-            return this;
-        }
-};
-
-class Utils {
-    public:
-
-        static OperandType operationType(OperandType op1, OperandType op2) {
-            if (op1 == TUNDEFINED || op2 == TUNDEFINED) return TUNDEFINED;
-            if (op1 == TVOID || op2 == TVOID)           return TUNDEFINED;
-
-            if (op1 < op2) std::swap(op1, op2);
-            
-            if (op1 == TSTRING)    return TSTRING;
-            if (op1 == TFLOAT)     return TFLOAT;
-            if (op1 == TCHAR)      return TCHAR;
-            if (op1 == TINT)       return TINT;
-            if (op1 == TBOOLEAN)   return TBOOLEAN;
-
-            return TUNDEFINED;
-        }
-
-
-        static bool isValidAssignment(OperandType lhs, OperandType rhs) {
-            if (lhs == TUNDEFINED || rhs == TUNDEFINED) return false;
-            if (lhs == TVOID    || rhs == TVOID)        return false;
-
-            if (lhs == TSTRING  && rhs != TVOID)    return true;
-            if (lhs == TBOOLEAN && rhs < TSTRING)   return true;
-            if (lhs == TINT     && rhs < TSTRING)   return true;
-            if (lhs == TCHAR    && rhs < TSTRING)   return true;
-            if (lhs == TFLOAT   && rhs < TSTRING)    return true;
-
-            return false;
-        }
+        FunctionCallParametersNode();
+        FunctionCallParametersNode( Expression* param );
+        FunctionCallParametersNode* addParameter( Expression* param );
+        ~FunctionCallParametersNode();
 };
 
 class Scope {
@@ -382,15 +349,8 @@ class Scope {
 
         std::unordered_map<std::string, std::tuple<DataType*, FunctionParametersNode*, ScopeNode*>> functions;
     public:
-        Scope() { 
-            this->parent = nullptr; 
-            this->defineVariable("return", DataType::Undefined(), Operand::undefined());
-        }
-
-        Scope(Scope* parent) { 
-            this->parent = parent; 
-            this->defineVariable("return", DataType::Undefined(), Operand::undefined());
-        }
+        Scope() { this->parent = nullptr; }
+        Scope(Scope* parent) { this->parent = parent; }
 
         Scope* getParent() { return parent; }
         void setParent(Scope* parent) { this->parent = parent; }
@@ -400,7 +360,20 @@ class Scope {
                 variables[varName] = { type, Operand::undefined() }; 
 
                 if (value.dataType->type != TUNDEFINED)
-                    assignVariable(varName, value);
+                    assignVariable(varName, value, true);
+
+                SymbolTableEntry stEntry(
+                    varName, EntryType::
+                    VARIABLE, 
+                    type->type, 
+                    scopeDepth, 
+                    type->isConst, 
+                    value.dataType->type != TUNDEFINED,
+                    false                
+                );
+
+                CompilerOrganizer::addSymbolTableEntry(stEntry);
+
             } else {
                 throw ErrorDetail(Severity::ERROR, "Variable " + varName + " has already been declared");
             }
@@ -409,8 +382,106 @@ class Scope {
         void defineFunction( DataType* returnType, std::string functionName, FunctionParametersNode* parameters, ScopeNode* scope) {
             if (functions.find(functionName) == functions.end()) {
                 functions[functionName] = std::make_tuple(returnType, parameters, scope);
+
+                SymbolTableEntry stEntry(
+                    functionName, 
+                    EntryType::FUNCTION, 
+                    returnType->type, 
+                    scopeDepth, 
+                    returnType->isConst, 
+                    scope != nullptr,
+                    false                
+                );
+
+                CompilerOrganizer::addSymbolTableEntry(stEntry);
+
             } else {
                 throw ErrorDetail(Severity::ERROR, "Function " + functionName + " has already been declared");
+            }
+        }
+
+        // ================================================================================================================================================================
+
+        void defineReturn( DataType* returnType ) { variables["return"] = { returnType, Operand::undefined() }; }
+        
+        bool canReturn()  { return variables.find("return") != variables.end() || ( parent != nullptr && parent->canReturn() ); }
+
+        bool hasReturned() { return 
+            ( variables.find("return") != variables.end() && variables["return"].second.dataType->type != TUNDEFINED ) 
+            ||
+            ( parent != nullptr && parent->hasReturned() );  
+        }
+        
+        void assignReturn(Operand value) { 
+            if (canReturn()) {
+                if (variables.find("return") == variables.end()) 
+                    parent->assignReturn(value);
+                else if (variables["return"].first->type == value.dataType->type) {
+                    variables["return"].second = value;
+                } else {
+                    throw ErrorDetail(Severity::ERROR, "Invalid Return Type");
+                }
+        
+            } else {
+               throw ErrorDetail(Severity::ERROR, "Invalid Return"); 
+            }
+        }
+        
+        bool validReturn(OperandType type) {
+            if (canReturn()) {
+                if (variables.find("return") == variables.end()) 
+                    parent->validReturn(type);
+                else if (!Utils::isValidAssignment(variables["return"].first->type, type)) {
+                    throw ErrorDetail(Severity::ERROR, "Invalid Return Type");
+                }
+            }
+
+            return true;
+        }
+        
+        // ================================================================================================================================================================
+
+        void defineBreak()  { variables["break"] = { DataType::Bool(), Operand::undefined() }; }
+
+        bool canBreak()   { return variables.find("break") != variables.end() || ( parent != nullptr && parent->canBreak() ); }
+
+        bool hasBreak() { 
+            return 
+            ( variables.find("break") != variables.end() && variables["break"].second.dataType->type == TVOID ) 
+            ||
+            ( parent != nullptr && parent->hasBreak() ); 
+        }
+
+        void assignBreak()  { 
+            if (canBreak()) {
+                if (variables.find("break") == variables.end()) 
+                    parent->assignBreak();
+                else variables["break"].second = Operand::voidValue();
+            } else {
+                throw ErrorDetail(Severity::ERROR, "Invalid Break"); 
+            }
+        }
+
+        // ================================================================================================================================================================
+
+        void defineContinue() { variables["continue"] = { DataType::Bool(), Operand::undefined() }; }
+        
+        bool canContinue() { return variables.find("continue") != variables.end() || ( parent != nullptr && parent->canContinue() ); }
+        
+        bool hasContinued()  { 
+            return 
+            ( variables.find("continue") != variables.end() && variables["continue"].second.dataType->type == TVOID ) 
+            ||
+            ( parent != nullptr && parent->hasContinued() ); 
+        }
+        
+        void assignContinue()  { 
+            if (canContinue()) {
+                if (variables.find("continue") == variables.end()) parent->assignContinue();
+                else variables["continue"].second = Operand::voidValue();
+                variables["continue"].second = Operand::voidValue();
+            } else {
+                throw ErrorDetail(Severity::ERROR, "Invalid Continue"); 
             }
         }
 
@@ -418,33 +489,18 @@ class Scope {
             variables.clear();
             functions.clear();
             parent = nullptr;
-            this->defineVariable("return", DataType::Undefined(), Operand::undefined());
         }
 
-        void assignReturn(Operand value) {
-            variables["return"] = {value.dataType, value};
-        }
-
-        void breakScope() { variables["break"] = { DataType::Undefined(), Operand::undefined() }; }
-
-        void contScope() { variables["continue"] = { DataType::Undefined(), Operand::undefined() }; }
-
-        bool returned() { return variables["return"].first->type != TUNDEFINED; }
-
-        bool isBroke() { return variables.find("break") != variables.end(); }
-
-        bool isContinued() { return variables.find("continue") != variables.end(); }
-
-        // TODO: make some exclusion for initializing constant variable
-        void assignVariable(std::string varName, Operand value) {
+        void assignVariable(std::string varName, Operand value, bool initializing = false) {
             const auto& it = variables.find(varName);
             if (it != variables.end()) {
-                if (variables[varName].first->isConst) throw ErrorDetail(Severity::ERROR, "Variable " + varName + " is constant and cannot be assigned");
+                if ( !initializing && variables[varName].first->isConst) throw ErrorDetail(Severity::ERROR, "Variable " + varName + " is constant and cannot be assigned");
 
                 bool isValidAssignment = Utils::isValidAssignment(variables[varName].first->type, value.dataType->type);
                 if (!isValidAssignment) throw ErrorDetail(Severity::ERROR, "The right handside type doesn't match the expected type for the variable");
 
-                variables[varName].second = Operand(variables[varName].first, value);
+                DataType* convertedType = new DataType(variables[varName].first->type);
+                variables[varName].second = Operand(convertedType, value);
             } else if (parent != nullptr) {
                 parent->assignVariable(varName, value);
             } else {
@@ -458,7 +514,7 @@ class Scope {
             }  else if (parent != nullptr) {
                 return parent->valueOf(varName);
             } else {
-                throw std::runtime_error("Variable " + varName + " not found");
+                throw ErrorDetail(Severity::ERROR, "Variable " + varName + " not found");
                 return Operand();
             }
         }
@@ -470,7 +526,7 @@ class Scope {
             } else if (parent != nullptr) {
                 return parent->scopeOf(functionName);
             } else {
-                throw std::runtime_error("Function " + functionName + " not found");
+                throw ErrorDetail(Severity::ERROR, "Function " + functionName + " not found");
                 return nullptr;
             }
         }
@@ -481,7 +537,7 @@ class Scope {
             } else if (parent != nullptr) {
                 return parent->getFunctionParameters(functionName);
             } else {
-                throw std::runtime_error("Function " + functionName + " not found");
+                throw ErrorDetail(Severity::ERROR, "Function " + functionName + " not found");
                 return new FunctionParametersNode();
             }
         }
@@ -489,6 +545,8 @@ class Scope {
         OperandType getFunctionReturnType(std::string functionName) {
             if (functions.find(functionName) != functions.end()) {
                 return std::get<0>(functions[functionName])->type;
+            } else if (parent != nullptr) {
+                return parent->getFunctionReturnType(functionName);
             } else {
                 return TUNDEFINED;
             }
@@ -500,8 +558,7 @@ class Scope {
             } else if (parent != nullptr) {
                 return parent->typeOf(varName);
             } else {
-                throw std::runtime_error("Variable " + varName + " not found");
-                return TINT;
+                return TUNDEFINED;
             }
         }
 };

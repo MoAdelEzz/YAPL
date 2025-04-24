@@ -1,5 +1,5 @@
 #pragma once
-#include "errorHandler.hpp"
+#include "organizer.hpp"
 #include "expression.hpp"
 #include <ostream>
 #include <fstream>
@@ -29,6 +29,9 @@ class ProgramNode {
             return this; 
         }
         ProgramNode* getNext() { return next; }
+        ~ProgramNode() { 
+            if (next) delete next; 
+        }
 
         virtual void runSemanticChecker(Scope* scope = nullptr) {
             ProgramNode* it = next;
@@ -71,6 +74,12 @@ class PrintNode : public ProgramNode {
             this->body = body;
             this->logLineInfo();
         }   
+
+        virtual void runSemanticChecker(Scope* scope = nullptr) override {
+            if (body->getExpectedType(scope) >= TVOID) {
+                ErrorDetail error(Severity::ERROR, "Invalid Expression Inside Print");
+            }
+        }
 
         void run(Scope* scope = nullptr) override {
             try {

@@ -1,0 +1,4 @@
+Name                Node Type           Type                Scope               IsConst             IsInitialized       IsUsed              
+----------------------------------------------------------------------------------------------------
+x                   Variable            int                 1                   No                  Yes                 Yes                 
+y                   Variable            int                 1                   No                  Yes                 Yes                 

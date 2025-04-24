@@ -1,4 +1,5 @@
 #pragma once
+#include "common.hpp"
 #include "expression.hpp"
 #include "program.hpp"
 
@@ -17,6 +18,26 @@ class ReturnNode : public ProgramNode {
 
     ReturnNode(int line) : ProgramNode(line) {
         this->setNext(nullptr);
+    }
+
+    ~ReturnNode() {
+        if (value) delete value;
+    }
+
+    void runSemanticChecker(Scope* scope = nullptr) {
+        if (!scope->canReturn()) {
+            ErrorDetail error(Severity::ERROR, "Return Statement Not Allowed Here");
+            error.setLine(this->line);
+            CompilerOrganizer::addError(error);
+        } else {
+            try {
+                OperandType valueType = value == nullptr ? TVOID : value->getExpectedType(scope);
+                scope->validReturn(valueType);
+            } catch(ErrorDetail error) {
+                error.setLine(this->line);
+                CompilerOrganizer::addError(error);
+            }
+        }
     }
 
     void run(Scope* parentScope = nullptr) {

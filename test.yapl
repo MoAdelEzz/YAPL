@@ -1,8 +1,46 @@
-int x = "1";
-int y = 2;
-print( x + y );
-if ( x < 10 ) {
-    print("here");
-} else {
-    print("wow");
+const int y = 130;
+int w;
+
+print("hello");
+
+for (int i = 0; i < 5; i++) {
+    int w;
+
+    if (i % 2 == 0) {
+        //print("%2 " + i);
+    } else {
+        //print("!%2 " + i);
+    }
+}
+
+w = 4;
+
+int i = 0;
+while(i < 5) {
+    int z = 10;
+    {
+        int q = 143;
+    }
+    switch(i) {
+        case 0:
+            //print("switched = " + i);
+            //print("wassup");
+            break;
+        case 1:
+            //print("switched = " + i);
+            //print("wassup");
+            break;
+        case 2:
+            //print("switched = " + i);
+            //print("wassup");
+            break;
+        case 3:
+            //print("switched = " + i);
+            //print("wassup");
+            break;
+        default:
+            //print("defaulted");
+    }
+    //print("==============================================");
+    i += 1;
 }

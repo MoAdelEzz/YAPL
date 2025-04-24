@@ -21,6 +21,12 @@ g++ -std=c++17 -o yapl \
     -Iinclude \
     src/parser.tab.cpp \
     src/lex.yy.cc \
+    src/branching.cpp \
+    src/controllers.cpp \
+    src/expression.cpp \
+    src/common.cpp \
+    src/functions.cpp \
+    src/loop.cpp \
     -lfl
 
 # Check if compilation was successful
