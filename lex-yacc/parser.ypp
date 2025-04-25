@@ -17,15 +17,18 @@
     #include "parser.tab.hpp"
     extern int yylex();
     extern FILE *yyin;   
+
+    int lineNumber = 1;
+    int scopeDepth = 0;
+
     void yyerror(const char* s) {
         std::cerr << "Error: " << s << std::endl;
+        std::cerr << "Line: " << lineNumber << std::endl;
     }
     CompilerState CompilerOrganizer::state = VALIDATING;
     std::vector<ErrorDetail> CompilerOrganizer::errors;
     std::vector<SymbolTableEntry> CompilerOrganizer::symbolTable;
 
-    int lineNumber = 1;
-    int scopeDepth = 0;
 %}
 
 %union  {
@@ -73,6 +76,7 @@
 %left '(' ')'
 %left '[' ']'
 %right '!' OR AND
+%right '~'
 %right IF
 %right ELSE
 %left ';'
@@ -248,22 +252,21 @@ Condition:
     |   Condition     AND      Condition              { $$ = new Expression($1, $3, OP_AND); } 
     |   '!' Condition                                 { $$ = new Expression($2, $2, OP_NOT); }
 
-    |     MathOperation GTE      MathOperation          { $$ = new Expression($1, $3, OP_GE);  } 
-    |     MathOperation GT       MathOperation          { $$ = new Expression($1, $3, OP_GT);  } 
-    |     MathOperation LTE      MathOperation          { $$ = new Expression($1, $3, OP_LE);  } 
-    |     MathOperation LT       MathOperation          { $$ = new Expression($1, $3, OP_LT);  } 
-    |     MathOperation ISEQUAL  MathOperation          { $$ = new Expression($1, $3, OP_EQ);  } 
-    |     MathOperation NOTEQUAL MathOperation          { $$ = new Expression($1, $3, OP_NEQ); } 
+    |   MathOperation GTE      MathOperation          { $$ = new Expression($1, $3, OP_GE);  } 
+    |   MathOperation GT       MathOperation          { $$ = new Expression($1, $3, OP_GT);  } 
+    |   MathOperation LTE      MathOperation          { $$ = new Expression($1, $3, OP_LE);  } 
+    |   MathOperation LT       MathOperation          { $$ = new Expression($1, $3, OP_LT);  } 
+    |   MathOperation ISEQUAL  MathOperation          { $$ = new Expression($1, $3, OP_EQ);  } 
+    |   MathOperation NOTEQUAL MathOperation          { $$ = new Expression($1, $3, OP_NEQ); } 
 
-    |    StringOperation GTE      StringOperation          { $$ = new StringContainer($1, $3, OP_GE);   }
-    |    StringOperation GT       StringOperation          { $$ = new StringContainer($1, $3, OP_GT);   }
-    |    StringOperation LTE      StringOperation          { $$ = new StringContainer($1, $3, OP_LE);   }
-    |    StringOperation LT       StringOperation          { $$ = new StringContainer($1, $3, OP_LT);   }
-    |    StringOperation ISEQUAL  StringOperation          { $$ = new StringContainer($1, $3, OP_EQ);   }
-    |    StringOperation NOTEQUAL StringOperation          { $$ = new StringContainer($1, $3, OP_NEQ);  }
+    |   StringOperation GTE      StringOperation      { $$ = new StringContainer($1, $3, OP_GE);   }
+    |   StringOperation GT       StringOperation      { $$ = new StringContainer($1, $3, OP_GT);   }
+    |   StringOperation LTE      StringOperation      { $$ = new StringContainer($1, $3, OP_LE);   }
+    |   StringOperation LT       StringOperation      { $$ = new StringContainer($1, $3, OP_LT);   }
+    |   StringOperation ISEQUAL  StringOperation      { $$ = new StringContainer($1, $3, OP_EQ);   }
+    |   StringOperation NOTEQUAL StringOperation      { $$ = new StringContainer($1, $3, OP_NEQ);  }
 
-    |   MathOperation                               { $$ = $1; }
-    |   StringOperation                             { $$ = $1; }
+    |   Operation                                     { $$ = $1; }
 
 Operation: 
       MathOperation                                 { $$ = $1; }     
@@ -285,24 +288,27 @@ MathOperation:
     |   MathOperation '/' MathOperation             { $$ = new Expression($1, $3, OP_DIV); }    
     |   MathOperation '%' MathOperation             { $$ = new Expression($1, $3, OP_MOD); }     
     |   '(' MathOperation ')' MathOperation         { $$ = new Expression($2, $4, OP_MUL); } 
-    |   '(' MathOperation ')'                       {                   $$ = $2;               }
-    |   POW '(' MathOperation ',' MathOperation ')' { $$ = new Expression($3, $5, OP_POW);  }
-    |   SQRT '(' MathOperation ')'                  { $$ = new Expression($3, $3, OP_SQRT); }
+    |   '(' MathOperation ')'                       {               $$ = $2;               }
+    |   POW '(' MathOperation ',' MathOperation ')' { $$ = new Expression($3, $5, OP_POW); }
+    |   SQRT '(' MathOperation ')'                  { $$ = new Expression($3, $3, OP_SQRT);}
     |   MathOperation SHL MathOperation             { $$ = new Expression($1, $3, OP_SHL); } 
     |   MathOperation SHR MathOperation             { $$ = new Expression($1, $3, OP_SHR); } 
-    |   MathOperation '|' MathOperation             { $$ = new Expression($1, $3, OP_BW_OR); }
+    |   MathOperation '|' MathOperation             { $$ = new Expression($1, $3, OP_BW_OR);  }
     |   MathOperation '&' MathOperation             { $$ = new Expression($1, $3, OP_BW_AND); }
     |   MathOperation '^' MathOperation             { $$ = new Expression($1, $3, OP_XOR); }
-    |   IDENTIFIER INCREMENT                          { $$ = new IdentifierContainer($1.str, OP_POST_ADD); }
-    |   INCREMENT IDENTIFIER                          { $$ = new IdentifierContainer($2.str, OP_PRE_ADD); }
-    |   DECREMENT IDENTIFIER                          { $$ = new IdentifierContainer($2.str, OP_PRE_SUB); }
-    |   IDENTIFIER DECREMENT                          { $$ = new IdentifierContainer($1.str, OP_POST_ADD); }
+    |   '~' MathOperation                           { $$ = new Expression($2, $2, OP_BW_NOT); }
+    |   IDENTIFIER INCREMENT                        { $$ = new IdentifierContainer($1.str, OP_POST_ADD); }
+    |   INCREMENT IDENTIFIER                        { $$ = new IdentifierContainer($2.str, OP_PRE_ADD); }
+    |   DECREMENT IDENTIFIER                        { $$ = new IdentifierContainer($2.str, OP_PRE_SUB); }
+    |   IDENTIFIER DECREMENT                        { $$ = new IdentifierContainer($1.str, OP_POST_SUB); }
+    |   '-' MathOperation                             { $$ = new Expression($2, $2, OP_UMINUS); }
     |   MathOperand                    
 
 StringOperation:
         StringOperation '+' StringOperation             { $$ =  new StringContainer($1, $3, OP_ADD); } 
     |   StringOperation '+' MathOperation               { $$ =  new StringContainer($1, $3, OP_ADD); } 
     |   StringOperation '-' MathOperation               { $$ =  new StringContainer($1, $3, OP_SUB); }    
+    |   MathOperation   '+' StringOperation             { $$ =  new StringContainer($1, $3, OP_ADD); } 
     |   '(' StringOperation ')'                         { $$ =  $2; } 
     |   StringOperation SHL StringOperation             { $$ =  new StringContainer($1, $3, OP_SHL); } 
     |   StringOperation SHR StringOperation             { $$ =  new StringContainer($1, $3, OP_SHR); } 
@@ -330,7 +336,7 @@ Type:
 %%
 
 
-int main() {
+int main(int argc, char* argv[]) {
     ScopeNode* x = new ScopeNode(-1);
     yyin = fopen("test.yapl", "r");
     yyparse();

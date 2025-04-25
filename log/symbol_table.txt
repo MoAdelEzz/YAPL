@@ -1,9 +1,6 @@
 Name                Node Type           Type                Scope               IsConst             IsInitialized       IsUsed              
 ----------------------------------------------------------------------------------------------------
-y                   Variable            int                 1                   Yes                 Yes                 No                  
-w                   Variable            int                 1                   No                  Yes                 No                  
-i                   Variable            int                 2                   No                  Yes                 Yes                 
-w                   Variable            int                 2                   No                  No                  No                  
-i                   Variable            int                 1                   No                  Yes                 Yes                 
-z                   Variable            int                 2                   No                  Yes                 No                  
-q                   Variable            int                 3                   No                  Yes                 No                  
+x                   Variable            int                 1                   No                  Yes                 Yes                 
+y                   Variable            float               1                   No                  Yes                 Yes                 
+z                   Variable            boolean             1                   No                  Yes                 No                  
+isReady             Function            boolean             1                   No                  Yes                 Yes                 

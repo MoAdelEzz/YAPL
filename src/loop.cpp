@@ -1,4 +1,5 @@
 #include "loop.hpp"
+#include "enums.hpp"
 extern int scopeDepth;
 
 // =========================================================================================
@@ -27,7 +28,15 @@ void ForNode::checkCondition(Scope* forScope) {
         throw "Possible Infinite Loop";
     }
 
-    if (condition->getExpectedType(forScope) > TSTRING) {
+    OperandType type = TUNDEFINED;
+    try {
+        type = condition->getExpectedType(forScope);
+    } catch (ErrorDetail error) {
+        error.setLine(this->line);
+        CompilerOrganizer::addError(error);
+    }
+
+    if (type > TSTRING) {
         throw "Something Wrong With The Operation inside the condition";
     }
 }
@@ -121,8 +130,15 @@ void WhileNode::checkCondition(Scope* whileScope) {
     if (condition == nullptr) {
         throw "Possible Infinite Loop";
     }
+    OperandType type = TUNDEFINED;
+    try {
+        type = condition->getExpectedType(whileScope);
+    } catch (ErrorDetail error) {
+        error.setLine(this->line);
+        CompilerOrganizer::addError(error);
+    }
 
-    if (condition->getExpectedType(whileScope) > TSTRING) {
+    if (type > TSTRING) {
         throw "Something Wrong With The Operation inside the condition";
     }
 }
@@ -181,8 +197,15 @@ void DoWhileNode::checkCondition(Scope* doWhileScope) {
     if (condition == nullptr) {
         throw "Possible Infinite Loop";
     }
+    OperandType type = TUNDEFINED;
+    try {
+        type = condition->getExpectedType(doWhileScope);
+    } catch (ErrorDetail error) {
+        error.setLine(this->line);
+        CompilerOrganizer::addError(error);
+    }
 
-    if (condition->getExpectedType(doWhileScope) > TSTRING) {
+    if (type > TSTRING) {
         throw "Something Wrong With The Operation inside the condition";
     }
 }

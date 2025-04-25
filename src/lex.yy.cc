@@ -1077,7 +1077,7 @@ YY_RULE_SETUP
 {
     // std::cout << "Character " << yytext << std::endl;
     yylval.data.line = lineNumber;
-    yylval.data.str = strdup(yytext);
+    yylval.data.str = strndup(yytext + 1, yyleng - 2);
     return CHARACTER;
 }
 	YY_BREAK

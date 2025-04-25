@@ -1,5 +1,6 @@
 #pragma once
 #include "common.hpp"
+#include "enums.hpp"
 #include "expression.hpp"
 #include "program.hpp"
 
@@ -31,7 +32,13 @@ class ReturnNode : public ProgramNode {
             CompilerOrganizer::addError(error);
         } else {
             try {
-                OperandType valueType = value == nullptr ? TVOID : value->getExpectedType(scope);
+                OperandType valueType = TUNDEFINED; 
+                try {
+                    valueType = value == nullptr ? TVOID : value->getExpectedType(scope);
+                } catch (ErrorDetail error) {
+                    error.setLine(this->line);
+                    CompilerOrganizer::addError(error);
+                }
                 scope->validReturn(valueType);
             } catch(ErrorDetail error) {
                 error.setLine(this->line);

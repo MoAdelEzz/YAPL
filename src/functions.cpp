@@ -84,7 +84,7 @@ Operand FunctionCallNode::getValue(Scope* scope) {
 
     for (int i = 0; i < functionParameters->names.size(); i++) { 
         if (!Utils::isValidAssignment(functionParameters->types[i]->type, arguments->params[i]->getType())) { 
-            throw std::runtime_error("Argument type mismatch"); 
+            throw ErrorDetail(Severity::ERROR, "Argument type mismatch");
         }
 
         functionScope->
@@ -98,7 +98,7 @@ Operand FunctionCallNode::getValue(Scope* scope) {
 
     if (returnValue.dataType->type != scope->getFunctionReturnType(name)) {
         std::cout << "Mismatch in return type" << std::endl;
-        throw std::runtime_error("Return Type Mismatch");
+        throw ErrorDetail(Severity::ERROR, "Return Type Mismatch");
         return Operand::undefined();
     } else if (returnValue.dataType->type == TVOID) {
         return Operand::voidValue();

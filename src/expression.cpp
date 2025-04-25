@@ -1,4 +1,5 @@
 #include "expression.hpp"
+#include "enums.hpp"
 #include "organizer.hpp"
 // =========================================================================================
 // ====================================== Expression ======================================
@@ -6,7 +7,13 @@
 
 Expression::Expression(Expression *l, Expression *r, OperationType op) : left(l), right(r), op(op) {}
 
-Expression::Expression(const char* value, DataType* type) { nodeValue.init(value, type); }
+Expression::Expression(const char* value, DataType* type) { 
+    if (type->type == TCHAR) {
+        nodeValue.init(std::to_string((int)value[0]).c_str(), type);
+    } else {
+        nodeValue.init(value, type); 
+    }
+}
 
 Expression::~Expression() {
     if (left != nullptr) delete left, left = nullptr;
@@ -20,7 +27,8 @@ Operand Expression::calculateNodeValue(Expression* left, Expression* right, Scop
     Operand op2 = right->getValue(scope);
 
     if (op1.dataType->type == TVOID || op2.dataType->type == TVOID) {
-        throw std::runtime_error("Invalid Operand Type");
+        ErrorDetail error(Severity::ERROR, "void operation is not supported");
+        throw error;
     }
 
     if (op == OP_SQRT) {
@@ -48,6 +56,8 @@ Operand Expression::calculateNodeValue(Expression* left, Expression* right, Scop
                 result = (int)op1 + (int)op2;   break;
             case OP_SUB:
                 result = (int)op1 - (int)op2;   break;
+            case OP_UMINUS:
+                result = -(int)op1;             break;
             case OP_MUL:
                 result = (int)op1 * (int)op2;   break;
             case OP_DIV:
@@ -97,19 +107,21 @@ Operand Expression::calculateNodeValue(Expression* left, Expression* right, Scop
                 result = (float)op1 + (float)op2;   break;
             case OP_SUB:
                 result = (float)op1 - (float)op2;   break;
+            case OP_UMINUS:
+                result = -(float)op1;               break;
             case OP_MUL:
                 result = (float)op1 * (float)op2;   break;
             case OP_DIV:
                 result = (float)op1 / (float)op2;   break;
             case OP_MOD:
-                throw std::runtime_error("mod operation is not supported for float");
+                throw ErrorDetail(Severity::ERROR, "mod operation is not supported for float");
                 break;
             case OP_AND:
                 result = (float)op1 && (float)op2;  break;
             case OP_NOT:
                 result = !(float)op1;               break;
             case OP_BW_AND: case OP_BW_OR: case OP_BW_NOT: case OP_XOR: case OP_SHL: case OP_SHR:
-                throw std::runtime_error("bitwise operation is not supported for float");
+                throw ErrorDetail(Severity::ERROR, "bitwise operation is not supported for float");
                 break;
             case OP_EQ:
                 result = (float)op1 == (float)op2;  break;
@@ -146,6 +158,10 @@ Operand Expression::getValue(Scope* scope) {
     return this->nodeValue;
 }
 
+bool validateOperation(OperandType type1, OperandType type2, OperationType op) { 
+    return !isBitwiseOperation(op) || (type1 != TFLOAT && type2 != TFLOAT);
+}
+
 OperandType Expression::getExpectedType(Scope* scope) {
     if (left == nullptr && right == nullptr) {
         return nodeValue.dataType->type;
@@ -154,6 +170,12 @@ OperandType Expression::getExpectedType(Scope* scope) {
     } else if (left == nullptr && right != nullptr) {
         return right->getExpectedType(scope);
     } else {
+        OperandType op1 = left->getExpectedType(scope);
+        OperandType op2 = right->getExpectedType(scope);
+        if (!validateOperation(op1, op2, op)) {
+            std::string message = op == OP_MOD ? "mod operation is not supported for float" : "bitwise operation is not supported for float";
+            throw ErrorDetail(Severity::ERROR, message);
+        } 
         return Utils::operationType(left->getExpectedType(scope), right->getExpectedType(scope));
     }
     return TUNDEFINED;
@@ -171,7 +193,7 @@ Operand StringContainer::calculateNodeValue(Expression* left, Expression* right,
     Operand op2 = right->getValue(scope);
 
     if (op1.dataType->type == TVOID || op2.dataType->type == TVOID) {
-        throw std::runtime_error("void operation is not supported for string");
+        throw ErrorDetail(Severity::ERROR, "void operation is not supported for string");
     }
     
     std::string result = "";

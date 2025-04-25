@@ -106,7 +106,7 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 31 "lex-yacc/parser.ypp"
+#line 34 "lex-yacc/parser.ypp"
 
     ProgramNode*    Node;
     Expression*     Exp;

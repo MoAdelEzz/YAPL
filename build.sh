@@ -33,7 +33,7 @@ g++ -std=c++17 -o yapl \
 if [ $? -eq 0 ]; then
     echo "Build successful. Running calculator..."
     echo "-------------------------------------"
-    ./yapl
+    ./yapl test.yapl
 else
     echo "Build failed."
     exit 1

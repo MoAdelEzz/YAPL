@@ -101,7 +101,7 @@ int|float|bool|char|string|void { yylval.data.line = lineNumber; yylval.data.str
 '.' {
     // std::cout << "Character " << yytext << std::endl;
     yylval.data.line = lineNumber;
-    yylval.data.str = strdup(yytext);
+    yylval.data.str = strndup(yytext + 1, yyleng - 2);
     return CHARACTER;
 }
 

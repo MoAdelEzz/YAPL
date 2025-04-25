@@ -49,7 +49,7 @@ class Operand {
         Operand(const Operand& other) { 
             this->dataType = new DataType(*other.dataType);
             switch (other.dataType->type) {
-                case TINT: case TBOOLEAN: case TCHAR:
+                case TINT: case TBOOLEAN:
                     this->content = malloc(sizeof(int));
                     *(int*)this->content = *(int*)other.content;
                     break;
@@ -57,6 +57,12 @@ class Operand {
                     this->content = malloc(sizeof(float));
                     *(float*)this->content = *(float*)other.content;
                     break;
+
+                case TCHAR:
+                    this->content = malloc(sizeof(char));
+                    *(char*)this->content = *(char*)other.content;
+                    break;
+                
                 case TSTRING:
                     this->content = new std::string(*(std::string*)other.content);
                     break;
@@ -68,7 +74,7 @@ class Operand {
         Operand(DataType* type, void* content) { this->dataType = type; this->content = content; }
 
         Operand(DataType* convertedType, Operand& other) {
-            switch(other.dataType->type) {
+            switch(convertedType->type) {
                 case TBOOLEAN:
                     this->init( std::to_string((bool)other).c_str(), convertedType ); break;
                 case TINT:
@@ -77,10 +83,10 @@ class Operand {
                     this->init( std::to_string((float)other).c_str(), convertedType ); break;
                 case TSTRING:
                     this->init( other.toString().c_str(), convertedType ); break;
+                case TCHAR:
+                    this->init( std::to_string((int)other).c_str(), convertedType); break;
                 case TVOID:
                     this->init(nullptr, DataType::Void()); break;
-                case TCHAR:
-                    this->init(nullptr, convertedType); break;
                 case TUNDEFINED:
                     break;
             }
@@ -89,11 +95,14 @@ class Operand {
         ~Operand() {
             if (content && dataType) {
                 switch(dataType->type) {
-                    case TINT: case TBOOLEAN: case TCHAR:
+                    case TINT: case TBOOLEAN:
                         delete (int*)content;
                         break;
                     case TFLOAT:
                         delete (float*)content;
+                        break;
+                    case TCHAR:
+                        delete (char*)content;
                         break;
                     default:
                         break;
@@ -149,23 +158,25 @@ class Operand {
 
             switch (dataType->type) {
                 case TINT:
-                    *(int*)content = atoi(value); break;
+                    *(int*)content   = atoi(value); break;
                 case TFLOAT:
                     *(float*)content = atof(value); break;
                 case TCHAR:
-                    *(char*)content = value[0]; break;
+                    *(char*)content  = (char)atoi(value); break;
                 case TBOOLEAN:
-                    *(int*)content = strcmp(value, "true") && strcmp(value, "1") ? 0 : 1; break;
+                    *(int*)content   = strcmp(value, "true") && strcmp(value, "1") ? 0 : 1; break;
                 default: break;
             }
         }
     
         std::string toString() const {
             switch (dataType->type) {
-                case TINT: case TBOOLEAN: case TCHAR:
+                case TINT: case TBOOLEAN:
                     return std::to_string((int) *(int*)content);
                 case TFLOAT:
                     return std::to_string((float) *(float*)content);
+                case TCHAR:
+                    return std::string(1, (char) *(char*)content);
                 case TSTRING:
                     return *(std::string*)content;
                 default:
@@ -175,8 +186,10 @@ class Operand {
 
         operator int() const {
             switch (dataType->type) {
-                case TINT: case TBOOLEAN: case TCHAR:
+                case TINT: case TBOOLEAN:
                     return (int) *(int*)content;
+                case TCHAR:
+                    return (int) *(char*)content;
                 case TFLOAT:
                     return (int) *(float*)content;
                 default:
@@ -186,10 +199,12 @@ class Operand {
 
         operator float() const {
             switch (dataType->type) {
-                case TINT: case TBOOLEAN: case TCHAR:
+                case TINT: case TBOOLEAN:
                     return (float) *(int*)content;
                 case TFLOAT:
                     return (float) *(float*)content;
+                case TCHAR:
+                    return (float) *(char*)content;
                 default:
                     return 0;
             }
@@ -197,8 +212,10 @@ class Operand {
 
         operator char() const {
             switch (dataType->type) {
-                case TINT: case TBOOLEAN: case TCHAR:
+                case TINT: case TBOOLEAN:
                     return (char) (int) *(int*)content;
+                case TCHAR:
+                    return (char) *(char*)content;
                 case TFLOAT:
                     return (char) (int) *(float*)content;
                 default:
@@ -208,10 +225,12 @@ class Operand {
 
         operator bool() const {
             switch (dataType->type) {
-                case TINT: case TBOOLEAN: case TCHAR:
+                case TINT: case TBOOLEAN:
                     return *(int*)content != 0;
                 case TFLOAT:
                     return *(float*)content != 0;
+                case TCHAR:
+                    return *(char*)content != 0;
                 default:
                     return 0;
             }
@@ -219,12 +238,16 @@ class Operand {
 
         Operand operator+(int that) const {
             switch (dataType->type) {
-                case TINT: case TBOOLEAN: case TCHAR:
+                case TINT:
+                    return Operand(DataType::Int(), (void*) new int((int) *(int*)content + that));
+                case TBOOLEAN:
                     return Operand(DataType::Int(), (void*) new int((int) *(int*)content + that));
                 case TFLOAT:
                     return Operand(DataType::Float(), (void*) new float((float) *(float*)content + (float)that));
                 case TSTRING:
                     return Operand(DataType::String(), (void*) new std::string(*(std::string*)content + std::to_string(that)));
+                case TCHAR:
+                    return Operand(DataType::Char(), (void*) new char((char) *(char*)content + (char)that));
                 default:
                     return Operand(DataType::Float(), nullptr);
             }
@@ -233,12 +256,14 @@ class Operand {
         template<typename T>
         bool operator>(const T& that) const {
             switch (dataType->type) {
-                case TINT: case TBOOLEAN: case TCHAR:
+                case TINT: case TBOOLEAN:
                     return (int) *(int*)content > that;
                 case TFLOAT:
                     return (float) *(float*)content > (float)that;
                 case TSTRING:
                     return *(std::string*)content > std::to_string(that);
+                case TCHAR:
+                    return (char) *(char*)content > (char)that;
                 default:
                     return 0;
             }
@@ -247,12 +272,14 @@ class Operand {
         template<typename T>
         bool operator==(const T& that) const {
             switch (dataType->type) {
-                case TINT: case TBOOLEAN: case TCHAR:
+                case TINT: case TBOOLEAN:
                     return (int) *(int*)content == (int)that;
                 case TFLOAT:
                     return (float) *(float*)content == (float)that;
                 case TSTRING:
                     return *(std::string*)content == std::to_string(that);
+                case TCHAR:
+                    return (char) *(char*)content == (char)that;
                 default:
                     return false;
             }
@@ -260,12 +287,14 @@ class Operand {
 
         bool operator==(const Operand& that) const {
             switch (dataType->type) {
-                case TINT: case TBOOLEAN: case TCHAR:
+                case TINT: case TBOOLEAN:
                     return (int) *(int*)content == (int)that;
                 case TFLOAT:
                     return (float) *(float*)content == (float)that;
                 case TSTRING:
                     return *(std::string*)content == that.toString();
+                case TCHAR:
+                    return (char) *(char*)content == (char)that;
                 default:
                     return false;
             }
@@ -274,12 +303,14 @@ class Operand {
         template<typename T>
         bool operator!=(const T& that) const {
             switch (dataType->type) {
-                case TINT: case TBOOLEAN: case TCHAR:
+                case TINT: case TBOOLEAN:
                     return (int) *(int*)content != that;
                 case TFLOAT:
                     return (float) *(float*)content != (float)that;
                 case TSTRING:
                     return *(std::string*)content != std::to_string(that);
+                case TCHAR:
+                    return (char) *(char*)content != (char)that;
                 default:
                     return true;
             }

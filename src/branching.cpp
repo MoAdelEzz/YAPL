@@ -1,4 +1,5 @@
 #include "branching.hpp"
+#include "enums.hpp"
 
 // =========================================================================================
 // ======================================== IF NODE ========================================
@@ -24,7 +25,15 @@ IfNode* IfNode::setElse(ProgramNode* reject) {
 }
 
 void IfNode::runSemanticChecker(Scope* scope) {
-    if (condition->getExpectedType(scope) == TUNDEFINED) {
+    OperandType type = TUNDEFINED;
+    try {
+        type = condition->getExpectedType(scope);
+    } catch (ErrorDetail error) {
+        error.setLine(this->line);
+        CompilerOrganizer::addError(error);
+    }
+
+    if (type == TUNDEFINED) {
         ErrorDetail error(Severity::ERROR, "Ivalid Expression For The If Condition");
         error.setLine(this->line);
         CompilerOrganizer::addError(error);

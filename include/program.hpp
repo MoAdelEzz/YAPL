@@ -1,4 +1,5 @@
 #pragma once
+#include "enums.hpp"
 #include "organizer.hpp"
 #include "expression.hpp"
 #include <ostream>
@@ -76,17 +77,22 @@ class PrintNode : public ProgramNode {
         }   
 
         virtual void runSemanticChecker(Scope* scope = nullptr) override {
-            if (body->getExpectedType(scope) >= TVOID) {
-                ErrorDetail error(Severity::ERROR, "Invalid Expression Inside Print");
-            }
-        }
-
-        void run(Scope* scope = nullptr) override {
+            OperandType type = TUNDEFINED;
             try {
-                std::cout << body->getValue(scope) << std::endl;
+                type = body->getExpectedType(scope);
             } catch (ErrorDetail error) {
                 error.setLine(this->line);
                 CompilerOrganizer::addError(error);
             }
+
+            if (type >= TVOID) {
+                ErrorDetail error(Severity::ERROR, "Invalid Expression Inside Print");
+                error.setLine(this->line);
+                CompilerOrganizer::addError(error);
+            }
+        }
+
+        void run(Scope* scope = nullptr) override {
+            std::cout << body->getValue(scope) << std::endl;
         }
 };
