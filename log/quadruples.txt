@@ -1,14 +1,18 @@
-FUNC_START  test                    
-PRINT       x                       
-PRINT       y                       
-PRINT       w                       
-RET         4                       
-FUNC_END    test                    
-ARG         1                       
-ARG         20                      
-ARG         20                      
-CALL        test    3       t4      
-ARG         1                       
-ARG         10                      
-ARG         20                      
-CALL        test    3       t5      
+DECLARE     int             x       
+=           1               x       
+LABEL                       L2      
+PRINT       3                       
+JMP                         L3      
+LABEL                       L5      
+==          x       1       t2      
+JZ          t2              L6      
+LABEL                       L3      
+JMP                         L4      
+LABEL                       L6      
+==          x       2       t3      
+JZ          t3              L7      
+LABEL                       L4      
+PRINT       12                      
+JMP                         L0      
+LABEL                       L7      
+LABEL                       L0      

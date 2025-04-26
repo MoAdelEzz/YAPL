@@ -238,11 +238,12 @@ void CaseNode::generateQuadruples(Scope* scope) {
 
     int continueLabel = continueJumpTo.back();
     continueJumpTo.pop_back();
-
-    std::string target = condition->generateQuadruples();
-
-    std::string cond = CompilerOrganizer::createQuadEntry(OP_EQ, varName, target);
-    CompilerOrganizer::addQuadruple(QUAD_GOTO_IF_FALSE, cond, "", "L" + std::to_string(skipLabel));
+    
+    if (condition != nullptr) {
+        std::string target = condition->generateQuadruples();
+        std::string cond = CompilerOrganizer::createQuadEntry(OP_EQ, varName, target);
+        CompilerOrganizer::addQuadruple(QUAD_GOTO_IF_FALSE, cond, "", "L" + std::to_string(skipLabel));
+    }
     
     CompilerOrganizer::addLabel(skipConditionLabel);
 
