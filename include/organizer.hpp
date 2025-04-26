@@ -40,6 +40,7 @@ class SymbolTableEntry {
     std::string name;
     EntryType entryType;
     OperandType dataType;
+    std::vector<OperandType> argumentTypes;
     bool isConst;
     bool isInitialized;
     bool isUsed;
@@ -57,6 +58,9 @@ class SymbolTableEntry {
         void markAsInitialized() { this->isInitialized = true; }
         void markAsUsed() { this->isUsed = true; }
 
+
+        void addArgument(OperandType type) { if ( entryType == FUNCTION ) argumentTypes.push_back(type); }
+
         std::string getName() { return name; }
         int getScopeLayer() { return scopeLayer; }
         EntryType getEntryType() { return entryType; }
@@ -70,10 +74,20 @@ class SymbolTableEntry {
         }
 
         void dump(std::ofstream& out) const {
+            std::string dataType = "";
+            if (entryType == FUNCTION) {
+                dataType += " (";
+                for (int i = 0; i < argumentTypes.size(); i++) {
+                    OperandType type = argumentTypes[i];
+                    dataType +=  Utils::typeToString(type) + (i == argumentTypes.size() - 1 ? ") -> " : ",");
+                }
+                dataType += Utils::typeToString(this->dataType);
+            }
+
             if (entryType != SCOPE_ENTRY && entryType != SCOPE_EXIT) {
                 out << std::setw(20) << std::left << name
                 << std::setw(20) << std::left << (entryType == VARIABLE ? "Variable" : "Function")
-                << std::setw(20) << std::left << Utils::typeToString(dataType)
+                << std::setw(20) << std::left << dataType
                 << std::setw(20) << std::left << scopeLayer
                 << std::setw(20) << std::left << (isConst ? "Yes" : "No")
                 << std::setw(20) << std::left << (isInitialized ? "Yes" : "No")

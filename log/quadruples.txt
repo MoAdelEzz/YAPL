@@ -1,18 +1,17 @@
-DECLARE     int             x       
-=           1               x       
-LABEL                       L2      
-PRINT       3                       
-JMP                         L3      
-LABEL                       L5      
-==          x       1       t2      
-JZ          t2              L6      
-LABEL                       L3      
-JMP                         L4      
-LABEL                       L6      
-==          x       2       t3      
-JZ          t3              L7      
-LABEL                       L4      
-PRINT       12                      
-JMP                         L0      
-LABEL                       L7      
-LABEL                       L0      
+DECLARE     int             y       
+=           2               y       
+FUNC_START  f1                      
+MUL         x       y       t1      
+RET         t1                      
+FUNC_END    f1                      
+FUNC_START  f2                      
+DECLARE     int             y       
+=           10              y       
+ARG         x                       
+ARG         0                       
+CALL        f1      2       t2      
+RET         t2                      
+FUNC_END    f2                      
+ARG         2                       
+CALL        f2      1       t3      
+PRINT       t3                      

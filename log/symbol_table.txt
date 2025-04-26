@@ -1,3 +1,9 @@
 Name                Node Type           Type                Scope               IsConst             IsInitialized       IsUsed              
 ----------------------------------------------------------------------------------------------------
-x                   Variable            int                 1                   No                  Yes                 No                  
+y                   Variable                                1                   No                  No                  Yes                 
+f1                  Function             (int,int) -> int   1                   No                  Yes                 Yes                 
+x                   Variable                                2                   No                  No                  Yes                 
+w                   Variable                                2                   No                  Yes                 No                  
+f2                  Function             (int) -> int       1                   No                  Yes                 Yes                 
+x                   Variable                                2                   No                  No                  Yes                 
+y                   Variable                                3                   No                  No                  No                  

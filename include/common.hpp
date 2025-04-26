@@ -387,24 +387,26 @@ class Scope {
         Scope* getParent() { return parent; }
         void setParent(Scope* parent) { this->parent = parent; }
 
-        void defineVariable(std::string varName, DataType* type, Operand value) { 
+        void defineVariable(std::string varName, DataType* type, Operand value, bool writeSymbol) { 
             if (variables.find(varName) == variables.end()) {
                 variables[varName] = { type, Operand::undefined() }; 
 
                 if (value.dataType->type != TUNDEFINED)
                     assignVariable(varName, value, true);
-
-                SymbolTableEntry stEntry(
-                    varName, EntryType::
-                    VARIABLE, 
-                    type->type, 
-                    scopeDepth, 
-                    type->isConst, 
-                    value.dataType->type != TUNDEFINED,
-                    false                
-                );
-
-                CompilerOrganizer::addSymbolTableEntry(stEntry);
+                
+                if (writeSymbol) {
+                    SymbolTableEntry stEntry(
+                        varName, EntryType::
+                        VARIABLE, 
+                        type->type, 
+                        scopeDepth, 
+                        type->isConst, 
+                        value.dataType->type != TUNDEFINED,
+                        false                
+                    );
+    
+                    CompilerOrganizer::addSymbolTableEntry(stEntry);
+                }
 
             } else {
                 throw ErrorDetail(Severity::ERROR, "Variable " + varName + " has already been declared");
@@ -424,6 +426,10 @@ class Scope {
                     scope != nullptr,
                     false                
                 );
+
+                for (int i = 0; i < parameters->names.size(); i++) {
+                    stEntry.addArgument(parameters->types[i]->type);
+                }
 
                 CompilerOrganizer::addSymbolTableEntry(stEntry);
 

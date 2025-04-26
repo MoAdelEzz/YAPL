@@ -27,6 +27,9 @@ std::string FunctionDefintionNode::nodeName() {
 }
 
 void FunctionDefintionNode::run(Scope* scope) {
+    body->setParentScope(scope);
+    body->isFunction = true;
+    body->haltLogging = true;
     scope->defineFunction(returnType, name, parameters, body);
     body->getScope()->defineReturn(returnType);
 }
@@ -38,22 +41,29 @@ void FunctionDefintionNode::runSemanticChecker(Scope* scope) {
         error.setLine(line);
         CompilerOrganizer::addError(error);
     }
-
-    Scope* functionScope = body->getScope();
-
-    functionScope->defineReturn(returnType);
-
-    for (int i = 0; i < parameters->names.size(); i++) {
-        functionScope->defineVariable(parameters->names[i], parameters->types[i], Operand::undefined());
-    }
-
+    
     FunctionParametersNode* params = scope->getFunctionParameters(name);
     std::reverse(params->names.begin(), params->names.end());
     std::reverse(params->types.begin(), params->types.end());
     std::reverse(params->defaultValues.begin(), params->defaultValues.end());
 
+    Scope* functionScope = body->getScope();
+
+    scopeDepth++;
+    CompilerOrganizer::addSymbolTableEntry(SymbolTableEntry::scopeEntry());
+
+    functionScope->defineReturn(returnType);
+    for (int i = 0; i < parameters->names.size(); i++) {
+        functionScope->defineVariable(parameters->names[i], parameters->types[i], Operand::undefined(), true);
+        if (parameters->defaultValues[i] != nullptr) 
+            CompilerOrganizer::markSymbolAsInitialized(parameters->names[i]);  
+    }
+
     body->runSemanticChecker(scope);
     functionScope->reset();
+    
+    CompilerOrganizer::addSymbolTableEntry(SymbolTableEntry::scopeExit());
+    scopeDepth--;
 }
 
 void FunctionDefintionNode::generateQuadruples(Scope* scope) {
@@ -139,9 +149,9 @@ Operand FunctionCallNode::getValue(Scope* scope) {
     for (int i = 0; i < functionParameters->names.size(); i++) { 
         functionScope->
         getScope()->
-        defineVariable(functionParameters->names[i], functionParameters->types[i], arguments->params[i]->getValue(scope));
+        defineVariable(functionParameters->names[i], functionParameters->types[i], arguments->params[i]->getValue(scope), false);
     }
-
+    
     functionScope->run(scope);
     Operand returnValue = functionScope->valueOf("return");
     functionScope->getScope()->reset();

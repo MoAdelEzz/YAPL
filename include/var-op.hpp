@@ -68,24 +68,20 @@ class DefineNode : public ProgramNode {
 
         virtual void runSemanticChecker(Scope* scope = nullptr) override {
             try {
-                OperandType lhsType = TUNDEFINED;
-                if (value == nullptr) {
-                    scope->defineVariable(name, type, Operand::undefined());
-                } else {
-                    try {
-                        lhsType = value->getExpectedType(scope);
-                    } catch(ErrorDetail error) {
-                        error.setLine(this->line);
-                        CompilerOrganizer::addError(error);
-                    }
-    
-                    if (lhsType == type->type) {
-                        Operand op = value ? value->getValue(scope) : Operand::undefined();
-                        scope->defineVariable(name, type,  op);
-                    } else if (lhsType) {
-                        throw ErrorDetail(Severity::ERROR, "Type Mismatch For The Variable " + name);
-                    }
+                OperandType rhsType = TUNDEFINED;
+
+                try {
+                    rhsType = value->getExpectedType(scope);
+                } catch(ErrorDetail error) {
+                    error.setLine(this->line);
+                    CompilerOrganizer::addError(error);
                 }
+
+                if ( !Utils::isValidAssignment(type->type, rhsType) && value != nullptr) {
+                    throw ErrorDetail(Severity::ERROR, "Type Mismatch For The Variable " + name);
+                } 
+
+                scope->defineVariable(name, type, Operand::undefined(), true);
             } 
             catch (ErrorDetail error) {
                 error.setLine(this->line);
@@ -98,7 +94,7 @@ class DefineNode : public ProgramNode {
         void run(Scope* scope = nullptr) override {
             try {
                 Operand op = value ? value->getValue(scope) : Operand::undefined();
-                scope->defineVariable(name, type, op);
+                scope->defineVariable(name, type, op, false);
             } 
             catch (ErrorDetail error) {
                 error.setLine(this->line);

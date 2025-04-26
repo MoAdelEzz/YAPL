@@ -12,6 +12,7 @@ class ScopeNode : public ProgramNode {
 public:
     int quadLabel;
     bool haltLogging = false;
+    bool isFunction = false;
 
     ScopeNode(int line, bool isFunction = false, bool breakable = false, bool continuable = false) 
     :
@@ -37,6 +38,8 @@ public:
     }
 
     Scope* getScope() { return scope; }
+
+    void setParentScope(Scope* scp) { scope->setParent(scp); }
 
     void resetScope() { scope->reset(); }
     
@@ -73,7 +76,9 @@ public:
     void run(Scope* parentScope = nullptr) {
         scopeDepth++;
 
-        this->scope->setParent(parentScope);
+        if (!isFunction)
+            this->scope->setParent(parentScope);
+        
         ProgramNode* it = nextChild;
         while (it != nullptr) {
             it->run(this->scope);

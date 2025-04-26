@@ -1,3 +1,2 @@
-6: Error - Expected At Least 1 arguments, but got 0
-9: Error - Expected At Most 2 arguments, but got 3
-10: Error - Expected At Most 2 arguments, but got 4
+2: Error - Variable y is not defined
+2: Error - Invalid Return Type
