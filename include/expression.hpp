@@ -10,6 +10,7 @@ class Expression {
         OperationType op;
 
         Operand nodeValue;
+        std::string quadContainer;
     public:
         Expression(Expression *l, Expression *r, OperationType op);
 
@@ -18,6 +19,8 @@ class Expression {
         ~Expression();
 
         OperandType getType();
+
+        virtual std::string generateQuadruples(Scope* scope = nullptr);
 
         virtual Operand calculateNodeValue(Expression* left, Expression* right, Scope* scope);
 
@@ -31,7 +34,7 @@ class StringContainer : public Expression {
         StringContainer(Expression *left, Expression *right, OperationType op);
         StringContainer(const char* value);
         
-        Operand calculateNodeValue(Expression* left, Expression* right, Scope* scope);
+        Operand calculateNodeValue(Expression* left, Expression* right, Scope* scope) override;
 
         friend std::ostream& operator<<(std::ostream& os, const StringContainer& node);
 };
@@ -42,8 +45,10 @@ class IdentifierContainer : public Expression {
     public:
         IdentifierContainer(std::string varName, OperationType op = OP_NONE);
         
-        Operand getValue(Scope* scope = nullptr) override;
+        std::string getIdentifier() { return varName; }
 
+        std::string generateQuadruples(Scope* scope) override;
+        Operand getValue(Scope* scope = nullptr) override;
         OperandType getExpectedType(Scope* scope) override;
 
         friend std::ostream& operator<<(std::ostream& os, const IdentifierContainer& node);

@@ -20,6 +20,7 @@ class ForNode : public ProgramNode {
         void checkCondition(Scope* forScope);
         bool getLoopCondition(Scope* forScope);
 
+        void generateQuadruples(Scope* scope) override;
         void run(Scope* scope = nullptr) override;
         void runSemanticChecker(Scope* scope = nullptr) override;
 };
@@ -37,6 +38,7 @@ class WhileNode : public ProgramNode {
         bool getLoopCondition(Scope* whileScope);
         void checkCondition(Scope* whileScope);
         
+        void generateQuadruples(Scope* scope) override;
         void run(Scope* scope = nullptr) override;
         void runSemanticChecker(Scope* scope = nullptr) override;
 };
@@ -54,6 +56,7 @@ class DoWhileNode: public ProgramNode {
         bool getLoopCondition(Scope* whileScope);
         void checkCondition(Scope* doWhileScope);
 
+        void generateQuadruples(Scope* scope) override;
         void run(Scope* scope = nullptr) override;
         void runSemanticChecker(Scope* scope = nullptr) override;
 };

@@ -19,6 +19,7 @@ class FunctionDefintionNode : public ProgramNode {
 
         void run(Scope* scope = nullptr) override;
         void runSemanticChecker(Scope* scope = nullptr) override;
+        void generateQuadruples(Scope* scope = nullptr) override;
 };
 
 
@@ -34,4 +35,5 @@ class FunctionCallNode : public Expression {
         
         OperandType getExpectedType(Scope* scope = nullptr) override;
         Operand getValue(Scope* scope = nullptr) override;
-};
+        std::string generateQuadruples(Scope* scope) override;
+    };

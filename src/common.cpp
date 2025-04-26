@@ -6,24 +6,22 @@
 
 FunctionParametersNode::FunctionParametersNode() {}
 
-FunctionParametersNode::FunctionParametersNode( DataType* type, std::string name ) {            
-    this->names.push_back(name);
-    this->types.push_back(type);
+FunctionParametersNode::FunctionParametersNode( Expression* defaultValue, DataType* type, std::string name ) {            
+    addParameter(defaultValue, type, name);
 }
 
-FunctionParametersNode* FunctionParametersNode::addParameter( DataType* type, std::string name ) {
+FunctionParametersNode* FunctionParametersNode::addParameter( Expression* defaultValue, DataType* type, std::string name ) {
     this->names.push_back(name);
     this->types.push_back(type);
+    this->defaultValues.push_back(defaultValue);
     return this;
 }
 
 
 FunctionParametersNode::~FunctionParametersNode() {
-    for (DataType*& type : types) {
-        delete type;
-        type = nullptr;
-    }
     types.clear();
+    names.clear();
+    defaultValues.clear();
 }
 
 // =========================================================================================

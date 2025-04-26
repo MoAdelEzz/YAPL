@@ -19,6 +19,7 @@ class IfNode : public ProgramNode {
 
         void run(Scope* scope = nullptr) override;
         void runSemanticChecker(Scope* scope) override;
+        void generateQuadruples(Scope* scope) override;
 };
 
 class CaseNode : public ProgramNode {
@@ -26,33 +27,39 @@ class CaseNode : public ProgramNode {
     ScopeNode* body;
     public:
         bool isMatched = false;
+        int skipConditionLabel = 0;
+        std::string varName;
 
         CaseNode( int line, Expression* condition = nullptr);
         ~CaseNode();
 
-
         std::string nodeName() override;
         CaseNode* assignBody(ProgramNode* node);
 
-
         void run(Scope *scope = nullptr, Expression* identifier = nullptr, bool forceMatch = false);
         void runSemanticChecker(Scope* scope = nullptr) override;
+        void generateQuadruples(Scope* scope) override;
 };
 
 class SwitchBody {
     std::vector<CaseNode*> cases;
+    std::vector<int> labels;
 
     public:
         SwitchBody();
         SwitchBody(CaseNode* cn);
         ~SwitchBody();
+        
         SwitchBody* addCase(CaseNode* caseNode);
         std::vector<CaseNode*> getCases();
+        int getCaseLabel(int index);
+
+        void generateCaseLabels(std::string varName);
 };
 
 
 class SwitchNode : public ProgramNode {
-    Expression* identifier;
+    IdentifierContainer* identifier;
     SwitchBody* body;
 
     public:
@@ -63,4 +70,5 @@ class SwitchNode : public ProgramNode {
 
         void run(Scope* scope = nullptr) override;
         void runSemanticChecker(Scope* scope = nullptr) override;
+        void generateQuadruples(Scope* scope) override;
 }; 

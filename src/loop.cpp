@@ -1,7 +1,11 @@
 #include "loop.hpp"
 #include "enums.hpp"
+#include "organizer.hpp"
 extern int scopeDepth;
+extern int quadruplesLabel;
 
+extern std::vector<int> breakJumpTo;
+extern std::vector<int> continueJumpTo;
 // =========================================================================================
 // ======================================== For Loop =======================================
 // =========================================================================================
@@ -80,6 +84,8 @@ void ForNode::run(Scope* scope) {
 
 void ForNode::runSemanticChecker(Scope* scope) {
     Scope* forScope = new Scope(scope);
+    forScope->defineBreak();
+    forScope->defineContinue();
     body->haltLogging = true;
 
     scopeDepth++;
@@ -96,6 +102,32 @@ void ForNode::runSemanticChecker(Scope* scope) {
 
     delete forScope;
 }
+
+void ForNode::generateQuadruples(Scope* scope) {
+    int loopBodyLabel = quadruplesLabel++;
+    int loopConditionLabel = quadruplesLabel++;
+    int breakLabel = quadruplesLabel++;
+
+    breakJumpTo.push_back(breakLabel);
+    continueJumpTo.push_back(loopConditionLabel);
+
+    preLoop->generateQuadruples(scope);
+    CompilerOrganizer::addQuadruple(QUAD_GOTO, "", "", "L" + std::to_string(loopConditionLabel));
+
+    CompilerOrganizer::addLabel(loopBodyLabel);
+        body->generateQuadruples(scope);
+        postLoop->generateQuadruples(scope);
+
+    CompilerOrganizer::addLabel(loopConditionLabel);
+        std::string condition = this->condition->generateQuadruples();
+        CompilerOrganizer::addQuadruple(QUAD_GOTO_IF_TRUE, condition, "", "L" + std::to_string(loopBodyLabel));
+
+    CompilerOrganizer::addLabel(breakLabel);
+
+
+    if (breakJumpTo.back() == breakLabel) breakJumpTo.pop_back();
+    if (continueJumpTo.back() == loopConditionLabel) continueJumpTo.pop_back();
+}   
 
 // =========================================================================================
 // ======================================= While Loop ======================================
@@ -163,6 +195,28 @@ void WhileNode::runSemanticChecker(Scope* scope) {
     body->runSemanticChecker(scope);
 }
 
+void WhileNode::generateQuadruples(Scope* scope) {
+    int loopBodyLabel = quadruplesLabel++;
+    int loopConditionLabel = quadruplesLabel++;
+    int breakLabel = quadruplesLabel++;
+
+    breakJumpTo.push_back(breakLabel);
+    continueJumpTo.push_back(loopConditionLabel);
+
+    CompilerOrganizer::addQuadruple(QUAD_GOTO, "", "", "L" + std::to_string(loopConditionLabel));
+
+    CompilerOrganizer::addLabel(loopBodyLabel);
+        body->generateQuadruples(scope);
+
+    CompilerOrganizer::addLabel(loopConditionLabel);
+        std::string condition = this->condition->generateQuadruples();
+        CompilerOrganizer::addQuadruple(QUAD_GOTO_IF_TRUE, condition, "", "L" + std::to_string(loopBodyLabel));
+
+    CompilerOrganizer::addLabel(breakLabel);
+
+    if (breakJumpTo.back() == breakLabel) breakJumpTo.pop_back();
+    if (continueJumpTo.back() == loopConditionLabel) continueJumpTo.pop_back();
+}
 
 // ========================================================================================
 // ===================================== Do While Loop ====================================
@@ -225,4 +279,22 @@ void DoWhileNode::run(Scope* scope) {
             break;
         }
     } while ( getLoopCondition(scope) );
+}
+
+void DoWhileNode::generateQuadruples(Scope* scope) {
+    int loopBodyLabel = quadruplesLabel++;
+    int breakLabel = quadruplesLabel++;
+
+    breakJumpTo.push_back(breakLabel);
+    continueJumpTo.push_back(loopBodyLabel);
+
+    CompilerOrganizer::addLabel(loopBodyLabel);
+        body->generateQuadruples(scope);
+        std::string condition = this->condition->generateQuadruples();
+        CompilerOrganizer::addQuadruple(QUAD_GOTO_IF_TRUE, condition, "", "L" + std::to_string(loopBodyLabel));
+    
+    CompilerOrganizer::addLabel(breakLabel);
+
+    if (breakJumpTo.back() == breakLabel) breakJumpTo.pop_back();
+    if (continueJumpTo.back() == loopBodyLabel) continueJumpTo.pop_back();   
 }

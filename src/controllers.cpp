@@ -1,4 +1,8 @@
 #include "controllers.hpp" 
+#include <vector>
+
+extern std::vector<int> breakJumpTo;
+extern std::vector<int> continueJumpTo;
 
 // =========================================================================================
 // ======================================= Continue ========================================
@@ -22,6 +26,12 @@ void ContinueNode::runSemanticChecker(Scope* scope) {
         error.setLine(this->line);
         CompilerOrganizer::addError(error);
     }
+}
+
+void ContinueNode::generateQuadruples(Scope* scope) {
+    int to = continueJumpTo.back();
+    continueJumpTo.pop_back();
+    CompilerOrganizer::addQuadruple(QUAD_GOTO, "", "", "L" + std::to_string(to));
 }
 
 // =========================================================================================
@@ -48,4 +58,9 @@ void BreakNode::runSemanticChecker(Scope* scope) {
     }
 }
 
+void BreakNode::generateQuadruples(Scope* scope) {
+    int to = breakJumpTo.back();
+    breakJumpTo.pop_back();
+    CompilerOrganizer::addQuadruple(QUAD_GOTO, "", "", "L" + std::to_string(to));
+}
 

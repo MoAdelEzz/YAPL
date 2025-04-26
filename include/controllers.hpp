@@ -9,6 +9,7 @@ class ContinueNode : public ProgramNode {
 
         void run(Scope* scope = nullptr) override;
         void runSemanticChecker(Scope* scope = nullptr) override;
+        void generateQuadruples(Scope* scope = nullptr) override;
 };
 
 
@@ -20,4 +21,5 @@ class BreakNode : public ProgramNode {
 
         void run(Scope* scope = nullptr) override;
         void runSemanticChecker(Scope* scope = nullptr) override;
+        void generateQuadruples(Scope* scope = nullptr) override;
 };

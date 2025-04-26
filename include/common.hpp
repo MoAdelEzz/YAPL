@@ -29,7 +29,7 @@ class DataType {
             this->isConst = isConst;
         }
 
-        DataType(OperandType type)      { this->type = type, isConst = false; }
+        DataType(OperandType type, bool isConst = false)      { this->type = type, this->isConst = isConst; }
         ~DataType()                     { }
         static DataType* Undefined()    { return new DataType("undef", false); }
         static DataType* Void()         { return new DataType("void", false); }
@@ -352,13 +352,14 @@ class Operand {
 
 class FunctionParametersNode {
     public:
-        std::vector<DataType*> types;
+        std::vector<DataType*>   types;
+        std::vector<Expression*>    defaultValues;
         std::vector<std::string> names;
 
         FunctionParametersNode();
-        FunctionParametersNode( DataType* type, std::string name );
+        FunctionParametersNode( Expression* defaultValue, DataType* type, std::string name );
 
-        FunctionParametersNode* addParameter( DataType* type, std::string name );
+        FunctionParametersNode* addParameter( Expression* defaultValue, DataType* type, std::string name );
         
         ~FunctionParametersNode();
 };
@@ -517,9 +518,16 @@ class Scope {
         }
 
         void reset() {
+            DataType* returnable = variables.find("return") != variables.end() ? new DataType(variables["return"].first->type, variables["return"].first->isConst) : nullptr;
+            bool breakable = variables.find("break") != variables.end();
+            bool continuable = variables.find("continue") != variables.end();
+
             variables.clear();
             functions.clear();
-            parent = nullptr;
+
+            if (returnable) { defineReturn(returnable); }
+            if (breakable) { defineBreak(); }
+            if (continuable) { defineContinue(); }
         }
 
         void assignVariable(std::string varName, Operand value, bool initializing = false) {
@@ -561,6 +569,17 @@ class Scope {
                 return nullptr;
             }
         }
+
+        int getFunctionRequiredParamsCount(std::string functionName) {
+            FunctionParametersNode* params = getFunctionParameters(functionName);
+            std::vector<Expression*>& defaultValues = params->defaultValues;
+            int count = 0;
+            for (int i = defaultValues.size() - 1; i >= 0; i--) {
+                if (defaultValues[i] == nullptr) count++; 
+            }
+            return count;
+        }
+
 
         FunctionParametersNode* getFunctionParameters(std::string functionName) {
             if (functions.find(functionName) != functions.end()) {

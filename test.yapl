@@ -1,56 +1,12 @@
-int x = 10;
-float y = 10;
-bool z = true;
-
-if (1) {
-    print("condition = 1 is entered");
-}
-print("");
-
-if (true) {
-    print("condition = true is entered");
-} else {
-    print("condition = true is ignored");
-}
-print("");
-
-x = 2;
-if (x == 1) {
-    print("condition x == 1 is entered");
-} else {
-    print("condition x == 1 is ignored");
-}
-print("");
-
-if (x > 0 && x < 10) {
-    print("condition x > 0 && x < 10 is entered");
+int test(int x, int y = 10, int w = 20) {
     print(x);
-    print("");
+    print(y);
+    print(w);
+    return 4;
 }
 
-y = 1;
-if (x == 0 || y == 0) {
-    print("condition x == 0 || y == 0 is entered");
-} else {
-    print("condition x == 0 || y == 0 is ignored");
-}
-
-x = 3;
-if (x & 1) {
-    print("condition x & 1 is entered");
-}
-
-x = 0;
-if (!x) {
-    print("condition !x is entered");
-}
-
-bool isReady() {
-    return false;
-}
-
-if (isReady()) {
-    print("isReady() returned true");
-} else {
-    print("isReady() returned false");
-}
+//test();
+test(1, 20);
+test(1);
+//test(12, 13, 14);
+//test(12, 13, 14, 15);

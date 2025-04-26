@@ -162,6 +162,20 @@ bool validateOperation(OperandType type1, OperandType type2, OperationType op) {
     return !isBitwiseOperation(op) || (type1 != TFLOAT && type2 != TFLOAT);
 }
 
+std::string Expression::generateQuadruples(Scope* scope) {
+    if (left != nullptr && right != nullptr) {
+        std::string llabel = left->generateQuadruples();
+        std::string rlabel = right->generateQuadruples();
+        return CompilerOrganizer::createQuadEntry(op, llabel, rlabel);
+    } else if (left != nullptr) {
+        return left->generateQuadruples();
+    } else if (right != nullptr) {
+        return right->generateQuadruples();
+    } else {
+        return nodeValue.toString();
+    }
+}
+
 OperandType Expression::getExpectedType(Scope* scope) {
     if (left == nullptr && right == nullptr) {
         return nodeValue.dataType->type;
@@ -175,7 +189,7 @@ OperandType Expression::getExpectedType(Scope* scope) {
         if (!validateOperation(op1, op2, op)) {
             std::string message = op == OP_MOD ? "mod operation is not supported for float" : "bitwise operation is not supported for float";
             throw ErrorDetail(Severity::ERROR, message);
-        } 
+        }
         return Utils::operationType(left->getExpectedType(scope), right->getExpectedType(scope));
     }
     return TUNDEFINED;
@@ -255,6 +269,27 @@ std::ostream& operator<<(std::ostream& os, const StringContainer& node) {
 
 IdentifierContainer::IdentifierContainer(std::string varName, OperationType op) 
 : Expression(nullptr, DataType::Undefined()), varName(varName), op(op)  {}
+
+
+std::string IdentifierContainer::generateQuadruples(Scope* scope) {
+    if (op == OP_PRE_ADD) {
+        CompilerOrganizer::addQuadruple(OP_ADD, varName, "1", varName);
+        return varName;
+    } else if (op == OP_POST_ADD) {
+        std::string res = CompilerOrganizer::createQuadEntry(QUAD_ASSIGN, varName, "");
+        CompilerOrganizer::addQuadruple(OP_ADD, varName, "1", varName);
+        return res;
+    } else if (op == OP_PRE_SUB) {
+        CompilerOrganizer::addQuadruple(OP_SUB, varName, "1", varName);
+        return varName;
+    } else if (op == OP_POST_SUB) {
+        std::string res = CompilerOrganizer::createQuadEntry(QUAD_ASSIGN, varName, "");
+        CompilerOrganizer::addQuadruple(OP_SUB, varName, "1", varName);
+        return res;
+    } else {
+        return varName;
+    }
+}
 
 Operand IdentifierContainer::getValue(Scope* scope) { 
     Operand value = scope->valueOf(this->varName);

@@ -1,0 +1,14 @@
+FUNC_START  test                    
+PRINT       x                       
+PRINT       y                       
+PRINT       w                       
+RET         4                       
+FUNC_END    test                    
+ARG         1                       
+ARG         20                      
+ARG         20                      
+CALL        test    3       t4      
+ARG         1                       
+ARG         10                      
+ARG         20                      
+CALL        test    3       t5      

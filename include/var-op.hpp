@@ -1,4 +1,5 @@
 #pragma once
+#include "enums.hpp"
 #include "organizer.hpp"
 #include "common.hpp"
 #include "program.hpp"
@@ -54,11 +55,37 @@ class DefineNode : public ProgramNode {
 
             return this;
         }
+        
+        void generateQuadruples(Scope* scope) override {
+            CompilerOrganizer::addQuadruple(QUAD_DECLARE, Utils::typeToString(type->type), "", name);
+
+            if (value != nullptr) {
+                std::string result = value->generateQuadruples();
+                CompilerOrganizer::addQuadruple(QUAD_ASSIGN, result, "", name);
+            }
+        }
+        
 
         virtual void runSemanticChecker(Scope* scope = nullptr) override {
             try {
-                Operand op = value ? value->getValue(scope) : Operand::undefined();
-                scope->defineVariable(name, type,  op);
+                OperandType lhsType = TUNDEFINED;
+                if (value == nullptr) {
+                    scope->defineVariable(name, type, Operand::undefined());
+                } else {
+                    try {
+                        lhsType = value->getExpectedType(scope);
+                    } catch(ErrorDetail error) {
+                        error.setLine(this->line);
+                        CompilerOrganizer::addError(error);
+                    }
+    
+                    if (lhsType == type->type) {
+                        Operand op = value ? value->getValue(scope) : Operand::undefined();
+                        scope->defineVariable(name, type,  op);
+                    } else if (lhsType) {
+                        throw ErrorDetail(Severity::ERROR, "Type Mismatch For The Variable " + name);
+                    }
+                }
             } 
             catch (ErrorDetail error) {
                 error.setLine(this->line);
@@ -113,6 +140,13 @@ class AssignNode: public ProgramNode {
             } 
             return this;
         }
+
+        void generateQuadruples(Scope* scope) override {
+            std::string result = value->generateQuadruples();
+            if (name.size() > 0) // not a hanging operation
+                CompilerOrganizer::addQuadruple(QUAD_ASSIGN, result, "", name);
+        }
+        
 
         virtual void runSemanticChecker(Scope* scope = nullptr) override {
             const bool validLHS = name.size() == 0 || scope->typeOf(name) != TUNDEFINED;

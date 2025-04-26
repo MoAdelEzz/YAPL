@@ -56,3 +56,22 @@ bool isReady() {
 if (isReady()) {
     // depends on function result
 }
+
+x = 10;
+y = 45;
+int z = -1;
+
+if ( x == 10 ) {
+    print("If Then Passed");
+}
+
+
+if ( x == 10 ) {
+    if (y == 10) {
+        print("Nested If Passed");
+    } else {
+        print("Nested If Y Passed");
+    }
+} else if (y == 45) {
+    print("Nested If Else Passed");
+}

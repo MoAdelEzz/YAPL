@@ -20,6 +20,10 @@
 
     int lineNumber = 1;
     int scopeDepth = 0;
+    int quadruplesLabel = 0;
+    std::vector<int> breakJumpTo;
+    std::vector<int> continueJumpTo;
+    std::vector<int> returnJumpTo;
 
     void yyerror(const char* s) {
         std::cerr << "Error: " << s << std::endl;
@@ -28,7 +32,9 @@
     CompilerState CompilerOrganizer::state = VALIDATING;
     std::vector<ErrorDetail> CompilerOrganizer::errors;
     std::vector<SymbolTableEntry> CompilerOrganizer::symbolTable;
+    std::vector<QuadrupleEntry> CompilerOrganizer::quadruples;
 
+    int QuadrupleEntry::index = 1;
 %}
 
 %union  {
@@ -55,10 +61,10 @@
 %type <Node>   IFSentence VariableAssignment VariableDeclaration SwitchSentence
 %type <Node>   PrintSentence Scope Sentence Sentences ReturnSentence ForPostSentence
 
-%type <Exp>  Operand MathOperand MathOperation Operation Condition
+%type <Exp>  Operand MathOperand MathOperation Operation Condition FunctionParamOperand
 %type <Exp>  StringOperation StringOperand FunctionCall
 
-%type <FP>  FunctionParams 
+%type <FP>  FunctionParams FunctionDefaulValueParams
 %type <FCP> FunctionCallParams
 %type <SB>  SwitchBody
 %type <DT>  Type
@@ -89,10 +95,14 @@ Program: Sentences  {
     scopeNode->runSemanticChecker();
 
     if (CompilerOrganizer::getErrorCount() == 0) {
+        scopeNode->generateQuadruples();
+
         CompilerOrganizer::startRunning();
         scopeNode->run();
         CompilerOrganizer::exitWithSuccess();
+        
         CompilerOrganizer::dumpSymbolTable();
+        CompilerOrganizer::dumpQuadruples();
     } else {
         std::cout << "There Are " << CompilerOrganizer::getErrorCount()  << " Errors Found" << std::endl;
         CompilerOrganizer::dumpErrors();
@@ -233,13 +243,17 @@ FunctionDefinition:
         $$ = new FunctionDefintionNode($2.line, $1, $2.str, $4, dynamic_cast<ScopeNode*>($6)); 
     }
 
-    | Type IDENTIFIER '(' ')' Scope                { 
-        $$ = new FunctionDefintionNode($2.line, $1, $2.str, nullptr, dynamic_cast<ScopeNode*>($5)); 
-    }  
-
 FunctionParams: 
-      FunctionParams ',' Type IDENTIFIER                { $$ = $1->addParameter($3, $4.str);}
-    | Type IDENTIFIER                                   { $$ = new FunctionParametersNode($1, $2.str);}
+      Type IDENTIFIER ',' FunctionParams                                      { $$ = $4->addParameter(nullptr, $1, $2.str);}
+    | Type IDENTIFIER ',' FunctionDefaulValueParams                           { $$ = $4->addParameter(nullptr, $1, $2.str);}
+    | Type IDENTIFIER                                                         { $$ = new FunctionParametersNode(nullptr, $1, $2.str);}
+    |                                                                         { $$ = nullptr; }
+
+FunctionDefaulValueParams:
+      Type IDENTIFIER '=' FunctionParamOperand ',' FunctionDefaulValueParams  { $$ = $6->addParameter($4, $1, $2.str);}
+    | Type IDENTIFIER '=' StringOperand ',' FunctionDefaulValueParams         { $$ = $6->addParameter($4, $1, $2.str);}
+    | Type IDENTIFIER '=' FunctionParamOperand                                { $$ = new FunctionParametersNode($4, $1, $2.str);}
+    | Type IDENTIFIER '=' StringOperand                                       { $$ = new FunctionParametersNode($4, $1, $2.str);}
 
 VariableDeclaration: 
       Type IDENTIFIER                                   { $$ = new DefineNode($2.line, $1, $2.str, nullptr); }
@@ -266,12 +280,11 @@ Condition:
     |   StringOperation ISEQUAL  StringOperation      { $$ = new StringContainer($1, $3, OP_EQ);   }
     |   StringOperation NOTEQUAL StringOperation      { $$ = new StringContainer($1, $3, OP_NEQ);  }
 
-    |   Operation                                     { $$ = $1; }
+    |   '(' Condition ')'                             { $$ = $2; }
 
 Operation: 
       MathOperation                                 { $$ = $1; }     
     | StringOperation                               { $$ = $1; }   
-    | FunctionCall                                  { $$ = $1; }
     
 FunctionCall:
         IDENTIFIER '(' FunctionCallParams ')'       { $$ = new FunctionCallNode( $1.line, $1.str, $3 ); }
@@ -301,8 +314,9 @@ MathOperation:
     |   INCREMENT IDENTIFIER                        { $$ = new IdentifierContainer($2.str, OP_PRE_ADD); }
     |   DECREMENT IDENTIFIER                        { $$ = new IdentifierContainer($2.str, OP_PRE_SUB); }
     |   IDENTIFIER DECREMENT                        { $$ = new IdentifierContainer($1.str, OP_POST_SUB); }
-    |   '-' MathOperation                             { $$ = new Expression($2, $2, OP_UMINUS); }
+    |   '-' MathOperation                           { $$ = new Expression($2, $2, OP_UMINUS); }
     |   MathOperand                    
+    |   FunctionCall                                        
 
 StringOperation:
         StringOperation '+' StringOperation             { $$ =  new StringContainer($1, $3, OP_ADD); } 
@@ -316,7 +330,7 @@ StringOperation:
 
 Operand: MathOperand | StringOperand;
 
-MathOperand:
+FunctionParamOperand:
           INTEGER       { $$ = new Expression($1.str, DataType::Int());}
 
         | FLOAT         { $$ = new Expression($1.str, DataType::Float());}
@@ -324,6 +338,9 @@ MathOperand:
         | CHARACTER     { $$ = new Expression($1.str, DataType::Char());}
 
         | BOOLEAN       { $$ = new Expression($1.str, DataType::Bool());}
+
+MathOperand:
+          FunctionParamOperand
 
         | IDENTIFIER    { $$ = new IdentifierContainer($1.str); }
     

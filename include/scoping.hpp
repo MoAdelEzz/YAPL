@@ -10,6 +10,7 @@ class ScopeNode : public ProgramNode {
     ProgramNode* nextChild = nullptr;
     
 public:
+    int quadLabel;
     bool haltLogging = false;
 
     ScopeNode(int line, bool isFunction = false, bool breakable = false, bool continuable = false) 
@@ -38,6 +39,15 @@ public:
     Scope* getScope() { return scope; }
 
     void resetScope() { scope->reset(); }
+    
+    void generateQuadruples(Scope* parentScope = nullptr) {
+        this->scope->setParent(parentScope);
+        ProgramNode* it = nextChild;
+        while (it != nullptr) {
+            it->generateQuadruples(this->scope);
+            it = it->getNext();
+        }
+    }
 
     virtual void runSemanticChecker(Scope* parentScope = nullptr) {
         if (!haltLogging) {
@@ -78,8 +88,6 @@ public:
         scopeDepth--;
     }
     
-
-
     std::string nodeName() {
         return "ScopeNode";
     } 

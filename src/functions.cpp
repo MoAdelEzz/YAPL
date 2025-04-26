@@ -1,4 +1,7 @@
 #include "functions.hpp"
+#include "enums.hpp"
+#include "organizer.hpp"
+#include <string>
 
 // =========================================================================================
 // =================================== Function Defintion ==================================
@@ -44,8 +47,19 @@ void FunctionDefintionNode::runSemanticChecker(Scope* scope) {
         functionScope->defineVariable(parameters->names[i], parameters->types[i], Operand::undefined());
     }
 
+    FunctionParametersNode* params = scope->getFunctionParameters(name);
+    std::reverse(params->names.begin(), params->names.end());
+    std::reverse(params->types.begin(), params->types.end());
+    std::reverse(params->defaultValues.begin(), params->defaultValues.end());
+
     body->runSemanticChecker(scope);
     functionScope->reset();
+}
+
+void FunctionDefintionNode::generateQuadruples(Scope* scope) {
+    CompilerOrganizer::addFunctionStartLabel(name);
+    body->generateQuadruples(scope);
+    CompilerOrganizer::addFunctionEndLabel(name);
 }
 
 // =========================================================================================
@@ -63,7 +77,6 @@ FunctionCallNode::~FunctionCallNode() {
     if(arguments) delete arguments;
 }
 
-
 OperandType FunctionCallNode::getExpectedType(Scope* scope) {
     OperandType returnType = scope->getFunctionReturnType(name);
 
@@ -75,6 +88,47 @@ OperandType FunctionCallNode::getExpectedType(Scope* scope) {
         CompilerOrganizer::markSymbolAsUsed(name);
     }
 
+    FunctionParametersNode* params = scope->getFunctionParameters(name);
+    int requiredArgumentsCount = scope->getFunctionRequiredParamsCount(name);
+
+    if (!arguments && requiredArgumentsCount > 0) {
+        std::string message = "Missing " + std::to_string(requiredArgumentsCount) + " arguments";
+        ErrorDetail error(Severity::ERROR, message);
+        error.setLine(this->line);
+        CompilerOrganizer::addError(error);
+    }
+
+    if (arguments && arguments->params.size() < requiredArgumentsCount) {
+        std::string message = "Expected At Least " + std::to_string(requiredArgumentsCount) + " arguments, but got " + std::to_string(arguments->params.size());
+        ErrorDetail error(Severity::ERROR, message);
+        error.setLine(this->line);
+        CompilerOrganizer::addError(error);
+    }
+
+    if (arguments && arguments->params.size() > params->names.size()) {
+        std::string message = "Expected At Most " + std::to_string(params->names.size()) + " arguments, but got " + std::to_string(arguments->params.size());
+        ErrorDetail error(Severity::ERROR, message);
+        error.setLine(this->line);
+        CompilerOrganizer::addError(error);
+    }
+
+    for (int i = 0; i < params->names.size(); i++) {
+        if (i == arguments->params.size()) {
+            arguments->addParameter(params->defaultValues[i]);
+        } else {
+            OperandType argumentType = TUNDEFINED;
+            try { argumentType = arguments->params[i]->getExpectedType(scope); } catch(ErrorDetail error) { error.setLine(line); CompilerOrganizer::addError(error); }
+    
+            if ( !Utils::isValidAssignment(params->types[i]->type, argumentType) ) {
+                ErrorDetail error(Severity::ERROR, "Argument type mismatch in position " + std::to_string(i + 1) + ", expected " 
+                    + Utils::typeToString(params->types[i]->type) 
+                    + " but got " + Utils::typeToString( arguments->params[i]->getType()));    
+                error.setLine(line);
+                CompilerOrganizer::addError(error);
+            }
+        }
+    }
+
     return returnType;
 }
 
@@ -83,10 +137,6 @@ Operand FunctionCallNode::getValue(Scope* scope) {
     ScopeNode* functionScope = scope->scopeOf(name);
 
     for (int i = 0; i < functionParameters->names.size(); i++) { 
-        if (!Utils::isValidAssignment(functionParameters->types[i]->type, arguments->params[i]->getType())) { 
-            throw ErrorDetail(Severity::ERROR, "Argument type mismatch");
-        }
-
         functionScope->
         getScope()->
         defineVariable(functionParameters->names[i], functionParameters->types[i], arguments->params[i]->getValue(scope));
@@ -97,7 +147,7 @@ Operand FunctionCallNode::getValue(Scope* scope) {
     functionScope->getScope()->reset();
 
     if (returnValue.dataType->type != scope->getFunctionReturnType(name)) {
-        std::cout << "Mismatch in return type" << std::endl;
+        //std::cout << "Mismatch in return type" << std::endl;
         throw ErrorDetail(Severity::ERROR, "Return Type Mismatch");
         return Operand::undefined();
     } else if (returnValue.dataType->type == TVOID) {
@@ -105,4 +155,12 @@ Operand FunctionCallNode::getValue(Scope* scope) {
     } else {
         return returnValue;
     }
+}
+
+std::string FunctionCallNode::generateQuadruples(Scope* scope) {
+    for (int i = 0; i < arguments->params.size(); i++) { 
+        CompilerOrganizer::addFunctionArgument(arguments->params[i]->generateQuadruples(scope));
+    }
+    
+    return CompilerOrganizer::createQuadEntry(QUAD_FUNCTION_CALL, name, std::to_string(arguments->params.size()));
 }

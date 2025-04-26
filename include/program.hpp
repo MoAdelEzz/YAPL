@@ -34,6 +34,10 @@ class ProgramNode {
             if (next) delete next; 
         }
 
+        virtual void generateQuadruples(Scope* scope) {
+
+        }
+
         virtual void runSemanticChecker(Scope* scope = nullptr) {
             ProgramNode* it = next;
             while (it) {
@@ -75,6 +79,10 @@ class PrintNode : public ProgramNode {
             this->body = body;
             this->logLineInfo();
         }   
+        
+        void generateQuadruples(Scope* scope) override {
+            CompilerOrganizer::addQuadruple(QUAD_PRINT, body->generateQuadruples(), "", "");
+        }
 
         virtual void runSemanticChecker(Scope* scope = nullptr) override {
             OperandType type = TUNDEFINED;

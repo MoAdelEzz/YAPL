@@ -2,6 +2,7 @@
 #include "common.hpp"
 #include "enums.hpp"
 #include "expression.hpp"
+#include "organizer.hpp"
 #include "program.hpp"
 
 class ReturnNode : public ProgramNode {
@@ -55,5 +56,9 @@ class ReturnNode : public ProgramNode {
         } else {
             parentScope->assignReturn(value->getValue(parentScope));
         }
+    }
+
+    void generateQuadruples(Scope* scope = nullptr) {
+        CompilerOrganizer::addFunctionReturn(value->generateQuadruples(scope));
     }
 };

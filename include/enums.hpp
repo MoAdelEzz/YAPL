@@ -5,8 +5,50 @@ enum OperationType {
     OP_ADD, OP_PRE_ADD, OP_POST_ADD, OP_SUB, OP_MUL, OP_DIV, OP_MOD, OP_UMINUS,
     OP_EQ, OP_PRE_SUB, OP_POST_SUB, OP_NEQ, OP_LT, OP_LE, OP_GT, OP_GE, 
     OP_AND, OP_BW_AND, OP_OR, OP_BW_OR, OP_NOT, OP_BW_NOT, OP_XOR, OP_SHL, OP_SHR,
-    OP_POW, OP_SQRT, OP_NONE
+    OP_POW, OP_SQRT, OP_NONE, QUAD_GOTO_IF_TRUE, QUAD_GOTO_IF_FALSE, QUAD_GOTO, QUAD_LABEL,
+    QUAD_PRINT, QUAD_ASSIGN, QUAD_DECLARE, QUAD_FUNCTION_START, QUAD_FUNCTION_END, QUAD_FUNCTION_ARGUMENT,
+    QUAD_FUNCTION_RETURN, QUAD_FUNCTION_CALL
 };
+
+
+
+inline std::string opToString(OperationType op) { 
+    switch (op) {
+        case OP_ADD: return "ADD"; 
+        case OP_SUB: return "SUB"; 
+        case OP_MUL: return "MUL"; 
+        case OP_DIV: return "DIV"; 
+        case OP_MOD: return "MOD"; 
+        case OP_UMINUS: return "NEG"; 
+        case OP_EQ: return "=="; 
+        case OP_NEQ: return "!="; 
+        case OP_LT: return "<"; 
+        case OP_LE: return "<="; 
+        case OP_GT: return ">"; 
+        case OP_GE: return ">=";
+        case OP_AND: return "&&"; 
+        case OP_OR: return "||"; 
+        case OP_NOT: return "!"; 
+        case OP_XOR: return "^"; 
+        case OP_SHL: return "<<"; 
+        case OP_SHR: return ">>"; 
+        case OP_POW: return "^"; 
+        case OP_SQRT: return "sqrt";
+        case QUAD_GOTO_IF_TRUE: return "JNZ";
+        case QUAD_GOTO_IF_FALSE: return "JZ";
+        case QUAD_GOTO: return "JMP";
+        case QUAD_PRINT: return "PRINT";
+        case QUAD_ASSIGN: return "=";
+        case QUAD_DECLARE: return "DECLARE";
+        case QUAD_LABEL: return "LABEL";
+        case QUAD_FUNCTION_START: return "FUNC_START";
+        case QUAD_FUNCTION_END: return "FUNC_END";
+        case QUAD_FUNCTION_ARGUMENT: return "ARG";
+        case QUAD_FUNCTION_RETURN: return "RET";
+        case QUAD_FUNCTION_CALL: return "CALL";
+        default: return "";
+    }   
+}
 
 inline bool isBitwiseOperation(OperationType op) {
     switch (op) {

@@ -83,6 +83,27 @@ class SymbolTableEntry {
         }
 };
 
+
+class QuadrupleEntry {
+    static int index;
+
+    public:
+        OperationType operation;
+        std::string arg1;
+        std::string arg2;
+        std::string res;
+
+        QuadrupleEntry(OperationType operation, std::string arg1, std::string arg2, std::string result = "") 
+        : operation(operation), arg1(arg1), arg2(arg2) {
+            res =  result.size() > 0 ? result : "t" + std::to_string(index++);
+        }
+
+        bool hasDestination() const {
+            return operation != QUAD_PRINT;
+        }
+};
+
+
 enum CompilerState { VALIDATING, RUNNING, FAILED, FINISHED };
 
 class CompilerOrganizer {
@@ -90,8 +111,38 @@ class CompilerOrganizer {
         static CompilerState state;
         static std::vector<ErrorDetail> errors;
         static std::vector<SymbolTableEntry> symbolTable;
+        static std::vector<QuadrupleEntry> quadruples;
 
     public:
+        static std::string createQuadEntry(OperationType operation, std::string arg1, std::string arg2) {
+            quadruples.push_back(QuadrupleEntry(operation, arg1, arg2));
+            return quadruples.back().res;
+        }
+
+        static void addQuadruple(OperationType operation, std::string arg1, std::string arg2, std::string label) {
+            quadruples.push_back(QuadrupleEntry(operation, arg1, arg2, label));
+        }
+
+        static void addLabel(int label) {
+            quadruples.push_back(QuadrupleEntry(QUAD_LABEL, "", "", "L" + std::to_string(label)));
+        }
+
+        static void addFunctionStartLabel(std::string funcName) {
+            quadruples.push_back(QuadrupleEntry(QUAD_FUNCTION_START, funcName, "", " "));
+        }
+
+        static void addFunctionArgument(std::string argName) {
+            quadruples.push_back(QuadrupleEntry(QUAD_FUNCTION_ARGUMENT, argName, "", " "));
+        }
+
+        static void addFunctionReturn(std::string argName) {
+            quadruples.push_back(QuadrupleEntry(QUAD_FUNCTION_RETURN, argName, "", " "));
+        }
+
+        static void addFunctionEndLabel(std::string funcName) {
+            quadruples.push_back(QuadrupleEntry(QUAD_FUNCTION_END, funcName, "", " "));
+        }
+
         static void addError(ErrorDetail error) {
             errors.push_back(error);
         }
@@ -111,7 +162,6 @@ class CompilerOrganizer {
                 if ( symbolTable[i].getEntryType() == SCOPE_ENTRY && symbolTable[i].getScopeLayer() == targetScope )
                 {
                     targetScope--;
-                    std::cout << targetScope << std::endl;
                     if (targetScope < 1) break;
                 }
 
@@ -187,5 +237,20 @@ class CompilerOrganizer {
                 entry.dump(symbolTableFile);
             }
             symbolTableFile.close();
+        }
+
+        static void dumpQuadruples() {
+            std::ofstream quadruplesFile("log/quadruples.txt");
+            quadruplesFile.clear();
+
+            for (const QuadrupleEntry& entry : quadruples) {
+                quadruplesFile 
+                << std::setw(12) << std::left  << opToString(entry.operation)
+                << std::setw(8) << std::left  << entry.arg1
+                << std::setw(8) << std::left  << entry.arg2
+                << std::setw(8) << std::left  << (entry.hasDestination() ? entry.res : "") 
+                << std::endl;
+            }
+            quadruplesFile.close();
         }
 };
