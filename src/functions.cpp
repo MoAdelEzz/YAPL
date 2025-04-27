@@ -142,6 +142,8 @@ OperandType FunctionCallNode::getExpectedType(Scope* scope) {
         }
     }
 
+    CompilerOrganizer::markSymbolAsUsed(name, FUNCTION);
+
     return returnType;
 }
 

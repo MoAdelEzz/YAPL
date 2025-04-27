@@ -12,12 +12,12 @@ done
 
 # Generate parser and lexer files
 echo "Generating parser and lexer..."
-bison -d lex-yacc/parser.ypp -o src/parser.tab.cpp --defines=include/parser.tab.hpp -Wcounterexample
+bison -d lex-yacc/parser.ypp -o src/parser.tab.cpp --defines=include/parser.tab.hpp -Wcounterexample -Wother
 flex -o src/lex.yy.cc lex-yacc/lexer.l 
 
 # Compile the program
 echo "Compiling the program..."
-g++ -std=c++17 -o yapl \
+g++ -std=c++17 -o gui/yapl \
     -Iinclude \
     src/parser.tab.cpp \
     src/lex.yy.cc \
@@ -33,7 +33,7 @@ g++ -std=c++17 -o yapl \
 if [ $? -eq 0 ]; then
     echo "Build successful. Running calculator..."
     echo "-------------------------------------"
-    ./yapl test.yapl
+    ./gui/yapl test.yapl
 else
     echo "Build failed."
     exit 1

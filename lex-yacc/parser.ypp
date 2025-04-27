@@ -26,6 +26,8 @@
     std::vector<int> returnJumpTo;
 
     void yyerror(const char* s) {
+        ErrorDetail error(Severity::ERROR, "Syntax Error", "", lineNumber);
+        CompilerOrganizer::addError(error);
         std::cerr << "Error: " << s << std::endl;
         std::cerr << "Line: " << lineNumber << std::endl;
     }
@@ -107,6 +109,8 @@ Program: Sentences  {
         
         CompilerOrganizer::dumpSymbolTable();
         CompilerOrganizer::dumpQuadruples();
+        CompilerOrganizer::optimizeQuadruples();
+        CompilerOrganizer::dumpQuadruples(true);
     } else {
         std::cout << "There Are " << CompilerOrganizer::getErrorCount()  << " Errors Found" << std::endl;
         CompilerOrganizer::exitWithFailure();
@@ -124,6 +128,7 @@ Sentences:
 
 Scope:  
     SCOPE_BEGIN Sentences SCOPE_END       { $$ = new ScopeNode($1.line, $2); }    
+    | error SCOPE_END                     { yyerrok; }
 
 Sentence: 
       VariableAssignment ';'    { $$ = $1; }
@@ -138,6 +143,7 @@ Sentence:
     | SwitchSentence            { $$ = $1; }
     | CONTINUE ';'              { $$ = new ContinueNode($1.line);}       
     | BREAK ';'                 { $$ = new BreakNode($1.line);}
+    | error ';'                 { yyerrok; $$ = new ProgramNode(lineNumber); }
 
 
 VariableAssignment: 
@@ -225,13 +231,13 @@ IFSentence:
     |  IF '(' VariableAssignment ')' IfExtension                    { $$ = new IfNode($1.line, dynamic_cast<AssignNode*>($3), $5);   }
     |  IF '(' '!' Operation ')'      IfExtension                    { $$ = new IfNode($1.line, $4, $6, true);   }
 
-    |  IF '(' Condition          ')' Scope ELSE IfExtension         { $$ = new IfNode($1.line, $3, $5); dynamic_cast<IfNode*>($$)->setElse($7);   }
-    |  IF '(' VariableAssignment ')' Scope ELSE IfExtension         { $$ = new IfNode($1.line, dynamic_cast<AssignNode*>($3), $5); dynamic_cast<IfNode*>($$)->setElse($7);   }
-    |  IF '(' '!' Operation ')'      Scope ELSE IfExtension         { $$ = new IfNode($1.line, $4, $6, true); dynamic_cast<IfNode*>($$)->setElse($8);   }
+    |  IF '(' Condition          ')' IfExtension ELSE IfExtension         { $$ = new IfNode($1.line, $3, $5); dynamic_cast<IfNode*>($$)->setElse($7);   }
+    |  IF '(' VariableAssignment ')' IfExtension ELSE IfExtension         { $$ = new IfNode($1.line, dynamic_cast<AssignNode*>($3), $5); dynamic_cast<IfNode*>($$)->setElse($7);   }
+    |  IF '(' '!' Operation ')'      IfExtension ELSE IfExtension         { $$ = new IfNode($1.line, $4, $6, true); dynamic_cast<IfNode*>($$)->setElse($8);   }
 
 
 IfExtension:
-      IFSentence                                                    {  $$ = new ScopeNode(lineNumber, $1); }
+      Sentence                                                    {  $$ = new ScopeNode(lineNumber, $1); }
     | Scope
 
 ForSentence: FOR '(' VariableDeclaration ';' ForCondition ';' ForPostSentence ')' LoopScope {
@@ -393,8 +399,8 @@ Type:
 
 
 int main(int argc, char* argv[]) {
-    ScopeNode* x = new ScopeNode(-1);
-    yyin = fopen("test.yapl", "r");
+    /* yyin = fopen("test.yapl", "r"); */
+    yyin = fopen(argv[1], "r");
     yyparse();
     return 0;
 }

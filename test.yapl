@@ -1,107 +1,111 @@
-print("============================================== Testcase 1 ==============================================");
-void doSomething() {
-    print("1");
-}
-void doSomethingElse() {
-    print("2");
-}
-void handleDefault() {
-    print("3");
-}
+int x = 10;
+float y = 10;
+bool z = true;
 
-for (int x = 0; x < 3; x++) {
-    switch (x) {
-        case 1:
-            doSomething();
-            break;
-        case 2:
-            doSomethingElse();
-            break;
-        default:
-            handleDefault();
-    }
+print("============================================== Testcase 1 ==============================================");
+
+if (1) {
+    print("Ok");
+} else {
+    print("Bad");
 }
+print("Ok");
+
 
 print("============================================== Testcase 2 ==============================================");
-for (int y = 0; y < 3;) {
-    switch (y) {
-        case 0:
-        case 1:
-            y++;
-            break;
-        case 2:
-            y += 2;
-    }
-    print(y);
+
+if (false) {
+    print("Bad");
+} else {
+    print("Ok");
 }
+print("Ok");
 
 print("============================================== Testcase 3 ==============================================");
-int z;
-z = 10;
-switch (z) {
-    default:
-        doSomething();
+
+x = 2;
+if (x == 1) {
+    print("Bad");
+} else {
+    print("Ok");
 }
 
 print("============================================== Testcase 4 ==============================================");
-int a = 5;
-switch (a) {
-    case 5:
-        print(a);
-        break;
+x = 0;
+while (x < 4) {
+    if ((x > 0) && (x < 2)) {
+        print("Ok 1");
+    } else {
+        print("Ok 2");
+    }
+
+    print(x++);
 }
 
 print("============================================== Testcase 5 ==============================================");
-int x = 10;
-int y = 10;
-int n = 1;
 
-switch (n) {
-    case 1:
-        x++;
-        y--;
-    case 2:
-        y = y * 2;
-        break;
+for (x = 0; x < 2; x++) {
+    for(y = 0; y < 2; y++) {
+        print("(x, y) -> (" + x + ", " + y + ")" );
+        if (x == 0 || y == 0) {
+            print("Ok 1");
+        } else {
+            print("Ok 2");
+        }
+    }
 }
 
-print(x);
-print(y);
-
-
 print("============================================== Testcase 6 ==============================================");
-bool running = true;
-switch (running) {
-    case true:
-        print("Ok");
-        break;
-    case false:
-        print("No");
-        break;
+x = 3;
+if (x & 1) {
+    print("Ok");
 }
 
 print("============================================== Testcase 7 ==============================================");
-int val = 0;
-int result = 5;
-switch (val) {
-    case 1:
-        result = 10;
-        break;
-    case 2:
-        result = 20;
-        break;
+x = 5;
+if (x = 6) {
+    print("Ok and x = " + x);
 }
-print(result);
-
-
 
 print("============================================== Testcase 8 ==============================================");
-char ch = 'b';
-switch (ch) {
-    case 'a':
-        print("a");
-        break;
-    case 'b':
-        print("b");
-        break;
+x = 0;
+if (!x) {
+    print("Ok");
+}
+
+print("============================================== Testcase 9 ==============================================");
+bool isReady() {
+    return false;
+}
+
+float isNotReady() {
+    return 0.0;
+}
+
+if (isReady()) {
+    print("Ready");
+} else if (!isNotReady()) {
+    print("Not Ready");
+} else {
+    print("Bad");
+}
+
+print("============================================== Testcase 10 ==============================================");
+x = 10;
+y = 45;
+z = -1;
+
+if ( x == 10 ) {
+    print("If Then Passed");
+}
+
+print("============================================== Testcase 11 ==============================================");
+if ( x == 10 ) {
+    if (y == 10) {
+        print("Nested If Passed");
+    } else {
+        print("Nested If Y Passed");
+    }
+} else if (y == 45) {
+    print("Nested If Else Passed");
 }

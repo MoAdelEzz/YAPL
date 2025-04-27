@@ -82,7 +82,9 @@ class DefineNode : public ProgramNode {
                 }
 
                 if ( !errornousRHS && value != nullptr && !Utils::isValidAssignment(type->type, rhsType)) {
-                    throw ErrorDetail(Severity::ERROR, "Type Mismatch For The Variable " + name);
+                    ErrorDetail error(Severity::ERROR, "Type Mismatch For The Variable " + name);
+                    error.setLine(this->line);
+                    CompilerOrganizer::addError(error);
                 } 
                 
                 scope->defineVariable(name, type, Operand::undefined(), true);
@@ -163,16 +165,20 @@ class AssignNode: public ProgramNode {
         
         virtual void runSemanticChecker(Scope* scope = nullptr) override {
             const bool validLHS = name.size() == 0 || scope->typeOf(name) != TUNDEFINED;
+            bool errornous = false;
+
             if ( ! validLHS ) {
                 ErrorDetail error(Severity::ERROR, "Variable " + name + " is not defined");
                 error.setLine(this->line);
                 CompilerOrganizer::addError(error);
+                errornous = true;
             }
 
-            if (name.size() > 0 && scope->isConstVariable(name)) {
+            if ( !errornous && name.size() > 0 && scope->isConstVariable(name)) {
                 ErrorDetail error(Severity::ERROR, "Variable " + name + " is constant and cannot be assigned");
                 error.setLine(this->line);
                 CompilerOrganizer::addError(error);
+                errornous = true;
             }
 
             OperandType nodeType = TUNDEFINED;
@@ -183,14 +189,21 @@ class AssignNode: public ProgramNode {
                 CompilerOrganizer::addError(error);
             }
             
-            if ( validLHS && name.size() > 0 && !Utils::isValidAssignment(scope->typeOf(name), nodeType) ) { 
+            if ( !errornous && validLHS && name.size() > 0 && !Utils::isValidAssignment(scope->typeOf(name), nodeType) ) { 
                 ErrorDetail error(Severity::ERROR, "Type Mismatch For The Variable " + name);
                 error.setLine(this->line);
                 CompilerOrganizer::addError(error);
+                errornous = true;
             }
 
-            if (name != "") {
-                scope->assignVariableValueType(name, nodeType);
+            if (!errornous && name != "") {
+                try {
+                    scope->assignVariableValueType(name, nodeType);
+                } catch (ErrorDetail error) {
+                    error.setLine(this->line);
+                    CompilerOrganizer::addError(error);
+                    errornous = true;
+                }
                 CompilerOrganizer::markSymbolAsInitialized(name);
             }
 

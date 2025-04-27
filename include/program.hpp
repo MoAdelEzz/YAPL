@@ -35,14 +35,18 @@ class ProgramNode {
         }
 
         virtual void generateQuadruples(Scope* scope) {
-
+            ProgramNode* it = next;
+            while (it) {
+                it->generateQuadruples(scope);
+                it = it->getNext();
+            }
         }
 
         virtual void runSemanticChecker(Scope* scope = nullptr) {
             ProgramNode* it = next;
             while (it) {
-                it->runSemanticChecker();
-                it = next->next;
+                it->runSemanticChecker(scope);
+                it = it->getNext();
             }
         }
 
@@ -55,7 +59,7 @@ class ProgramNode {
                     error.setLine(this->line);
                     CompilerOrganizer::addError(error);
                 }
-                it = next->next;
+                it = it->getNext();
             }
         }
 
@@ -81,7 +85,7 @@ class PrintNode : public ProgramNode {
         }   
         
         void generateQuadruples(Scope* scope) override {
-            CompilerOrganizer::addQuadruple(QUAD_PRINT, body->generateQuadruples(), "", "");
+            CompilerOrganizer::addQuadruple(QUAD_PRINT, body->generateQuadruples(), "", " ");
         }
 
         virtual void runSemanticChecker(Scope* scope = nullptr) override {

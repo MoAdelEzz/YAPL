@@ -1,16 +1,7 @@
 Name                Node Type           Type                Scope               IsConst             IsInitialized       IsUsed              
 ----------------------------------------------------------------------------------------------------
-doSomething         Function             (void              1                   No                  Yes                 No                  
-doSomethingElse     Function             (void              1                   No                  Yes                 No                  
-handleDefault       Function             (void              1                   No                  Yes                 No                  
-x                   Variable                                2                   No                  Yes                 Yes                 
-y                   Variable                                2                   No                  Yes                 Yes                 
-z                   Variable                                1                   No                  Yes                 Yes                 
-a                   Variable                                1                   No                  Yes                 Yes                 
-x                   Variable                                1                   No                  Yes                 Yes                 
-y                   Variable                                1                   No                  Yes                 Yes                 
-n                   Variable                                1                   No                  Yes                 Yes                 
-running             Variable                                1                   No                  Yes                 Yes                 
-val                 Variable                                1                   No                  Yes                 Yes                 
-result              Variable                                1                   No                  Yes                 Yes                 
-ch                  Variable                                1                   No                  Yes                 Yes                 
+x                   Variable            int                 1                   No                  Yes                 Yes                 
+y                   Variable            float               1                   No                  Yes                 Yes                 
+z                   Variable            boolean             1                   No                  Yes                 No                  
+isReady             Function            ()->boolean         1                   No                  Yes                 Yes                 
+isNotReady          Function            ()->float           1                   No                  Yes                 Yes                 

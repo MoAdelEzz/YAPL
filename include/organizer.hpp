@@ -1,6 +1,7 @@
 #pragma once
 #include "enums.hpp"
 #include <string>
+#include <unordered_map>
 #include <vector>
 #include <algorithm>
 #include <fstream>
@@ -76,12 +77,14 @@ class SymbolTableEntry {
         void dump(std::ofstream& out) const {
             std::string dataType = "";
             if (entryType == FUNCTION) {
-                dataType += " (";
+                dataType += "(";
                 for (int i = 0; i < argumentTypes.size(); i++) {
                     OperandType type = argumentTypes[i];
-                    dataType +=  Utils::typeToString(type) + (i == argumentTypes.size() - 1 ? ") -> " : ",");
+                    dataType +=  Utils::typeToString(type) + (i < argumentTypes.size() - 1 ? "," : "");
                 }
-                dataType += Utils::typeToString(this->dataType);
+                dataType += ")->" + Utils::typeToString(this->dataType);
+            } else {
+                dataType = Utils::typeToString(this->dataType); 
             }
 
             if (entryType != SCOPE_ENTRY && entryType != SCOPE_EXIT) {
@@ -109,7 +112,9 @@ class QuadrupleEntry {
 
         QuadrupleEntry(OperationType operation, std::string arg1, std::string arg2, std::string result = "") 
         : operation(operation), arg1(arg1), arg2(arg2) {
-            res =  result.size() > 0 ? result : "t" + std::to_string(index++);
+            if (result != " ") {
+                res =  result.size() > 0 ? result : "t" + std::to_string(index++);
+            }
         }
 
         bool hasDestination() const {
@@ -197,7 +202,7 @@ class CompilerOrganizer {
         }
 
         static void markSymbolAsUsed( std::string name, EntryType type = VARIABLE ) {
-            int index = findSymbolIndex(name);
+            int index = findSymbolIndex(name, type);
             if (index != -1) {
                 symbolTable[index].markAsUsed();
             }
@@ -259,8 +264,9 @@ class CompilerOrganizer {
             symbolTableFile.close();
         }
 
-        static void dumpQuadruples() {
-            std::ofstream quadruplesFile("log/quadruples.txt");
+        static void dumpQuadruples(bool isOptimized = false ) {
+            std::string filename = isOptimized ? "log/optimized_quadruples.txt" : "log/quadruples.txt";
+            std::ofstream quadruplesFile(filename);
             quadruplesFile.clear();
 
             for (const QuadrupleEntry& entry : quadruples) {
@@ -272,5 +278,95 @@ class CompilerOrganizer {
                 << std::endl;
             }
             quadruplesFile.close();
+        }
+
+        static void eraseUnusedVariables() {
+            std::vector<QuadrupleEntry> optimizedQuadruples;
+            std::unordered_map<std::string, int> varFrequency;
+
+            for (QuadrupleEntry& entry : quadruples) {
+                if (entry.operation == QUAD_ASSIGN) continue;
+                entry.arg1 != entry.res ? varFrequency[entry.arg1]++ : varFrequency[entry.arg1];
+                entry.arg2 != entry.res ? varFrequency[entry.arg2]++ : varFrequency[entry.arg2];
+            }
+
+            for (QuadrupleEntry& entry : quadruples) {
+                if (entry.operation != QUAD_ASSIGN) continue;
+                if (varFrequency[entry.res] > 0) {
+                    varFrequency[entry.arg1]++;
+                    varFrequency[entry.arg2]++;
+                }
+            }
+
+            for (int i = quadruples.size() - 1; i >= 0; i--) {
+                std::string result = quadruples[i].res;
+
+                if (result.size() == 0 || result[0] == 'L') {
+                    optimizedQuadruples.push_back(quadruples[i]); 
+                    continue;
+                }
+
+                if (varFrequency[result] > 0) {
+                    optimizedQuadruples.push_back(quadruples[i]);
+                } else {
+                    varFrequency[quadruples[i].arg1]--;
+                    varFrequency[quadruples[i].arg2]--;
+                }
+            }
+
+            std::reverse(optimizedQuadruples.begin(), optimizedQuadruples.end());
+            quadruples.clear();
+            quadruples = optimizedQuadruples;
+        }
+
+
+        static void eraseUnreachableCode() {
+            std::vector<QuadrupleEntry> optimizedQuadruples;
+
+            for (int i = 0; i < quadruples.size();) {
+                optimizedQuadruples.push_back(quadruples[i]);
+
+                if (quadruples[i].operation == QUAD_GOTO) {
+                    while(++i < quadruples.size() && quadruples[i].operation != QUAD_LABEL);
+                } else {
+                    i++;
+                }
+            }
+
+            quadruples.clear();
+            quadruples = optimizedQuadruples;
+        }
+
+        static void eraseUnusedLabels() { 
+            std::vector<QuadrupleEntry> optimizedQuadruples;
+
+            std::unordered_map<std::string, int> labelFrequency;
+            for (int i = 0; i < quadruples.size(); i++) {
+                if ( quadruples[i].operation == QUAD_GOTO || 
+                     quadruples[i].operation == QUAD_GOTO_IF_FALSE ||
+                     quadruples[i].operation == QUAD_GOTO_IF_TRUE
+                ) {
+                    labelFrequency[quadruples[i].res]++;
+                }
+            }
+
+            for (int i = 0; i < quadruples.size(); i++) {
+                if (quadruples[i].operation == QUAD_LABEL) {
+                    if (labelFrequency[quadruples[i].res] > 0) {
+                        optimizedQuadruples.push_back(quadruples[i]);
+                    }
+                } else {
+                    optimizedQuadruples.push_back(quadruples[i]);
+                }
+            }
+
+            quadruples.clear();
+            quadruples = optimizedQuadruples;
+        }
+
+        static void optimizeQuadruples() {
+            eraseUnusedVariables();
+            eraseUnreachableCode();
+            eraseUnusedLabels();
         }
 };
