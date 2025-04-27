@@ -1,17 +1,173 @@
+PRINT       ============================================== Testcase 1 ==============================================                
+FUNC_START  doSomething                
+PRINT       1                       
+FUNC_END    doSomething                
+FUNC_START  doSomethingElse                
+PRINT       2                       
+FUNC_END    doSomethingElse                
+FUNC_START  handleDefault                
+PRINT       3                       
+FUNC_END    handleDefault                
+DECLARE     int             x       
+=           0               x       
+JMP                         L1      
+LABEL                       L0      
+==          x       1       t5      
+JZ          t5              L8      
+LABEL                       L5      
+CALL        doSomething0       t6      
+JMP                         L4      
+JMP                         L6      
+LABEL                       L8      
+==          x       2       t7      
+JZ          t7              L9      
+LABEL                       L6      
+CALL        doSomethingElse0       t8      
+JMP                         L3      
+JMP                         L7      
+LABEL                       L9      
+LABEL                       L7      
+CALL        handleDefault0       t9      
+JMP                         L3      
+LABEL                       L10     
+LABEL                       L3      
+=           x               t10     
+ADD         x       1       x       
+LABEL                       L1      
+<           x       3       t11     
+JNZ         t11             L0      
+LABEL                       L2      
+PRINT       ============================================== Testcase 2 ==============================================                
 DECLARE     int             y       
-=           2               y       
-FUNC_START  f1                      
-MUL         x       y       t1      
-RET         t1                      
-FUNC_END    f1                      
-FUNC_START  f2                      
+=           0               y       
+JMP                         L12     
+LABEL                       L11     
+==          y       0       t13     
+JZ          t13             L19     
+LABEL                       L16     
+JMP                         L17     
+LABEL                       L19     
+==          y       1       t14     
+JZ          t14             L20     
+LABEL                       L17     
+=           y               t15     
+ADD         y       1       y       
+JMP                         L14     
+JMP                         L18     
+LABEL                       L20     
+==          y       2       t16     
+JZ          t16             L21     
+LABEL                       L18     
+ADD         y       2       t17     
+=           t17             y       
+JMP                         L14     
+LABEL                       L21     
+LABEL                       L14     
+PRINT       y                       
+LABEL                       L12     
+<           y       3       t19     
+JNZ         t19             L11     
+LABEL                       L13     
+PRINT       ============================================== Testcase 3 ==============================================                
+DECLARE     int             z       
+=           10              z       
+LABEL                       L24     
+CALL        doSomething0       t21     
+JMP                         L22     
+LABEL                       L25     
+LABEL                       L22     
+PRINT       ============================================== Testcase 4 ==============================================                
+DECLARE     int             a       
+=           5               a       
+==          a       5       t23     
+JZ          t23             L29     
+LABEL                       L28     
+PRINT       a                       
+JMP                         L27     
+JMP                         L26     
+LABEL                       L29     
+LABEL                       L26     
+PRINT       ============================================== Testcase 5 ==============================================                
+DECLARE     int             x       
+=           10              x       
 DECLARE     int             y       
 =           10              y       
-ARG         x                       
-ARG         0                       
-CALL        f1      2       t2      
-RET         t2                      
-FUNC_END    f2                      
-ARG         2                       
-CALL        f2      1       t3      
-PRINT       t3                      
+DECLARE     int             n       
+=           1               n       
+==          n       1       t26     
+JZ          t26             L34     
+LABEL                       L32     
+=           x               t27     
+ADD         x       1       x       
+=           y               t28     
+SUB         y       1       y       
+JMP                         L33     
+LABEL                       L34     
+==          n       2       t29     
+JZ          t29             L35     
+LABEL                       L33     
+MUL         y       2       t30     
+=           t30             y       
+JMP                         L30     
+JMP                         L30     
+LABEL                       L35     
+LABEL                       L30     
+PRINT       x                       
+PRINT       y                       
+PRINT       ============================================== Testcase 6 ==============================================                
+DECLARE     boolean         running 
+=           1               running 
+==          running 1       t34     
+JZ          t34             L40     
+LABEL                       L38     
+PRINT       Ok                      
+JMP                         L37     
+JMP                         L39     
+LABEL                       L40     
+==          running 0       t36     
+JZ          t36             L41     
+LABEL                       L39     
+PRINT       No                      
+JMP                         L36     
+JMP                         L36     
+LABEL                       L41     
+LABEL                       L36     
+PRINT       ============================================== Testcase 7 ==============================================                
+DECLARE     int             val     
+=           0               val     
+DECLARE     int             result  
+=           5               result  
+==          val     1       t39     
+JZ          t39             L46     
+LABEL                       L44     
+=           10              result  
+JMP                         L43     
+JMP                         L45     
+LABEL                       L46     
+==          val     2       t40     
+JZ          t40             L47     
+LABEL                       L45     
+=           20              result  
+JMP                         L42     
+JMP                         L42     
+LABEL                       L47     
+LABEL                       L42     
+PRINT       result                  
+PRINT       ============================================== Testcase 8 ==============================================                
+DECLARE     char            ch      
+=           b               ch      
+==          ch      a       t43     
+JZ          t43             L52     
+LABEL                       L50     
+PRINT       a                       
+JMP                         L49     
+JMP                         L51     
+LABEL                       L52     
+==          ch      b       t45     
+JZ          t45             L53     
+LABEL                       L51     
+PRINT       b                       
+JMP                         L48     
+JMP                         L48     
+LABEL                       L53     
+LABEL                       L48     

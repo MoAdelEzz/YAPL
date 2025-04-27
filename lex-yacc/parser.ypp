@@ -59,9 +59,9 @@
 
 %type <Node>   ForSentence WhileSentence DoWhileSentence FunctionDefinition Case
 %type <Node>   IFSentence VariableAssignment VariableDeclaration SwitchSentence
-%type <Node>   PrintSentence Scope Sentence Sentences ReturnSentence ForPostSentence
+%type <Node>   PrintSentence Scope Sentence Sentences ReturnSentence ForPostSentence LoopScope IfExtension
 
-%type <Exp>  Operand MathOperand MathOperation Operation Condition FunctionParamOperand
+%type <Exp>  Operand MathOperand MathOperation Operation Condition FunctionParamOperand ForCondition
 %type <Exp>  StringOperation StringOperand FunctionCall
 
 %type <FP>  FunctionParams FunctionDefaulValueParams
@@ -84,15 +84,19 @@
 %right '!' OR AND
 %right '~'
 %right IF
-%right ELSE
+%left ELSE
 %left ';'
 %left PRINT
+%right SCOPE_BEGIN
+%left SCOPE_END
 
 %%
 
 Program: Sentences  {
     ScopeNode* scopeNode = new ScopeNode(-1, $1);
+
     scopeNode->runSemanticChecker();
+    CompilerOrganizer::dumpErrors();
 
     if (CompilerOrganizer::getErrorCount() == 0) {
         scopeNode->generateQuadruples();
@@ -105,7 +109,6 @@ Program: Sentences  {
         CompilerOrganizer::dumpQuadruples();
     } else {
         std::cout << "There Are " << CompilerOrganizer::getErrorCount()  << " Errors Found" << std::endl;
-        CompilerOrganizer::dumpErrors();
         CompilerOrganizer::exitWithFailure();
     }
 
@@ -119,8 +122,8 @@ Sentences:
 
     |                           { $$ = nullptr; }
 
-Scope:  SCOPE_BEGIN Sentences SCOPE_END       { $$ = new ScopeNode($1.line, $2); }    
-
+Scope:  
+    SCOPE_BEGIN Sentences SCOPE_END       { $$ = new ScopeNode($1.line, $2); }    
 
 Sentence: 
       VariableAssignment ';'    { $$ = $1; }
@@ -218,25 +221,57 @@ PrintSentence:
     PRINT '(' Operation ')' ';'     { $$ = new PrintNode($1.line, $3);  }
 
 IFSentence:
-      IF '(' Condition ')' Scope   { $$ = new IfNode($1.line, $3, $5);   }
-    | IFSentence ELSE IFSentence   { $$ = dynamic_cast<IfNode*>($1)->setElse($3);  }
-    | IFSentence ELSE Scope        { $$ = dynamic_cast<IfNode*>($1)->setElse($3);  }
+       IF '(' Condition          ')' IfExtension                    { $$ = new IfNode($1.line, $3, $5);   }
+    |  IF '(' VariableAssignment ')' IfExtension                    { $$ = new IfNode($1.line, dynamic_cast<AssignNode*>($3), $5);   }
+    |  IF '(' '!' Operation ')'      IfExtension                    { $$ = new IfNode($1.line, $4, $6, true);   }
 
-ForSentence: FOR '(' VariableDeclaration ';' Condition ';' ForPostSentence ')' Scope {
-    $$ = new ForNode($1.line, dynamic_cast<DefineNode*>($3), $5, dynamic_cast<AssignNode*>($7), dynamic_cast<ScopeNode*>($9));
-}
+    |  IF '(' Condition          ')' Scope ELSE IfExtension         { $$ = new IfNode($1.line, $3, $5); dynamic_cast<IfNode*>($$)->setElse($7);   }
+    |  IF '(' VariableAssignment ')' Scope ELSE IfExtension         { $$ = new IfNode($1.line, dynamic_cast<AssignNode*>($3), $5); dynamic_cast<IfNode*>($$)->setElse($7);   }
+    |  IF '(' '!' Operation ')'      Scope ELSE IfExtension         { $$ = new IfNode($1.line, $4, $6, true); dynamic_cast<IfNode*>($$)->setElse($8);   }
+
+
+IfExtension:
+      IFSentence                                                    {  $$ = new ScopeNode(lineNumber, $1); }
+    | Scope
+
+ForSentence: FOR '(' VariableDeclaration ';' ForCondition ';' ForPostSentence ')' LoopScope {
+    $$ = new ForNode($1.line, $3, $5, dynamic_cast<AssignNode*>($7), dynamic_cast<ScopeNode*>($9));
+} 
+| FOR '(' VariableAssignment ';' ForCondition ';' ForPostSentence ')' LoopScope {
+    $$ = new ForNode($1.line, $3, $5, dynamic_cast<AssignNode*>($7), dynamic_cast<ScopeNode*>($9));
+} 
+
+ForCondition: Condition |  {$$ = nullptr;};
 
 ForPostSentence:
       VariableAssignment                         { $$ = $1;  }
     | ForPostSentence ',' VariableAssignment     { $$ = dynamic_cast<AssignNode*>($1)->setNextAssignment($3); };
+    | {$$ = nullptr;};
 
-WhileSentence: WHILE '(' Condition ')' Scope {
+WhileSentence: WHILE '(' Condition ')' LoopScope {
     $$ = new WhileNode($1.line, $3, dynamic_cast<ScopeNode*>($5));
 }
 
-DoWhileSentence: DO Scope WHILE '(' Condition ')' ';' {
+| WHILE '(' VariableAssignment ')' LoopScope {
+    $$ = new WhileNode($1.line, dynamic_cast<AssignNode*>($3), dynamic_cast<ScopeNode*>($5));
+}             
+
+| WHILE '(' '!' Operation ')' LoopScope {
+    $$ = new WhileNode($1.line, $4, dynamic_cast<ScopeNode*>($6), true);
+}         
+
+DoWhileSentence: DO LoopScope WHILE '(' Condition ')' ';' {
     $$ = new DoWhileNode($1.line, $5, dynamic_cast<ScopeNode*>($2));
 }
+| DO LoopScope WHILE '(' VariableAssignment ')' ';' {
+    $$ = new DoWhileNode($1.line, dynamic_cast<AssignNode*>($5), dynamic_cast<ScopeNode*>($2));
+} 
+| DO LoopScope WHILE '(' '!' Operation ')' ';' {
+    $$ = new DoWhileNode($1.line, $6, dynamic_cast<ScopeNode*>($2), true);
+}
+
+LoopScope:
+    Scope | Sentence { $$ = new ScopeNode(lineNumber, $1); }
 
 FunctionDefinition: 
       Type IDENTIFIER '(' FunctionParams ')' Scope { 
@@ -260,6 +295,7 @@ VariableDeclaration:
     | Type IDENTIFIER '=' Operation                     { $$ = new DefineNode($2.line, $1, $2.str, $4); }
     | VariableDeclaration ',' IDENTIFIER                { $$ = dynamic_cast<DefineNode*>($1)->setNextDefine( new DefineNode($3.line, $3.str, nullptr) ); }
     | VariableDeclaration ',' IDENTIFIER '=' Operation  { $$ = dynamic_cast<DefineNode*>($1)->setNextDefine( new DefineNode($3.line, $3.str, $5) ); }
+    | {$$ = nullptr;};
 
 Condition:
         Condition     OR       Condition              { $$ = new Expression($1, $3, OP_OR);  }
@@ -281,6 +317,9 @@ Condition:
     |   StringOperation NOTEQUAL StringOperation      { $$ = new StringContainer($1, $3, OP_NEQ);  }
 
     |   '(' Condition ')'                             { $$ = $2; }
+
+                          
+
 
 Operation: 
       MathOperation                                 { $$ = $1; }     

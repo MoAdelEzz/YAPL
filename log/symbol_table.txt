@@ -1,9 +1,16 @@
 Name                Node Type           Type                Scope               IsConst             IsInitialized       IsUsed              
 ----------------------------------------------------------------------------------------------------
-y                   Variable                                1                   No                  No                  Yes                 
-f1                  Function             (int,int) -> int   1                   No                  Yes                 Yes                 
-x                   Variable                                2                   No                  No                  Yes                 
-w                   Variable                                2                   No                  Yes                 No                  
-f2                  Function             (int) -> int       1                   No                  Yes                 Yes                 
-x                   Variable                                2                   No                  No                  Yes                 
-y                   Variable                                3                   No                  No                  No                  
+doSomething         Function             (void              1                   No                  Yes                 No                  
+doSomethingElse     Function             (void              1                   No                  Yes                 No                  
+handleDefault       Function             (void              1                   No                  Yes                 No                  
+x                   Variable                                2                   No                  Yes                 Yes                 
+y                   Variable                                2                   No                  Yes                 Yes                 
+z                   Variable                                1                   No                  Yes                 Yes                 
+a                   Variable                                1                   No                  Yes                 Yes                 
+x                   Variable                                1                   No                  Yes                 Yes                 
+y                   Variable                                1                   No                  Yes                 Yes                 
+n                   Variable                                1                   No                  Yes                 Yes                 
+running             Variable                                1                   No                  Yes                 Yes                 
+val                 Variable                                1                   No                  Yes                 Yes                 
+result              Variable                                1                   No                  Yes                 Yes                 
+ch                  Variable                                1                   No                  Yes                 Yes                 

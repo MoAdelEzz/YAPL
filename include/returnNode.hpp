@@ -59,6 +59,7 @@ class ReturnNode : public ProgramNode {
     }
 
     void generateQuadruples(Scope* scope = nullptr) {
-        CompilerOrganizer::addFunctionReturn(value->generateQuadruples(scope));
+        std::string ret = value == nullptr ? Utils::typeToString(TVOID) : value->generateQuadruples(scope);
+        CompilerOrganizer::addFunctionReturn(ret);
     }
 };

@@ -88,9 +88,9 @@ class Utils {
 
         static bool isValidAssignment(OperandType lhs, OperandType rhs) {
             if (lhs == TUNDEFINED || rhs == TUNDEFINED) return false;
-            if (lhs == TVOID    || rhs == TVOID)        return false;
+            if (lhs == TVOID    && rhs == TVOID)        return true;
 
-            if (lhs == TSTRING  && rhs != TVOID)    return true;
+            if (lhs == TSTRING  && rhs < TVOID)    return true;
             if (lhs == TBOOLEAN && rhs < TSTRING)   return true;
             if (lhs == TINT     && rhs < TSTRING)   return true;
             if (lhs == TCHAR    && rhs < TSTRING)   return true;

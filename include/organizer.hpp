@@ -169,7 +169,7 @@ class CompilerOrganizer {
             symbolTable.push_back(entry);
         }
 
-        static int findSymbolIndex(std::string name) {
+        static int findSymbolIndex(std::string name, EntryType type = VARIABLE) {
             int targetScope = scopeDepth;
 
             for (int i = symbolTable.size() - 1; i >= 0; i--) {
@@ -181,7 +181,7 @@ class CompilerOrganizer {
 
                 if ( symbolTable[i].getScopeLayer() > targetScope ) continue;
 
-                if ( symbolTable[i].getName() == name ) {
+                if ( symbolTable[i].getName() == name && symbolTable[i].getEntryType() == type ) {
                     return i;
                 }
             }
@@ -196,7 +196,7 @@ class CompilerOrganizer {
             }
         }
 
-        static void markSymbolAsUsed( std::string name ) {
+        static void markSymbolAsUsed( std::string name, EntryType type = VARIABLE ) {
             int index = findSymbolIndex(name);
             if (index != -1) {
                 symbolTable[index].markAsUsed();
@@ -211,7 +211,13 @@ class CompilerOrganizer {
 
         static CompilerState getState() { return state; }
 
-        static int getErrorCount() { return errors.size(); }
+        static int getErrorCount() { 
+            int count = 0;
+            for (int i = 0; i < errors.size(); i++) {
+                count += errors[i].getSeverity() == ERROR;
+            } 
+            return count; 
+        }
 
         static void dumpErrors() {
             std::sort(errors.begin(), errors.end(), [](const ErrorDetail& a, const ErrorDetail& b) { 

@@ -313,8 +313,18 @@ Operand IdentifierContainer::getValue(Scope* scope) {
 
 OperandType IdentifierContainer::getExpectedType(Scope* scope) {
     OperandType type = scope->typeOf(varName);
+    bool isInitialized = scope->isInitialized(varName);
+
+    if (op == OP_PRE_ADD || op == OP_POST_ADD || op == OP_PRE_SUB || op == OP_POST_SUB) {
+        if (scope->isConstVariable(varName)) {
+            throw ErrorDetail(Severity::ERROR, "Variable " + varName + " is constant and cannot be assigned");
+        }
+    }
+
     if (type == TUNDEFINED) {
         throw ErrorDetail(Severity::ERROR, "Variable " + varName + " is not defined");
+    } else if (!isInitialized) {
+        throw ErrorDetail(Severity::ERROR, "Variable " + varName + " was used before it was initialized");
     } else {
         CompilerOrganizer::markSymbolAsUsed(varName);
     }

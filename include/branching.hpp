@@ -3,15 +3,19 @@
 #include "program.hpp"
 #include "expression.hpp"
 #include "scoping.hpp"
+#include "var-op.hpp"
 #include <string>
 
 class IfNode : public ProgramNode {
     Expression* condition;
+    AssignNode* assignment;
     ProgramNode* accept;
     ProgramNode* reject;
+    bool inverted;
 
     public:
-        IfNode( int line, Expression* condition, ProgramNode* accept );  
+        IfNode( int line, Expression* condition, ProgramNode* accept, bool inverted = false  );  
+        IfNode( int line, AssignNode* assignment, ProgramNode* accept );  
         ~IfNode();
 
         std::string nodeName() override;

@@ -69,19 +69,28 @@ class DefineNode : public ProgramNode {
         virtual void runSemanticChecker(Scope* scope = nullptr) override {
             try {
                 OperandType rhsType = TUNDEFINED;
+                bool errornousRHS = false;
 
-                try {
-                    rhsType = value->getExpectedType(scope);
-                } catch(ErrorDetail error) {
-                    error.setLine(this->line);
-                    CompilerOrganizer::addError(error);
+                if (value) {
+                    try {
+                        rhsType = value->getExpectedType(scope);
+                    } catch(ErrorDetail error) {
+                        error.setLine(this->line);
+                        CompilerOrganizer::addError(error);
+                        errornousRHS = true;
+                    }
                 }
 
-                if ( !Utils::isValidAssignment(type->type, rhsType) && value != nullptr) {
+                if ( !errornousRHS && value != nullptr && !Utils::isValidAssignment(type->type, rhsType)) {
                     throw ErrorDetail(Severity::ERROR, "Type Mismatch For The Variable " + name);
                 } 
-
+                
                 scope->defineVariable(name, type, Operand::undefined(), true);
+
+                if ( !errornousRHS && value != nullptr && value->getExpectedType(scope) < TVOID) {
+                    CompilerOrganizer::markSymbolAsInitialized(name);
+                    scope->assignVariableValueType(name, type->type);
+                }
             } 
             catch (ErrorDetail error) {
                 error.setLine(this->line);
@@ -108,7 +117,8 @@ class DefineNode : public ProgramNode {
 class AssignNode: public ProgramNode {
     Expression* value;
     std::string name;
-
+    Operand nodeValue;
+    std::string quadResult = "";
     ProgramNode* nextAssign;
     
     public:
@@ -127,6 +137,10 @@ class AssignNode: public ProgramNode {
             if (nextAssign) delete nextAssign;
             if (value) delete value;
         }
+
+        Operand getValue() { return nodeValue; }
+        OperandType getType(Scope* scope) { return name.size() == 0 ? value->getExpectedType(scope) : scope->typeOf(name); }
+        std::string varName() {return quadResult;}
         
         ProgramNode* setNextAssignment(ProgramNode* nextAssign) { 
             if (this->nextAssign) {
@@ -139,15 +153,24 @@ class AssignNode: public ProgramNode {
 
         void generateQuadruples(Scope* scope) override {
             std::string result = value->generateQuadruples();
+            quadResult = result;
             if (name.size() > 0) // not a hanging operation
+            {
                 CompilerOrganizer::addQuadruple(QUAD_ASSIGN, result, "", name);
+                quadResult = name;
+            }
         }
         
-
         virtual void runSemanticChecker(Scope* scope = nullptr) override {
             const bool validLHS = name.size() == 0 || scope->typeOf(name) != TUNDEFINED;
             if ( ! validLHS ) {
                 ErrorDetail error(Severity::ERROR, "Variable " + name + " is not defined");
+                error.setLine(this->line);
+                CompilerOrganizer::addError(error);
+            }
+
+            if (name.size() > 0 && scope->isConstVariable(name)) {
+                ErrorDetail error(Severity::ERROR, "Variable " + name + " is constant and cannot be assigned");
                 error.setLine(this->line);
                 CompilerOrganizer::addError(error);
             }
@@ -166,14 +189,15 @@ class AssignNode: public ProgramNode {
                 CompilerOrganizer::addError(error);
             }
 
-            if (name != "")
+            if (name != "") {
+                scope->assignVariableValueType(name, nodeType);
                 CompilerOrganizer::markSymbolAsInitialized(name);
+            }
 
             if (nextAssign) { nextAssign->run(scope); }
         }
 
         void run(Scope* scope = nullptr) override {
-            Operand nodeValue;
             try {
                 nodeValue = value->getValue(scope);
             }

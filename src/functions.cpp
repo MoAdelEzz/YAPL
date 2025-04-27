@@ -57,8 +57,11 @@ void FunctionDefintionNode::runSemanticChecker(Scope* scope) {
         functionScope->defineVariable(parameters->names[i], parameters->types[i], Operand::undefined(), true);
         if (parameters->defaultValues[i] != nullptr) 
             CompilerOrganizer::markSymbolAsInitialized(parameters->names[i]);  
+        functionScope->assignVariableValueType(parameters->names[i], parameters->types[i]->type);
     }
 
+    body->isFunction = true;
+    body->haltLogging = true;
     body->runSemanticChecker(scope);
     functionScope->reset();
     
@@ -156,11 +159,7 @@ Operand FunctionCallNode::getValue(Scope* scope) {
     Operand returnValue = functionScope->valueOf("return");
     functionScope->getScope()->reset();
 
-    if (returnValue.dataType->type != scope->getFunctionReturnType(name)) {
-        //std::cout << "Mismatch in return type" << std::endl;
-        throw ErrorDetail(Severity::ERROR, "Return Type Mismatch");
-        return Operand::undefined();
-    } else if (returnValue.dataType->type == TVOID) {
+    if (returnValue.dataType->type == TVOID) {
         return Operand::voidValue();
     } else {
         return returnValue;

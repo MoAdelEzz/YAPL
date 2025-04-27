@@ -1,2 +1,0 @@
-2: Error - Variable y is not defined
-2: Error - Invalid Return Type

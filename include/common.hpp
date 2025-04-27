@@ -454,12 +454,9 @@ class Scope {
             if (canReturn()) {
                 if (variables.find("return") == variables.end()) 
                     parent->assignReturn(value);
-                else if (variables["return"].first->type == value.dataType->type) {
+                else {
                     variables["return"].second = value;
-                } else {
-                    throw ErrorDetail(Severity::ERROR, "Invalid Return Type");
                 }
-        
             } else {
                throw ErrorDetail(Severity::ERROR, "Invalid Return"); 
             }
@@ -469,7 +466,7 @@ class Scope {
             if (canReturn()) {
                 if (variables.find("return") == variables.end()) 
                     parent->validReturn(type);
-                else if (!Utils::isValidAssignment(variables["return"].first->type, type)) {
+                else if (!Utils::isValidAssignment(variables["return"].first->type, type) ) {
                     throw ErrorDetail(Severity::ERROR, "Invalid Return Type");
                 }
             }
@@ -513,11 +510,10 @@ class Scope {
             ( parent != nullptr && parent->hasContinued() ); 
         }
         
-        void assignContinue()  { 
+        void assignContinue(bool disable = false)  { 
             if (canContinue()) {
-                if (variables.find("continue") == variables.end()) parent->assignContinue();
-                else variables["continue"].second = Operand::voidValue();
-                variables["continue"].second = Operand::voidValue();
+                if (variables.find("continue") == variables.end()) parent->assignContinue(disable);
+                else variables["continue"].second = disable ? Operand::undefined() : Operand::voidValue();
             } else {
                 throw ErrorDetail(Severity::ERROR, "Invalid Continue"); 
             }
@@ -548,6 +544,17 @@ class Scope {
                 variables[varName].second = Operand(convertedType, value);
             } else if (parent != nullptr) {
                 parent->assignVariable(varName, value);
+            } else {
+                throw ErrorDetail(Severity::ERROR, "Variable " + varName + " not found");
+            }
+        }
+
+        void assignVariableValueType(std::string varName, OperandType type) {
+            const auto& it = variables.find(varName);
+            if (it != variables.end()) {
+                variables[varName].second.dataType->type = type;
+            } else if (parent != nullptr) {
+                parent->assignVariableValueType(varName, type);
             } else {
                 throw ErrorDetail(Severity::ERROR, "Variable " + varName + " not found");
             }
@@ -615,6 +622,26 @@ class Scope {
                 return parent->typeOf(varName);
             } else {
                 return TUNDEFINED;
+            }
+        }
+
+        bool isInitialized(std::string varName) {
+            if (variables.find(varName) != variables.end()) {
+                return variables[varName].second.dataType->type != TUNDEFINED;
+            } else if (parent != nullptr) {
+                return parent->isInitialized(varName);
+            } else {
+                return TUNDEFINED;
+            } 
+        }
+
+        bool isConstVariable(std::string varName) {
+            if (variables.find(varName) != variables.end()) {
+                return variables[varName].first->isConst;
+            } else if (parent != nullptr) {
+                return parent->isConstVariable(varName);
+            } else {
+                return false;
             }
         }
 };

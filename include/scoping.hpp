@@ -54,7 +54,7 @@ public:
 
     virtual void runSemanticChecker(Scope* parentScope = nullptr) {
         if (!haltLogging) {
-            scopeDepth++;
+            !isFunction ? scopeDepth++ : scopeDepth;
             CompilerOrganizer::addSymbolTableEntry(SymbolTableEntry::scopeEntry());
         }
 
@@ -69,7 +69,7 @@ public:
         
         if (!haltLogging) {
             CompilerOrganizer::addSymbolTableEntry(SymbolTableEntry::scopeExit());
-            scopeDepth--;
+            !isFunction ? scopeDepth-- : scopeDepth;
         }
     }
 

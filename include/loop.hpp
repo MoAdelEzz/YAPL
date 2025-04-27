@@ -5,14 +5,17 @@
 #include "scoping.hpp"
 
 class ForNode : public ProgramNode {
-    DefineNode* preLoop;
+    ProgramNode* preLoop;
     Expression* condition;
+    AssignNode* assignment;
     ProgramNode* postLoop;
     ScopeNode* body;
+    bool inverted;
 
     public:
         
-        ForNode( int line, DefineNode* preLoop, Expression* condition, ProgramNode* postLoop, ScopeNode* body );
+        ForNode( int line, ProgramNode* preLoop, Expression* condition, ProgramNode* postLoop, ScopeNode* body, bool inverted = false);
+        ForNode( int line, ProgramNode* preLoop, AssignNode* assignment, ProgramNode* postLoop, ScopeNode* body );
         ~ForNode();
         
         std::string nodeName() override;
@@ -27,10 +30,13 @@ class ForNode : public ProgramNode {
 
 class WhileNode : public ProgramNode {
     Expression* condition;
+    AssignNode* assignment;
     ScopeNode* body;
+    bool inverted;
 
     public:
-        WhileNode( int line, Expression* condition, ScopeNode* body );
+        WhileNode( int line, Expression* condition, ScopeNode* body, bool inverted = false);
+        WhileNode( int line, AssignNode* assignment, ScopeNode* body );
         ~WhileNode();
         
         std::string nodeName() override;
@@ -45,10 +51,13 @@ class WhileNode : public ProgramNode {
 
 class DoWhileNode: public ProgramNode {
     Expression* condition;
+    AssignNode* assignment;
     ScopeNode* body;
+    bool inverted;
 
     public:
-        DoWhileNode( int line, Expression* condition, ScopeNode* body );
+        DoWhileNode( int line, Expression* condition, ScopeNode* body, bool inverted = false );
+        DoWhileNode( int line, AssignNode* condition, ScopeNode* body );
         ~DoWhileNode();
     
         std::string nodeName() override;

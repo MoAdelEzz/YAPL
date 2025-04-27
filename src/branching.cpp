@@ -11,11 +11,21 @@ extern std::vector<int> continueJumpTo;
 // ======================================== IF NODE ========================================
 // =========================================================================================
 
-IfNode::IfNode( int line, Expression* condition, ProgramNode* accept ) : ProgramNode(line) {
+IfNode::IfNode( int line, Expression* condition, ProgramNode* accept, bool inverted ) : ProgramNode(line) {
+
+    this->inverted = inverted;
     this->condition = condition;
     this->accept = accept;
     this->logLineInfo();
 } 
+
+IfNode::IfNode( int line, AssignNode* assignment, ProgramNode* accept ) : ProgramNode(line) {
+    this->assignment = assignment;
+    this->accept = accept;
+    this->inverted = false;
+    this->logLineInfo();
+}
+
 
 IfNode::~IfNode() {
     if (condition) delete condition, condition = nullptr;
@@ -32,7 +42,15 @@ IfNode* IfNode::setElse(ProgramNode* reject) {
 
 
 void IfNode::run(Scope* scope) {
-    if (condition->getValue(scope) != 0) {
+    Operand conditionValue;
+    if (assignment) {
+        assignment->run(scope);
+        conditionValue = assignment->getValue();
+    } else {
+        conditionValue = condition->getValue(scope);
+    }
+
+    if ((bool)conditionValue != inverted) {
         accept->run(scope);
     } else if (reject) {
         reject->run(scope);
@@ -42,7 +60,7 @@ void IfNode::run(Scope* scope) {
 void IfNode::runSemanticChecker(Scope* scope) {
     OperandType type = TUNDEFINED;
     try {
-        type = condition->getExpectedType(scope);
+        type = assignment ? assignment->getType(scope) : condition->getExpectedType(scope);
     } catch (ErrorDetail error) {
         error.setLine(this->line);
         CompilerOrganizer::addError(error);
@@ -61,17 +79,30 @@ void IfNode::runSemanticChecker(Scope* scope) {
 }
 
 void IfNode::generateQuadruples(Scope* scope) {
-    std::string condition = this->condition->generateQuadruples();
+    std::string condition = "";
+    if (assignment) {
+        assignment->generateQuadruples(scope);
+        condition = assignment->varName();
+    } else {
+        condition = this->condition->generateQuadruples();
+    }
 
     if (!reject) {
         int label = quadruplesLabel++;
-        CompilerOrganizer::addQuadruple(QUAD_GOTO_IF_FALSE, condition, "", "L" + std::to_string(label));
+        CompilerOrganizer::addQuadruple( 
+            inverted ? QUAD_GOTO_IF_TRUE : QUAD_GOTO_IF_FALSE, 
+            condition, 
+            "", 
+            "L" + std::to_string(label));
         accept->generateQuadruples(scope);
         CompilerOrganizer::addLabel(label);
     } else {
         int label1 = quadruplesLabel++;
         int label2 = quadruplesLabel++;
-        CompilerOrganizer::addQuadruple(QUAD_GOTO_IF_FALSE, condition, "", "L" + std::to_string(label1));
+        CompilerOrganizer::addQuadruple( inverted ? QUAD_GOTO_IF_TRUE : QUAD_GOTO_IF_FALSE, 
+            condition, 
+            "", 
+            "L" + std::to_string(label1));
         accept->generateQuadruples(scope);
         CompilerOrganizer::addQuadruple(QUAD_GOTO, "", "", "L" + std::to_string(label2));
         CompilerOrganizer::addLabel(label1);
@@ -112,6 +143,13 @@ void SwitchNode::runSemanticChecker(Scope* scope) {
     ScopeNode* switchScope = new ScopeNode(-1, scope);
     switchScope->getScope()->defineBreak();
 
+    try {
+        identifier->getExpectedType(scope);
+    } catch(ErrorDetail error) {
+        error.setLine(this->line);
+        CompilerOrganizer::addError(error);
+    }
+    
     if (body) {
         bool caseMatched = false;
         for (CaseNode* caseNode : body->getCases()) {
