@@ -1,0 +1,61 @@
+int add(int a ,int b=10, int c =20){
+    return a + b + c;
+}
+
+float power(float base ,int exp=2){
+    float res=1.0;
+    for(int i=0;i<exp;i++){
+        res*=base;
+    }
+    return res;
+}
+
+bool is_even(int n){
+    return (n%2)==0;
+}
+
+bool toggle(bool v=true){
+    return !v;
+}
+
+int main()
+{
+    int i=3;
+    float f=power(2.0,3);
+    bool flag1=toggle();
+    
+//print(flag1);
+
+    bool flag2=toggle(false);
+
+//print(flag2);
+    {
+        int scoped=5;
+        {
+            int scoped =10;
+            i+=scoped;
+            scoped+=add(1,2,3);
+            scoped+=add(1,2);
+            scoped+=add(1);
+           print("scope 2 => " + scoped);
+        }
+        print("scope 1 => " + scoped);
+    }
+
+    f*=power(1.5);
+    print(f);
+    i = i << 1;
+    print(i);
+    i = i >> 2;
+    print(i);
+    i|=3;
+    print(i);
+    i&=7;
+    print(i);
+    i^=1;
+    print(i);
+
+    return i;
+}
+
+main();

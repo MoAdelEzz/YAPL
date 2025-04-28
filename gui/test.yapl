@@ -1,2 +1,6 @@
-int x = 0;
-print(x);
+int i = 0;
+int j = 0;
+
+bool flag = false;
+bool q = true;
+ flag = !flag && !q || (i >= j);

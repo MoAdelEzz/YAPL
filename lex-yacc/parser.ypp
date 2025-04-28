@@ -299,8 +299,8 @@ FunctionCallParams:
 
 MathOperation:
         L0MathOperations
-    |   L0MathOperations AND MathOperation       { $$ = new Expression($1, $3, OP_AND); }  
-    |   L0MathOperations OR  MathOperation       { $$ = new Expression($1, $3, OP_OR);  }   
+    |   MathOperation AND L0MathOperations       { $$ = new Expression($1, $3, OP_AND); }  
+    |   MathOperation OR  L0MathOperations       { $$ = new Expression($1, $3, OP_OR);  }   
 
 L0MathOperations:
         L1MathOperations

@@ -86,9 +86,9 @@ class SymbolTableEntry {
             std::string dataType = "";
             if (entryType == FUNCTION) {
                 dataType += "( ";
-                for (int i = 0; i < argumentTypes.size(); i++) {
+                for (int i = argumentTypes.size() - 1; i >= 0; i--) {
                     OperandType type = argumentTypes[i];
-                    dataType +=  Utils::typeToString(type) + (i < argumentTypes.size() - 1 ? " - " : "");
+                    dataType +=  Utils::typeToString(type) + (i > 0 ? " - " : "");
                 }
                 dataType += " ) -> " + Utils::typeToString(this->dataType);
             } else {

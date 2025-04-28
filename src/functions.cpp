@@ -56,7 +56,10 @@ void FunctionDefintionNode::runSemanticChecker(Scope* scope) {
 
     functionScope->defineReturn(returnType);
     for (int i = 0; i < parameters->names.size(); i++) {
-        functionScope->defineVariable(parameters->names[i], parameters->types[i], Operand::undefined(), true);
+        SymbolTableEntry stEntry = functionScope->defineVariable(parameters->names[i], parameters->types[i], Operand::undefined(), true);
+        stEntry.setLine(this->line);
+        CompilerOrganizer::addSymbolTableEntry(stEntry);
+
         if (parameters->defaultValues[i] != nullptr) 
             CompilerOrganizer::markSymbolAsInitialized(parameters->names[i]);  
         functionScope->assignVariableValueType(parameters->names[i], parameters->types[i]->type);

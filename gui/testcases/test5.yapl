@@ -1,0 +1,47 @@
+
+// syntax error
+int x = 10_;
+
+// type mismatch
+int x = "abc";
+
+// undeclared variable w
+int y = w;
+
+// default value before required
+//void f(int x = 10, int y) {
+//    print(" No ");
+//}
+
+void g(int x, int y = 10, int z = 20) { }
+
+// missing parameter
+g();
+
+// more params than needed
+g(1, 12, 12, 12);
+
+// use of undeclared function
+v(1, 2, 3);
+
+// invalid floating point operations
+float y = 1.0 % 4;
+y = 1.0 & 0.4;
+y = 1.0 | 0.4;
+y = 1.0 ^ 0.4;
+y = 1.0 << 0.4;
+y = 1.0 >> 0.4;
+
+// variable redefinition
+int x;
+
+// use of uninitialized variable
+print(oooo);
+
+// invalid reassignment of const variable
+const int x = 5;
+x = 10;
+
+// invalid assignment with void
+void voidFunction() {}
+x = voidFunction();

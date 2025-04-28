@@ -10,8 +10,6 @@ enum OperationType {
     QUAD_FUNCTION_RETURN, QUAD_FUNCTION_CALL
 };
 
-
-
 inline std::string opToString(OperationType op) { 
     switch (op) {
         case OP_ADD: return "ADD"; 
@@ -27,6 +25,9 @@ inline std::string opToString(OperationType op) {
         case OP_GT: return "GT"; 
         case OP_GE: return "GTE";
         case OP_AND: return "AND"; 
+        case OP_BW_AND: return "BW_AND";
+        case OP_BW_OR: return "BW_OR";
+        case OP_BW_NOT: return "BW_NOT";
         case OP_OR: return "OR"; 
         case OP_NOT: return "NOT"; 
         case OP_XOR: return "XOR"; 

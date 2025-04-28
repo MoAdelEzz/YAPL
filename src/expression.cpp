@@ -5,41 +5,7 @@
 // ====================================== Expression ======================================
 // =========================================================================================
 
-Expression::Expression(Expression *l, Expression *r, OperationType op) : left(l), right(r), op(op) {
-    
-    bool leftHasIdentifier  =   left != nullptr && !left->canBeEvaluated;
-    bool rightHasIdentifier =  right != nullptr && !right->canBeEvaluated;
-
-    if (!leftHasIdentifier && !rightHasIdentifier) {
-        if (left != nullptr && right != nullptr) {
-            nodeValue = calculateNodeValue(left, right, nullptr);
-        } else if (left) {
-            if (op == OP_SQRT) {
-                float res = sqrt((float)nodeValue);
-                nodeValue.init(std::to_string(res).c_str(), DataType::Float());
-            } else if (op == OP_UMINUS) {
-                OperandType type = left->getType();
-                if (type == TINT || type == TFLOAT || type == TCHAR || type == TBOOLEAN) {
-                    int val = -1 * (int)left->getValue();
-                    nodeValue.init(std::to_string(val).c_str(), DataType::Int());
-                } else {
-                    float val = -1 * (float)left->getValue();
-                    nodeValue.init(std::to_string(val).c_str(), DataType::Float());
-                }
-            } else {
-                nodeValue = left->getValue(nullptr);
-            }
-        } else if (right) {
-            nodeValue = right->getValue(nullptr);
-        }
-        
-        bool same = left == right;
-        if (left != nullptr) delete left, left = nullptr;
-        if (!same && right != nullptr) delete right, right = nullptr;
-    } else {
-        canBeEvaluated = false;
-    }
-}
+Expression::Expression(Expression *l, Expression *r, OperationType op) : left(l), right(r), op(op) {}
 
 Expression::Expression(const char* value, DataType* type) { 
     if (type->type == TCHAR) {
@@ -50,8 +16,9 @@ Expression::Expression(const char* value, DataType* type) {
 }
 
 Expression::~Expression() {
+    bool same = left == right;
     if (left != nullptr) delete left, left = nullptr;
-    if (right != nullptr) delete right, right = nullptr;
+    if (!same && right != nullptr) delete right, right = nullptr;
 }
 
 OperandType Expression::getType() { return nodeValue.dataType->type; }
