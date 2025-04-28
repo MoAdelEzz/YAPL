@@ -1,14 +1,3 @@
 DECLARE,int,,x
-ADD,4,10,t1
-MUL,11,12,t2
-SUB,t1,t2,t3
-=,t3,,x
-DECLARE,int,,y
-=,x,,y
-DECLARE,int,,a
-=,1,,a
-DECLARE,int,,b
-ADD,a,6,t4
-MUL,t4,12,t5
-=,t5,,b
+=,205,,x
 PRINT,x,,

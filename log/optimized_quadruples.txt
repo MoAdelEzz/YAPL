@@ -1,1 +1,3 @@
-PRINT               x                                            
+DECLARE,int,,x
+=,205,,x
+PRINT,x,,

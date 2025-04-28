@@ -1,5 +1,2 @@
 Name,Node Type,Type,Line,Scope,IsConst,IsInitialized,IsUsed
 x,Variable,int,1,1,No,Yes,Yes
-y,Variable,int,2,1,No,Yes,No
-a,Variable,int,3,1,No,Yes,Yes
-b,Variable,int,4,1,No,Yes,No

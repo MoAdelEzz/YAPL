@@ -11,6 +11,7 @@ class Expression {
 
         Operand nodeValue;
         std::string quadContainer;
+        bool canBeEvaluated = true;
     public:
         Expression(Expression *l, Expression *r, OperationType op);
 

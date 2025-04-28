@@ -5,7 +5,26 @@
 // ====================================== Expression ======================================
 // =========================================================================================
 
-Expression::Expression(Expression *l, Expression *r, OperationType op) : left(l), right(r), op(op) {}
+Expression::Expression(Expression *l, Expression *r, OperationType op) : left(l), right(r), op(op) {
+
+    bool leftHasIdentifier  =   left != nullptr && !left->canBeEvaluated;
+    bool rightHasIdentifier =  right != nullptr && !right->canBeEvaluated;
+
+    if (!leftHasIdentifier && !rightHasIdentifier) {
+        if (left != nullptr && right != nullptr) {
+            nodeValue = calculateNodeValue(left, right, nullptr);
+        } else if (left) {
+            nodeValue = left->getValue(nullptr);
+        } else if (right) {
+            nodeValue = right->getValue(nullptr);
+        }
+        
+        if (left != nullptr) delete left, left = nullptr;
+        if (right != nullptr) delete right, right = nullptr;
+    } else {
+        canBeEvaluated = false;
+    }
+}
 
 Expression::Expression(const char* value, DataType* type) { 
     if (type->type == TCHAR) {
@@ -268,7 +287,9 @@ std::ostream& operator<<(std::ostream& os, const StringContainer& node) {
 // =========================================================================================
 
 IdentifierContainer::IdentifierContainer(std::string varName, OperationType op) 
-: Expression(nullptr, DataType::Undefined()), varName(varName), op(op)  {}
+: Expression(nullptr, DataType::Undefined()), varName(varName), op(op)  {
+    canBeEvaluated = false;
+}
 
 
 std::string IdentifierContainer::generateQuadruples(Scope* scope) {
