@@ -63,11 +63,11 @@ class SwitchBody {
 
 
 class SwitchNode : public ProgramNode {
-    IdentifierContainer* identifier = nullptr;
+    Expression* identifier = nullptr;
     SwitchBody* body = nullptr;
 
     public:
-        SwitchNode( int line, std::string id, SwitchBody* body );
+        SwitchNode( int line, Expression* id, SwitchBody* body );
         ~SwitchNode();
 
         std::string nodeName() override;

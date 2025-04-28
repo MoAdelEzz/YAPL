@@ -1,0 +1,37 @@
+char x = 'a', y = '1';
+
+print("x = " + x + ", y = " + y);
+print("");
+
+print("Mathematical Operations");
+print( "x + y = "    +  (x + y)     );
+print( "x - y = "    +  (x - y)     );
+print( "x * y = "    +  (x * y)     );
+print( "x / y = "    +  (x / y)     );
+//print( "x % y = "    +  (x % y)     );
+print( "x ** y = "   +  pow(x, 0.5)   );
+print( "sqrt(x) = "  +  sqrt(x)     );
+print( "-x = "       +  (-x)        );
+print( "-y = "       +  (-y)        );
+print("");
+
+
+print("Increments");
+int w = x;
+print("w++ = " + w++ + ", w = " + w);
+print("++w = " + ++w + ", w = " + w);
+
+print("--w = " + --w + ", w = " + w);
+print("w-- = " + w-- + ", w = " + w);
+print("");
+
+//print("Bitwise Operations");
+
+//print( "x & y = "    +  (x & y)     );
+//print( "x | y = "    +  (x | y)     );
+//print( "x ^ y = "    +  (x ^ y)     );
+//print( "x << y = "   +  (x << y)    );
+//print( "x >> y = "   +  (x >> y)    );
+//print( "~x = "       +  (~x)        );
+//print( "~y = "       +  (~y)        );
+//print("");

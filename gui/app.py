@@ -381,8 +381,7 @@ class LanguageGUI(QMainWindow):
         text_edit.moveCursor(QTextCursor.Start)
 
     def run_code(self):
-        
-        
+        self.editor.error_messages = {}
         self.editor.extra_selections = []
         self.unused_variables = []
         self.editor.setExtraSelections([])

@@ -1,0 +1,52 @@
+const int int1 = 10;
+int int2 = 0;
+int int3 = 'b';
+const int int4 = 11.5;
+int int5 = true;
+
+print("integers evaluations");
+print( int1 + "  " + int2 + "  " + int3 + " " + int4 + " " + int5 );
+print("");
+
+float f1 = 10;
+const float f2 = 0.5;
+float f3 = .8;
+float f4 = 10.;
+float f5 = 'a';
+const float f6 = false;
+
+print("floats evaluations");
+print( "" +  f1 + " " + f2 + " " + f3 + " " + f4 + " " + f5 + " " + f6 );
+print("");
+
+const char c1 = 97;
+const char c2 = 98.2;
+char c3 = 'a';
+char c4 = c1 + true;
+
+print("chars evaluations");
+print( c1 + " " + c2 + " " + c3 + " " + c4 );
+print("");
+
+
+bool b1 = 1;
+bool b2 = 12.90;
+const bool b3 = 0;
+bool b4 = true;
+bool b5 = false;
+ const bool b6 = 'a';
+
+print("boolean evaluations");
+print( b1 + " " + b2 + " " + b3 + " " + b4 + " " + b5 + " " + b6  );
+print("");
+
+
+string s1 = "hello there";
+const string s2 = 1;
+string s3 = 13.9;
+string s4 = true;
+const string s5 = 'a';
+
+print("strings evaluations");
+print( s1 + " " + s2 + " " + s3 + " " + s4 + " " + s5  );
+print("");

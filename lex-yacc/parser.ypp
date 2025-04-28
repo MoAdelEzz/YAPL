@@ -54,7 +54,7 @@
 }
 
 %token <data> IF ELSE FOR WHILE DO SWITCH CASE DEFAULT CONTINUE BREAK RETURN PRINT DATA_TYPE
-%token <data>  IDENTIFIER INTEGER BOOLEAN FLOAT CONST 
+%token <data> IDENTIFIER INTEGER BOOLEAN FLOAT CONST 
 %token <data> STRING POW SQRT SHL SHR AND OR GTE LTE LT GT ISEQUAL NOTEQUAL 
 %token <data> CHARACTER INCREMENT DECREMENT PLUS_EQUAL MINUS_EQUAL DIV_EQUAL MOD_EQUAL AND_EQUAL OR_EQUAL 
 %token <data> XOR_EQUAL MUL_EQUAL SCOPE_BEGIN SCOPE_END
@@ -63,8 +63,9 @@
 %type <Node>   IFSentence VariableAssignment VariableDeclaration SwitchSentence
 %type <Node>   PrintSentence Scope Sentence Sentences ReturnSentence ForPostSentence LoopScope IfExtension
 
-%type <Exp>  Operand MathOperand MathOperation Operation FunctionParamOperand ForCondition
-%type <Exp>  StringOperation StringOperand FunctionCall
+%type <Exp>  MathOperand Operation FunctionParamOperand ForCondition
+%type <Exp>  MathOperation L0MathOperations L1MathOperations L2MathOperations L3MathOperations L4MathOperations L5MathOperations
+%type <Exp>  StringOperation L0StringOperation L1StringOperation StringOperand FunctionCall
 
 %type <FP>  FunctionParams FunctionDefaulValueParams
 %type <FCP> FunctionCallParams
@@ -79,8 +80,8 @@
 %left ISEQUAL NOTEQUAL
 %left LT GT LTE GTE
 %left SHL SHR
-%left '+' '-'
 %left '*' '/' '%'
+%left '+' '-'
 %left '(' ')'
 %left '[' ']'
 %right '!' OR AND
@@ -203,8 +204,8 @@ VariableAssignment:
 
 
 SwitchSentence:  
-      SWITCH '(' IDENTIFIER ')' SCOPE_BEGIN SwitchBody SCOPE_END { $$ = new SwitchNode($1.line, $3.str, $6); }
-    | SWITCH '(' IDENTIFIER ')' SCOPE_BEGIN SCOPE_END            { $$ = new SwitchNode($1.line, $3.str, nullptr); }
+      SWITCH '(' Operation ')' SCOPE_BEGIN SwitchBody SCOPE_END { $$ = new SwitchNode($1.line, $3, $6); }
+    | SWITCH '(' Operation ')' SCOPE_BEGIN SCOPE_END            { $$ = new SwitchNode($1.line, $3, nullptr); }
 
 SwitchBody:
       Case Sentences                { 
@@ -215,7 +216,7 @@ SwitchBody:
     }
 
 Case: 
-      CASE Operand ':'              { $$ = new CaseNode($1.line, $2); }
+      CASE Operation ':'            { $$ = new CaseNode($1.line, $2); }
     | DEFAULT ':'                   { $$ = new CaseNode($1.line);};
 
 ReturnSentence:
@@ -267,7 +268,7 @@ FunctionDefinition:
 
 FunctionParams: 
       Type IDENTIFIER ',' FunctionParams                                      { $$ = $4->addParameter(nullptr, $1, $2.str);}
-    | Type IDENTIFIER ',' FunctionDefaulValueParams                           { $$ = $4->addParameter(nullptr, $1, $2.str);}
+    | FunctionDefaulValueParams                                               { $$ = $1;}
     | Type IDENTIFIER                                                         { $$ = new FunctionParametersNode(nullptr, $1, $2.str);}
     |                                                                         { $$ = nullptr; }
 
@@ -297,62 +298,76 @@ FunctionCallParams:
     |   Operation                                   { $$ = new FunctionCallParametersNode($1); }
 
 MathOperation:
-        MathOperation '+' MathOperation             { $$ = new Expression($1, $3, OP_ADD); }
-    |   MathOperation '-' MathOperation             { $$ = new Expression($1, $3, OP_SUB); }  
-    |   '-' MathOperation                           { $$ = new Expression($2, $2, OP_UMINUS); }
-    |   MathOperation '*' MathOperation             { $$ = new Expression($1, $3, OP_MUL); } 
-    |   MathOperation '/' MathOperation             { $$ = new Expression($1, $3, OP_DIV); }    
-    |   MathOperation '%' MathOperation             { $$ = new Expression($1, $3, OP_MOD); }    
-    |   MathOperation SHL MathOperation             { $$ = new Expression($1, $3, OP_SHL); } 
-    |   MathOperation SHR MathOperation             { $$ = new Expression($1, $3, OP_SHR); } 
-    
-    |   MathOperation '|' MathOperation             { $$ = new Expression($1, $3, OP_BW_OR);}
-    |   MathOperation '&' MathOperation             { $$ = new Expression($1, $3, OP_BW_AND);}
-    |   MathOperation '^' MathOperation             { $$ = new Expression($1, $3, OP_XOR); }
-    |   '~' MathOperation                           { $$ = new Expression($2, $2, OP_BW_NOT); }
+        L0MathOperations
+    |   L0MathOperations AND MathOperation       { $$ = new Expression($1, $3, OP_AND); }  
+    |   L0MathOperations OR  MathOperation       { $$ = new Expression($1, $3, OP_OR);  }   
 
-    |   MathOperation AND MathOperation             { $$ = new Expression($1, $3, OP_AND); }  
-    |   MathOperation OR  MathOperation             { $$ = new Expression($1, $3, OP_OR);  }     
-    |   '!' MathOperation                           { $$ = new Expression($2, $2, OP_NOT); }    
-    |   MathOperation GTE      MathOperation        { $$ = new Expression($1, $3, OP_GE);  } 
-    |   MathOperation GT       MathOperation        { $$ = new Expression($1, $3, OP_GT);  } 
-    |   MathOperation LTE      MathOperation        { $$ = new Expression($1, $3, OP_LE);  } 
-    |   MathOperation LT       MathOperation        { $$ = new Expression($1, $3, OP_LT);  } 
-    |   MathOperation ISEQUAL  MathOperation        { $$ = new Expression($1, $3, OP_EQ);  } 
-    |   MathOperation NOTEQUAL MathOperation        { $$ = new Expression($1, $3, OP_NEQ); }    
+L0MathOperations:
+        L1MathOperations
+    |   L1MathOperations GTE      L0MathOperations        { $$ = new Expression($1, $3, OP_GE);  } 
+    |   '-' L1MathOperations                              { $$ = new Expression($2, $2, OP_UMINUS);  } 
+    |   L1MathOperations GT       L0MathOperations        { $$ = new Expression($1, $3, OP_GT);  } 
+    |   L1MathOperations LTE      L0MathOperations        { $$ = new Expression($1, $3, OP_LE);  } 
+    |   L1MathOperations LT       L0MathOperations        { $$ = new Expression($1, $3, OP_LT);  } 
+    |   L1MathOperations ISEQUAL  L0MathOperations        { $$ = new Expression($1, $3, OP_EQ);  } 
+    |   L1MathOperations NOTEQUAL L0MathOperations        { $$ = new Expression($1, $3, OP_NEQ); }  
+    |   '!' L1MathOperations                        { $$ = new Expression($2, $2, OP_NOT); }
 
-    |   '(' MathOperation ')' MathOperation         { $$ = new Expression($2, $4, OP_MUL); } 
-    |   '(' MathOperation ')'                       {               $$ = $2;               }
-    |   POW '(' MathOperation ',' MathOperation ')' { $$ = new Expression($3, $5, OP_POW); }
-    |   SQRT '(' MathOperation ')'                  { $$ = new Expression($3, $3, OP_SQRT);}
-    
+L1MathOperations:
+        L2MathOperations '+' L1MathOperations             { $$ = new Expression($1, $3, OP_ADD); }
+    |   L2MathOperations '-' L1MathOperations             { $$ = new Expression($1, $3, OP_SUB); }  
+    |   L2MathOperations '|' L1MathOperations             { $$ = new Expression($1, $3, OP_BW_OR);}
+    |   L2MathOperations '&' L1MathOperations             { $$ = new Expression($1, $3, OP_BW_AND);}
+    |   L2MathOperations
+
+L2MathOperations:
+        L3MathOperations '*' L2MathOperations             { $$ = new Expression($1, $3, OP_MUL); } 
+    |   L3MathOperations '/' L2MathOperations             { $$ = new Expression($1, $3, OP_DIV); }    
+    |   L3MathOperations '%' L2MathOperations             { $$ = new Expression($1, $3, OP_MOD); }   
+    |   L3MathOperations '^' L2MathOperations             { $$ = new Expression($1, $3, OP_XOR); }
+    |   L3MathOperations
+
+L3MathOperations:
+        '(' L0MathOperations ')'                          { $$ = $2; }
+    |   POW '(' L0MathOperations ',' L0MathOperations ')' { $$ = new Expression($3, $5, OP_POW); }
+    |   SQRT '(' L0MathOperations ')'                     { $$ = new Expression($3, $3, OP_SQRT);}
+    |   L4MathOperations
+
+L4MathOperations:
+        L5MathOperations SHL L4MathOperations             { $$ = new Expression($1, $3, OP_SHL); } 
+    |   L5MathOperations SHR L4MathOperations             { $$ = new Expression($1, $3, OP_SHR); } 
+    |   L5MathOperations
+
+L5MathOperations:
+        '~' MathOperand                             { $$ = new Expression($2, $2, OP_BW_NOT); }
     |   IDENTIFIER INCREMENT                        { $$ = new IdentifierContainer($1.str, OP_POST_ADD); }
     |   INCREMENT IDENTIFIER                        { $$ = new IdentifierContainer($2.str, OP_PRE_ADD); }
     |   DECREMENT IDENTIFIER                        { $$ = new IdentifierContainer($2.str, OP_PRE_SUB); }
-    |   IDENTIFIER DECREMENT                        { $$ = new IdentifierContainer($1.str, OP_POST_SUB); }
-    
+    |   IDENTIFIER DECREMENT                        { $$ = new IdentifierContainer($1.str, OP_POST_SUB); }    
     |   MathOperand                    
-    |   FunctionCall                                
-
+    |   FunctionCall    
+            
 StringOperation:
-        StringOperation '+' StringOperation         { $$ =  new StringContainer($1, $3, OP_ADD); } 
-    |   StringOperation '+' MathOperation           { $$ =  new StringContainer($1, $3, OP_ADD); } 
-    |   StringOperation '-' MathOperation           { $$ =  new StringContainer($1, $3, OP_SUB); }    
-    |   MathOperation   '+' StringOperation         { $$ =  new StringContainer($1, $3, OP_ADD); } 
-    |   '(' StringOperation ')'                     { $$ =  $2; } 
-    |   StringOperation SHL StringOperation         { $$ =  new StringContainer($1, $3, OP_SHL); } 
-    |   StringOperation SHR StringOperation         { $$ =  new StringContainer($1, $3, OP_SHR); } 
+        L0StringOperation GTE      StringOperation    { $$ = new StringContainer($1, $3, OP_GE);   }
+    |   L0StringOperation GT       StringOperation    { $$ = new StringContainer($1, $3, OP_GT);   }
+    |   L0StringOperation LTE      StringOperation    { $$ = new StringContainer($1, $3, OP_LE);   }
+    |   L0StringOperation LT       StringOperation    { $$ = new StringContainer($1, $3, OP_LT);   }
+    |   L0StringOperation ISEQUAL  StringOperation    { $$ = new StringContainer($1, $3, OP_EQ);   }
+    |   L0StringOperation NOTEQUAL StringOperation    { $$ = new StringContainer($1, $3, OP_NEQ);  }
+    |   L0StringOperation   
 
-    |   StringOperation GTE      StringOperation    { $$ = new StringContainer($1, $3, OP_GE);   }
-    |   StringOperation GT       StringOperation    { $$ = new StringContainer($1, $3, OP_GT);   }
-    |   StringOperation LTE      StringOperation    { $$ = new StringContainer($1, $3, OP_LE);   }
-    |   StringOperation LT       StringOperation    { $$ = new StringContainer($1, $3, OP_LT);   }
-    |   StringOperation ISEQUAL  StringOperation    { $$ = new StringContainer($1, $3, OP_EQ);   }
-    |   StringOperation NOTEQUAL StringOperation    { $$ = new StringContainer($1, $3, OP_NEQ);  }
+L0StringOperation:
+        L0StringOperation '+' L1StringOperation     { $$ =  new StringContainer($1, $3, OP_ADD); } 
+    |   L1StringOperation '-' L0StringOperation     { $$ =  new StringContainer($1, $3, OP_SUB); }    
+    |   L0StringOperation '+' L2MathOperations      { $$ =  new StringContainer($1, $3, OP_ADD); }    
+    |   L2MathOperations  '+' L0StringOperation     { $$ =  new StringContainer($1, $3, OP_ADD); }    
+    |   L1StringOperation SHL L0StringOperation     { $$ =  new StringContainer($1, $3, OP_SHL); } 
+    |   L1StringOperation SHR L0StringOperation     { $$ =  new StringContainer($1, $3, OP_SHR); } 
+    |   L1StringOperation
 
-    |   StringOperand   
-
-Operand: MathOperand | StringOperand;
+L1StringOperation:
+        '(' StringOperation ')'                     { $$ =  $2; } 
+    |   StringOperand  
 
 FunctionParamOperand:
           INTEGER       { $$ = new Expression($1.str, DataType::Int());}

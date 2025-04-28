@@ -1,2 +1,0 @@
-Name,Node Type,Type,Line,Scope,IsConst,IsInitialized,IsUsed
-x,Variable,int,1,1,No,Yes,Yes

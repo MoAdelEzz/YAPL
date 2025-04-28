@@ -1,7 +1,3 @@
-DECLARE,int,,y
-=,23,,y
 DECLARE,int,,x
-ADD,y,200,t1
-SUB,t1,5,t2
-=,t2,,x
+ASSIGN,0,,x
 PRINT,x,,

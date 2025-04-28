@@ -25,6 +25,7 @@ ForNode::ForNode( int line, ProgramNode* preLoop, AssignNode* assignment, Progra
     this->assignment = assignment; 
     this->postLoop = postLoop; 
     this->body = body; 
+    this->inverted = false;
     this->logLineInfo();
 }
 
@@ -186,6 +187,7 @@ WhileNode::WhileNode( int line, Expression* condition, ScopeNode* body, bool inv
 WhileNode::WhileNode( int line, AssignNode* assignment, ScopeNode* body ) : ProgramNode(line) {
     this->assignment = assignment; 
     this->body = body; 
+    this->inverted = false;
     this->logLineInfo();
 }
 
@@ -200,10 +202,10 @@ bool WhileNode::getLoopCondition(Scope* whileScope) {
     if (condition == nullptr && assignment == nullptr) {
         return true;
     } else if (condition) {
-        return condition->getValue(whileScope) != inverted;
+        return condition->getValue(whileScope) != (bool)inverted;
     } else {
         assignment->run(whileScope);
-        return assignment->getValue() != inverted;
+        return assignment->getValue() != (bool)inverted;
     } 
 }
 
@@ -315,6 +317,7 @@ DoWhileNode::DoWhileNode( int line, Expression* condition, ScopeNode* body, bool
 DoWhileNode::DoWhileNode(int line, AssignNode* assignment, ScopeNode* body ) : ProgramNode(line) {
     this->assignment = assignment; 
     this->body = body; 
+    this->inverted = false;
     this->logLineInfo();
 }
 
@@ -330,10 +333,10 @@ bool DoWhileNode::getLoopCondition(Scope* whileScope) {
     if (condition == nullptr && assignment == nullptr) {
         return true;
     } else if (condition) {
-        return condition->getValue(whileScope) != inverted;
+        return condition->getValue(whileScope) != (bool)inverted;
     } else {
         assignment->run(whileScope);
-        return assignment->getValue() != inverted;
+        return assignment->getValue() != (bool)inverted;
     }
 }
 

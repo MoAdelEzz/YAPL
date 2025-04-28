@@ -1,5 +1,6 @@
 #include "branching.hpp"
 #include "enums.hpp"
+#include "expression.hpp"
 #include "organizer.hpp"
 #include <vector>
 
@@ -117,9 +118,9 @@ void IfNode::generateQuadruples(Scope* scope) {
 
 std::string SwitchNode::nodeName() { return "SwitchNode"; }
 
-SwitchNode::SwitchNode( int line, std::string id, SwitchBody* body ) : ProgramNode(line) { 
+SwitchNode::SwitchNode( int line, Expression* id, SwitchBody* body ) : ProgramNode(line) { 
     this->body = body;
-    this->identifier = new IdentifierContainer(id);
+    this->identifier = id;
     this->logLineInfo();
 }
 
@@ -165,7 +166,15 @@ void SwitchNode::generateQuadruples(Scope* scope) {
         int breakLabel = quadruplesLabel++;
         breakJumpTo.push_back(quadruplesLabel++);
 
-        body->generateCaseLabels(identifier->getIdentifier());
+        IdentifierContainer* idContainer = dynamic_cast<IdentifierContainer*>(identifier);
+        std::string name;
+        if (idContainer) {
+            name = idContainer->getIdentifier();
+        } else {
+            name = identifier->generateQuadruples(scope);
+        }
+
+        body->generateCaseLabels(name);
 
         const std::vector<CaseNode*>& cases = body->getCases();
         for (int i = 0; i < cases.size(); i++) {
