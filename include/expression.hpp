@@ -5,8 +5,8 @@
 
 class Expression {
     protected:
-        Expression *left;
-        Expression *right;
+        Expression *left = nullptr;
+        Expression *right = nullptr;
         OperationType op;
 
         Operand nodeValue;

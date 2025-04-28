@@ -7,10 +7,10 @@
 #include <string>
 
 class IfNode : public ProgramNode {
-    Expression* condition;
-    AssignNode* assignment;
-    ProgramNode* accept;
-    ProgramNode* reject;
+    Expression* condition = nullptr;
+    AssignNode* assignment = nullptr;
+    ProgramNode* accept = nullptr;
+    ProgramNode* reject = nullptr;
     bool inverted;
 
     public:
@@ -27,8 +27,8 @@ class IfNode : public ProgramNode {
 };
 
 class CaseNode : public ProgramNode {
-    Expression* condition;
-    ScopeNode* body;
+    Expression* condition = nullptr;
+    ScopeNode* body = nullptr;
     public:
         bool isMatched = false;
         int skipConditionLabel = 0;
@@ -63,8 +63,8 @@ class SwitchBody {
 
 
 class SwitchNode : public ProgramNode {
-    IdentifierContainer* identifier;
-    SwitchBody* body;
+    IdentifierContainer* identifier = nullptr;
+    SwitchBody* body = nullptr;
 
     public:
         SwitchNode( int line, std::string id, SwitchBody* body );

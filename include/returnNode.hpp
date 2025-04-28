@@ -6,7 +6,7 @@
 #include "program.hpp"
 
 class ReturnNode : public ProgramNode {
-    Expression* value;
+    Expression* value = nullptr;
   public:
     std::string nodeName() {
         return "ReturnNode";

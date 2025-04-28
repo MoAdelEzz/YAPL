@@ -1,6 +1,6 @@
-#line 2 "src/lex.yy.cc"
+#line 1 "src/lex.yy.cc"
 
-#line 4 "src/lex.yy.cc"
+#line 3 "src/lex.yy.cc"
 
 #define  YY_INT_ALIGNED short int
 
@@ -560,8 +560,8 @@ char *yytext;
     #include "parser.tab.hpp"
 
     extern int lineNumber;
+#line 563 "src/lex.yy.cc"
 #line 564 "src/lex.yy.cc"
-#line 565 "src/lex.yy.cc"
 
 #define INITIAL 0
 
@@ -780,7 +780,7 @@ YY_DECL
 	{
 #line 24 "lex-yacc/lexer.l"
 
-#line 784 "src/lex.yy.cc"
+#line 783 "src/lex.yy.cc"
 
 	while ( /*CONSTCOND*/1 )		/* loops until end-of-file is reached */
 		{
@@ -1077,14 +1077,16 @@ YY_RULE_SETUP
 {
     // std::cout << "Character " << yytext << std::endl;
     yylval.data.line = lineNumber;
-    yylval.data.str = strndup(yytext + 1, yyleng - 2);
+    char* c = new char;
+    *c = yytext[1];
+    yylval.data.str = c;
     return CHARACTER;
 }
 	YY_BREAK
 case 44:
 /* rule 44 can match eol */
 YY_RULE_SETUP
-#line 108 "lex-yacc/lexer.l"
+#line 110 "lex-yacc/lexer.l"
 {
     yylval.data.line = lineNumber;
     yylval.data.str = strdup(yytext + 1);
@@ -1094,7 +1096,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 45:
 YY_RULE_SETUP
-#line 115 "lex-yacc/lexer.l"
+#line 117 "lex-yacc/lexer.l"
 {
     return yytext[0];
 }
@@ -1102,27 +1104,27 @@ YY_RULE_SETUP
 case 46:
 /* rule 46 can match eol */
 YY_RULE_SETUP
-#line 119 "lex-yacc/lexer.l"
+#line 121 "lex-yacc/lexer.l"
 { lineNumber++; }
 	YY_BREAK
 case 47:
 /* rule 47 can match eol */
 YY_RULE_SETUP
-#line 121 "lex-yacc/lexer.l"
+#line 123 "lex-yacc/lexer.l"
 { lineNumber++; }
 	YY_BREAK
 case 48:
 /* rule 48 can match eol */
 YY_RULE_SETUP
-#line 123 "lex-yacc/lexer.l"
+#line 125 "lex-yacc/lexer.l"
 ;
 	YY_BREAK
 case 49:
 YY_RULE_SETUP
-#line 126 "lex-yacc/lexer.l"
+#line 128 "lex-yacc/lexer.l"
 ECHO;
 	YY_BREAK
-#line 1126 "src/lex.yy.cc"
+#line 1127 "src/lex.yy.cc"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -2127,5 +2129,5 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 126 "lex-yacc/lexer.l"
+#line 128 "lex-yacc/lexer.l"
 

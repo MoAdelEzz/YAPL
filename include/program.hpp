@@ -35,32 +35,16 @@ class ProgramNode {
         }
 
         virtual void generateQuadruples(Scope* scope) {
-            ProgramNode* it = next;
-            while (it) {
-                it->generateQuadruples(scope);
-                it = it->getNext();
-            }
+            
         }
 
+
         virtual void runSemanticChecker(Scope* scope = nullptr) {
-            ProgramNode* it = next;
-            while (it) {
-                it->runSemanticChecker(scope);
-                it = it->getNext();
-            }
+            
         }
 
         virtual void run(Scope* scope = nullptr) {
-            ProgramNode* it = next;
-            while (it) {
-                try {
-                    it->run(scope);
-                } catch (ErrorDetail error) {
-                    error.setLine(this->line);
-                    CompilerOrganizer::addError(error);
-                }
-                it = it->getNext();
-            }
+            
         }
 
         virtual std::string nodeName() {
@@ -72,7 +56,7 @@ class ProgramNode {
 
 
 class PrintNode : public ProgramNode {
-    Expression* body;
+    Expression* body = nullptr;
     public:
         std::string nodeName() override {
             return "PrintNode";
@@ -90,14 +74,17 @@ class PrintNode : public ProgramNode {
 
         virtual void runSemanticChecker(Scope* scope = nullptr) override {
             OperandType type = TUNDEFINED;
+            bool errornous = false;
+
             try {
                 type = body->getExpectedType(scope);
             } catch (ErrorDetail error) {
                 error.setLine(this->line);
                 CompilerOrganizer::addError(error);
+                errornous = true;
             }
 
-            if (type >= TVOID) {
+            if (!errornous && type >= TVOID) {
                 ErrorDetail error(Severity::ERROR, "Invalid Expression Inside Print");
                 error.setLine(this->line);
                 CompilerOrganizer::addError(error);

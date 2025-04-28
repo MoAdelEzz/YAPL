@@ -6,10 +6,10 @@
 #include <string>
 
 class FunctionDefintionNode : public ProgramNode {
-    DataType* returnType;
+    DataType* returnType = nullptr;
     std::string name;
-    FunctionParametersNode* parameters;
-    ScopeNode* body;
+    FunctionParametersNode* parameters = nullptr;
+    ScopeNode* body = nullptr;
     
     public:
         FunctionDefintionNode( int line, DataType* returnType, std::string name, FunctionParametersNode* params, ScopeNode* body);
@@ -26,7 +26,7 @@ class FunctionDefintionNode : public ProgramNode {
 class FunctionCallNode : public Expression {
     int line;
     std::string name;
-    FunctionCallParametersNode* arguments;
+    FunctionCallParametersNode* arguments = nullptr;
     
     public:
         FunctionCallNode(int line, std::string name, FunctionCallParametersNode* arguments);

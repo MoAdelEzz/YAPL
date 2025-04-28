@@ -63,7 +63,7 @@
 %type <Node>   IFSentence VariableAssignment VariableDeclaration SwitchSentence
 %type <Node>   PrintSentence Scope Sentence Sentences ReturnSentence ForPostSentence LoopScope IfExtension
 
-%type <Exp>  Operand MathOperand MathOperation Operation Condition FunctionParamOperand ForCondition
+%type <Exp>  Operand MathOperand MathOperation Operation FunctionParamOperand ForCondition
 %type <Exp>  StringOperation StringOperand FunctionCall
 
 %type <FP>  FunctionParams FunctionDefaulValueParams
@@ -202,7 +202,6 @@ VariableAssignment:
     }
 
 
-
 SwitchSentence:  
       SWITCH '(' IDENTIFIER ')' SCOPE_BEGIN SwitchBody SCOPE_END { $$ = new SwitchNode($1.line, $3.str, $6); }
     | SWITCH '(' IDENTIFIER ')' SCOPE_BEGIN SCOPE_END            { $$ = new SwitchNode($1.line, $3.str, nullptr); }
@@ -227,13 +226,9 @@ PrintSentence:
     PRINT '(' Operation ')' ';'     { $$ = new PrintNode($1.line, $3);  }
 
 IFSentence:
-       IF '(' Condition          ')' IfExtension                    { $$ = new IfNode($1.line, $3, $5);   }
-    |  IF '(' VariableAssignment ')' IfExtension                    { $$ = new IfNode($1.line, dynamic_cast<AssignNode*>($3), $5);   }
-    |  IF '(' '!' Operation ')'      IfExtension                    { $$ = new IfNode($1.line, $4, $6, true);   }
+       IF '(' VariableAssignment ')' IfExtension                    { $$ = new IfNode($1.line, dynamic_cast<AssignNode*>($3), $5);   }
 
-    |  IF '(' Condition          ')' IfExtension ELSE IfExtension         { $$ = new IfNode($1.line, $3, $5); dynamic_cast<IfNode*>($$)->setElse($7);   }
-    |  IF '(' VariableAssignment ')' IfExtension ELSE IfExtension         { $$ = new IfNode($1.line, dynamic_cast<AssignNode*>($3), $5); dynamic_cast<IfNode*>($$)->setElse($7);   }
-    |  IF '(' '!' Operation ')'      IfExtension ELSE IfExtension         { $$ = new IfNode($1.line, $4, $6, true); dynamic_cast<IfNode*>($$)->setElse($8);   }
+    |  IF '(' VariableAssignment ')' IfExtension ELSE IfExtension   { $$ = new IfNode($1.line, dynamic_cast<AssignNode*>($3), $5); dynamic_cast<IfNode*>($$)->setElse($7);   }
 
 
 IfExtension:
@@ -247,34 +242,20 @@ ForSentence: FOR '(' VariableDeclaration ';' ForCondition ';' ForPostSentence ')
     $$ = new ForNode($1.line, $3, $5, dynamic_cast<AssignNode*>($7), dynamic_cast<ScopeNode*>($9));
 } 
 
-ForCondition: Condition |  {$$ = nullptr;};
+ForCondition: Operation |  {$$ = nullptr;};
 
 ForPostSentence:
       VariableAssignment                         { $$ = $1;  }
     | ForPostSentence ',' VariableAssignment     { $$ = dynamic_cast<AssignNode*>($1)->setNextAssignment($3); };
     | {$$ = nullptr;};
 
-WhileSentence: WHILE '(' Condition ')' LoopScope {
-    $$ = new WhileNode($1.line, $3, dynamic_cast<ScopeNode*>($5));
-}
-
-| WHILE '(' VariableAssignment ')' LoopScope {
+WhileSentence: WHILE '(' VariableAssignment ')' LoopScope {
     $$ = new WhileNode($1.line, dynamic_cast<AssignNode*>($3), dynamic_cast<ScopeNode*>($5));
-}             
+}           
 
-| WHILE '(' '!' Operation ')' LoopScope {
-    $$ = new WhileNode($1.line, $4, dynamic_cast<ScopeNode*>($6), true);
-}         
-
-DoWhileSentence: DO LoopScope WHILE '(' Condition ')' ';' {
-    $$ = new DoWhileNode($1.line, $5, dynamic_cast<ScopeNode*>($2));
-}
-| DO LoopScope WHILE '(' VariableAssignment ')' ';' {
+DoWhileSentence: DO LoopScope WHILE '(' VariableAssignment ')' ';' {
     $$ = new DoWhileNode($1.line, dynamic_cast<AssignNode*>($5), dynamic_cast<ScopeNode*>($2));
 } 
-| DO LoopScope WHILE '(' '!' Operation ')' ';' {
-    $$ = new DoWhileNode($1.line, $6, dynamic_cast<ScopeNode*>($2), true);
-}
 
 LoopScope:
     Scope | Sentence { $$ = new ScopeNode(lineNumber, $1); }
@@ -303,33 +284,9 @@ VariableDeclaration:
     | VariableDeclaration ',' IDENTIFIER '=' Operation  { $$ = dynamic_cast<DefineNode*>($1)->setNextDefine( new DefineNode($3.line, $3.str, $5) ); }
     | {$$ = nullptr;};
 
-Condition:
-        Condition     OR       Condition              { $$ = new Expression($1, $3, OP_OR);  }
-    |   Condition     AND      Condition              { $$ = new Expression($1, $3, OP_AND); } 
-    |   '!' Condition                                 { $$ = new Expression($2, $2, OP_NOT); }
-
-    |   MathOperation GTE      MathOperation          { $$ = new Expression($1, $3, OP_GE);  } 
-    |   MathOperation GT       MathOperation          { $$ = new Expression($1, $3, OP_GT);  } 
-    |   MathOperation LTE      MathOperation          { $$ = new Expression($1, $3, OP_LE);  } 
-    |   MathOperation LT       MathOperation          { $$ = new Expression($1, $3, OP_LT);  } 
-    |   MathOperation ISEQUAL  MathOperation          { $$ = new Expression($1, $3, OP_EQ);  } 
-    |   MathOperation NOTEQUAL MathOperation          { $$ = new Expression($1, $3, OP_NEQ); } 
-
-    |   StringOperation GTE      StringOperation      { $$ = new StringContainer($1, $3, OP_GE);   }
-    |   StringOperation GT       StringOperation      { $$ = new StringContainer($1, $3, OP_GT);   }
-    |   StringOperation LTE      StringOperation      { $$ = new StringContainer($1, $3, OP_LE);   }
-    |   StringOperation LT       StringOperation      { $$ = new StringContainer($1, $3, OP_LT);   }
-    |   StringOperation ISEQUAL  StringOperation      { $$ = new StringContainer($1, $3, OP_EQ);   }
-    |   StringOperation NOTEQUAL StringOperation      { $$ = new StringContainer($1, $3, OP_NEQ);  }
-
-    |   '(' Condition ')'                             { $$ = $2; }
-
-                          
-
-
 Operation: 
-      MathOperation                                 { $$ = $1; }     
-    | StringOperation                               { $$ = $1; }   
+      MathOperation             
+    | StringOperation                              
     
 FunctionCall:
         IDENTIFIER '(' FunctionCallParams ')'       { $$ = new FunctionCallNode( $1.line, $1.str, $3 ); }
@@ -342,35 +299,57 @@ FunctionCallParams:
 MathOperation:
         MathOperation '+' MathOperation             { $$ = new Expression($1, $3, OP_ADD); }
     |   MathOperation '-' MathOperation             { $$ = new Expression($1, $3, OP_SUB); }  
+    |   '-' MathOperation                           { $$ = new Expression($2, $2, OP_UMINUS); }
     |   MathOperation '*' MathOperation             { $$ = new Expression($1, $3, OP_MUL); } 
     |   MathOperation '/' MathOperation             { $$ = new Expression($1, $3, OP_DIV); }    
-    |   MathOperation '%' MathOperation             { $$ = new Expression($1, $3, OP_MOD); }     
+    |   MathOperation '%' MathOperation             { $$ = new Expression($1, $3, OP_MOD); }    
+    |   MathOperation SHL MathOperation             { $$ = new Expression($1, $3, OP_SHL); } 
+    |   MathOperation SHR MathOperation             { $$ = new Expression($1, $3, OP_SHR); } 
+    
+    |   MathOperation '|' MathOperation             { $$ = new Expression($1, $3, OP_BW_OR);}
+    |   MathOperation '&' MathOperation             { $$ = new Expression($1, $3, OP_BW_AND);}
+    |   MathOperation '^' MathOperation             { $$ = new Expression($1, $3, OP_XOR); }
+    |   '~' MathOperation                           { $$ = new Expression($2, $2, OP_BW_NOT); }
+
+    |   MathOperation AND MathOperation             { $$ = new Expression($1, $3, OP_AND); }  
+    |   MathOperation OR  MathOperation             { $$ = new Expression($1, $3, OP_OR);  }     
+    |   '!' MathOperation                           { $$ = new Expression($2, $2, OP_NOT); }    
+    |   MathOperation GTE      MathOperation        { $$ = new Expression($1, $3, OP_GE);  } 
+    |   MathOperation GT       MathOperation        { $$ = new Expression($1, $3, OP_GT);  } 
+    |   MathOperation LTE      MathOperation        { $$ = new Expression($1, $3, OP_LE);  } 
+    |   MathOperation LT       MathOperation        { $$ = new Expression($1, $3, OP_LT);  } 
+    |   MathOperation ISEQUAL  MathOperation        { $$ = new Expression($1, $3, OP_EQ);  } 
+    |   MathOperation NOTEQUAL MathOperation        { $$ = new Expression($1, $3, OP_NEQ); }    
+
     |   '(' MathOperation ')' MathOperation         { $$ = new Expression($2, $4, OP_MUL); } 
     |   '(' MathOperation ')'                       {               $$ = $2;               }
     |   POW '(' MathOperation ',' MathOperation ')' { $$ = new Expression($3, $5, OP_POW); }
     |   SQRT '(' MathOperation ')'                  { $$ = new Expression($3, $3, OP_SQRT);}
-    |   MathOperation SHL MathOperation             { $$ = new Expression($1, $3, OP_SHL); } 
-    |   MathOperation SHR MathOperation             { $$ = new Expression($1, $3, OP_SHR); } 
-    |   MathOperation '|' MathOperation             { $$ = new Expression($1, $3, OP_BW_OR);  }
-    |   MathOperation '&' MathOperation             { $$ = new Expression($1, $3, OP_BW_AND); }
-    |   MathOperation '^' MathOperation             { $$ = new Expression($1, $3, OP_XOR); }
-    |   '~' MathOperation                           { $$ = new Expression($2, $2, OP_BW_NOT); }
+    
     |   IDENTIFIER INCREMENT                        { $$ = new IdentifierContainer($1.str, OP_POST_ADD); }
     |   INCREMENT IDENTIFIER                        { $$ = new IdentifierContainer($2.str, OP_PRE_ADD); }
     |   DECREMENT IDENTIFIER                        { $$ = new IdentifierContainer($2.str, OP_PRE_SUB); }
     |   IDENTIFIER DECREMENT                        { $$ = new IdentifierContainer($1.str, OP_POST_SUB); }
-    |   '-' MathOperation                           { $$ = new Expression($2, $2, OP_UMINUS); }
+    
     |   MathOperand                    
-    |   FunctionCall                                        
+    |   FunctionCall                                
 
 StringOperation:
-        StringOperation '+' StringOperation             { $$ =  new StringContainer($1, $3, OP_ADD); } 
-    |   StringOperation '+' MathOperation               { $$ =  new StringContainer($1, $3, OP_ADD); } 
-    |   StringOperation '-' MathOperation               { $$ =  new StringContainer($1, $3, OP_SUB); }    
-    |   MathOperation   '+' StringOperation             { $$ =  new StringContainer($1, $3, OP_ADD); } 
-    |   '(' StringOperation ')'                         { $$ =  $2; } 
-    |   StringOperation SHL StringOperation             { $$ =  new StringContainer($1, $3, OP_SHL); } 
-    |   StringOperation SHR StringOperation             { $$ =  new StringContainer($1, $3, OP_SHR); } 
+        StringOperation '+' StringOperation         { $$ =  new StringContainer($1, $3, OP_ADD); } 
+    |   StringOperation '+' MathOperation           { $$ =  new StringContainer($1, $3, OP_ADD); } 
+    |   StringOperation '-' MathOperation           { $$ =  new StringContainer($1, $3, OP_SUB); }    
+    |   MathOperation   '+' StringOperation         { $$ =  new StringContainer($1, $3, OP_ADD); } 
+    |   '(' StringOperation ')'                     { $$ =  $2; } 
+    |   StringOperation SHL StringOperation         { $$ =  new StringContainer($1, $3, OP_SHL); } 
+    |   StringOperation SHR StringOperation         { $$ =  new StringContainer($1, $3, OP_SHR); } 
+
+    |   StringOperation GTE      StringOperation    { $$ = new StringContainer($1, $3, OP_GE);   }
+    |   StringOperation GT       StringOperation    { $$ = new StringContainer($1, $3, OP_GT);   }
+    |   StringOperation LTE      StringOperation    { $$ = new StringContainer($1, $3, OP_LE);   }
+    |   StringOperation LT       StringOperation    { $$ = new StringContainer($1, $3, OP_LT);   }
+    |   StringOperation ISEQUAL  StringOperation    { $$ = new StringContainer($1, $3, OP_EQ);   }
+    |   StringOperation NOTEQUAL StringOperation    { $$ = new StringContainer($1, $3, OP_NEQ);  }
+
     |   StringOperand   
 
 Operand: MathOperand | StringOperand;

@@ -6,8 +6,8 @@
 #include "expression.hpp"
 
 class DefineNode : public ProgramNode {
-    DataType* type;
-    Expression* value;
+    DataType* type = nullptr;
+    Expression* value = nullptr;
     std::string name;
     DefineNode* nextDefine = nullptr;
 
@@ -22,7 +22,7 @@ class DefineNode : public ProgramNode {
           name(name),
           value(value),
           type(type)
-        {            
+        {           
             this->logLineInfo();
         }
 
@@ -87,7 +87,9 @@ class DefineNode : public ProgramNode {
                     CompilerOrganizer::addError(error);
                 } 
                 
-                scope->defineVariable(name, type, Operand::undefined(), true);
+                SymbolTableEntry stEntry = scope->defineVariable(name, type, Operand::undefined(), true);
+                stEntry.setLine(this->line);
+                CompilerOrganizer::addSymbolTableEntry(stEntry);
 
                 if ( !errornousRHS && value != nullptr && value->getExpectedType(scope) < TVOID) {
                     CompilerOrganizer::markSymbolAsInitialized(name);
@@ -99,7 +101,9 @@ class DefineNode : public ProgramNode {
                 CompilerOrganizer::addError(error);
             }
 
-            if (nextDefine) { nextDefine->run(scope); }
+            if (nextDefine) { 
+                nextDefine->runSemanticChecker(scope); 
+            }
         }
 
         void run(Scope* scope = nullptr) override {
@@ -117,11 +121,11 @@ class DefineNode : public ProgramNode {
 };
 
 class AssignNode: public ProgramNode {
-    Expression* value;
+    Expression* value = nullptr;
     std::string name;
     Operand nodeValue;
     std::string quadResult = "";
-    ProgramNode* nextAssign;
+    ProgramNode* nextAssign = nullptr;
     
     public:
         std::string nodeName() override { return "AssignNode"; }

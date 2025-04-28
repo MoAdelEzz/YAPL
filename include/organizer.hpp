@@ -8,6 +8,7 @@
 #include <iomanip>
 
 extern int scopeDepth;
+extern int lineNumber;
 
 enum Severity { ERROR, WARNING };
 
@@ -35,23 +36,29 @@ class ErrorDetail {
         void setSuggestion(std::string suggestion) { this->suggestion = suggestion; }
 };
 
-enum EntryType      { VARIABLE, FUNCTION, SCOPE_ENTRY, SCOPE_EXIT };
+enum EntryType      { VARIABLE, FUNCTION, SCOPE_ENTRY, SCOPE_EXIT, NONE };
 
 class SymbolTableEntry {
     std::string name;
-    EntryType entryType;
-    OperandType dataType;
+    EntryType entryType = NONE;
+    OperandType dataType = TUNDEFINED;
+    int line = -1;
     std::vector<OperandType> argumentTypes;
-    bool isConst;
-    bool isInitialized;
-    bool isUsed;
-    int  scopeLayer;
+    bool isConst = false;
+    bool isInitialized = false;
+    bool isUsed = false;
+    int  scopeLayer = -1;
 
     public:
-        SymbolTableEntry(std::string name, EntryType entryType, OperandType dataType, int scopeLayer, bool isConst = false, bool isInitialized = false, bool isUsed = false) 
-        : name(name), entryType(entryType), dataType(dataType), isConst(isConst), isInitialized(isInitialized), isUsed(isUsed), scopeLayer(scopeLayer) {}
+        SymbolTableEntry(std::string name, EntryType entryType, OperandType dataType, int scopeLayer, int line = -1, bool isConst = false, bool isInitialized = false, bool isUsed = false) 
+        : name(name), entryType(entryType), dataType(dataType), isConst(isConst), isInitialized(isInitialized), isUsed(isUsed), scopeLayer(scopeLayer) {
+            line = lineNumber;
+        }
+
+        SymbolTableEntry() {}
 
         void setName(std::string name) { this->name = name; }
+        void setLine(int lineNum) { this->line = lineNum; }
         void setEntryType(EntryType entryType) { this->entryType = entryType; }
         void setDataType(OperandType dataType) { this->dataType = dataType; }
         void setScopeLayer(int scopeLayer) { this->scopeLayer = scopeLayer; }
@@ -65,6 +72,7 @@ class SymbolTableEntry {
         std::string getName() { return name; }
         int getScopeLayer() { return scopeLayer; }
         EntryType getEntryType() { return entryType; }
+        int getLine() { return line; }
 
         static SymbolTableEntry scopeEntry() {
             return SymbolTableEntry("", SCOPE_ENTRY, TUNDEFINED, scopeDepth);
@@ -77,24 +85,20 @@ class SymbolTableEntry {
         void dump(std::ofstream& out) const {
             std::string dataType = "";
             if (entryType == FUNCTION) {
-                dataType += "(";
+                dataType += "( ";
                 for (int i = 0; i < argumentTypes.size(); i++) {
                     OperandType type = argumentTypes[i];
-                    dataType +=  Utils::typeToString(type) + (i < argumentTypes.size() - 1 ? "," : "");
+                    dataType +=  Utils::typeToString(type) + (i < argumentTypes.size() - 1 ? " - " : "");
                 }
-                dataType += ")->" + Utils::typeToString(this->dataType);
+                dataType += " ) -> " + Utils::typeToString(this->dataType);
             } else {
                 dataType = Utils::typeToString(this->dataType); 
             }
 
             if (entryType != SCOPE_ENTRY && entryType != SCOPE_EXIT) {
-                out << std::setw(20) << std::left << name
-                << std::setw(20) << std::left << (entryType == VARIABLE ? "Variable" : "Function")
-                << std::setw(20) << std::left << dataType
-                << std::setw(20) << std::left << scopeLayer
-                << std::setw(20) << std::left << (isConst ? "Yes" : "No")
-                << std::setw(20) << std::left << (isInitialized ? "Yes" : "No")
-                << std::setw(20) << std::left << (isUsed ? "Yes" : "No")
+                out << name << "," << (entryType == VARIABLE ? "Variable" : "Function") << "," << dataType << "," << 
+                line << "," << scopeLayer << "," << (isConst ? "Yes" : "No") << "," << 
+                (isInitialized || entryType == FUNCTION ? "Yes" : "No") << "," << (isUsed ? "Yes" : "No") 
                 << std::endl;
             }
         }
@@ -233,10 +237,7 @@ class CompilerOrganizer {
             logFile.clear();
 
             for (const ErrorDetail& error : errors) {
-                logFile << error.getLine() << ": " << (error.getSeverity() == ERROR ? "Error" : "Warning") << " - " << error.getMessage() << std::endl;
-                if (!error.getSuggestion().empty()) {
-                    logFile << "  Suggested fix: " << error.getSuggestion() << std::endl;
-                }
+                logFile << error.getLine() << "," << (error.getSeverity() == ERROR ? "Error" : "Warning") << "," << error.getMessage() << std::endl;
             }
             logFile.close();
         }
@@ -248,16 +249,18 @@ class CompilerOrganizer {
 
             std::ofstream symbolTableFile("log/symbol_table.txt");
             symbolTableFile.clear();
-            symbolTableFile << std::setw(20) << std::left << "Name"
-                            << std::setw(20) << std::left << "Node Type"
-                            << std::setw(20) << std::left << "Type"
-                            << std::setw(20) << std::left << "Scope"
-                            << std::setw(20) << std::left << "IsConst"
-                            << std::setw(20) << std::left << "IsInitialized"
-                            << std::setw(20) << std::left << "IsUsed"
-                            << std::endl;
+            symbolTableFile << "Name" << "," << "Node Type" << "," << "Type" << "," << "Line" << "," << "Scope" << "," << "IsConst" << "," << "IsInitialized" << "," << "IsUsed" << std::endl;
 
-            symbolTableFile << std::string(100, '-') << std::endl;
+            // symbolTableFile << std::setw(30) << std::left << "Name"
+            //                 << std::setw(30) << std::left << "Node Type"
+            //                 << std::setw(30) << std::left << "Type"
+            //                 << std::setw(30) << std::left << "Line"
+            //                 << std::setw(30) << std::left << "Scope"
+            //                 << std::setw(30) << std::left << "IsConst"
+            //                 << std::setw(30) << std::left << "IsInitialized"
+            //                 << std::setw(30) << std::left << "IsUsed"
+            //                 << std::endl;
+
             for (const SymbolTableEntry& entry : symbolTable) {
                 entry.dump(symbolTableFile);
             }
@@ -270,12 +273,8 @@ class CompilerOrganizer {
             quadruplesFile.clear();
 
             for (const QuadrupleEntry& entry : quadruples) {
-                quadruplesFile 
-                << std::setw(12) << std::left  << opToString(entry.operation)
-                << std::setw(8) << std::left  << entry.arg1
-                << std::setw(8) << std::left  << entry.arg2
-                << std::setw(8) << std::left  << (entry.hasDestination() ? entry.res : "") 
-                << std::endl;
+                quadruplesFile << opToString(entry.operation) << "," << entry.arg1 << "," 
+                << entry.arg2 << "," << (entry.hasDestination() ? entry.res : "")  << std::endl;
             }
             quadruplesFile.close();
         }
@@ -285,13 +284,14 @@ class CompilerOrganizer {
             std::unordered_map<std::string, int> varFrequency;
 
             for (QuadrupleEntry& entry : quadruples) {
-                if (entry.operation == QUAD_ASSIGN) continue;
                 entry.arg1 != entry.res ? varFrequency[entry.arg1]++ : varFrequency[entry.arg1];
                 entry.arg2 != entry.res ? varFrequency[entry.arg2]++ : varFrequency[entry.arg2];
             }
 
-            for (QuadrupleEntry& entry : quadruples) {
-                if (entry.operation != QUAD_ASSIGN) continue;
+            for (int i = quadruples.size() - 1; i >= 0; i--) {
+                QuadrupleEntry entry = quadruples[i];
+                if (entry.operation != QUAD_ASSIGN) 
+                    continue;
                 if (varFrequency[entry.res] > 0) {
                     varFrequency[entry.arg1]++;
                     varFrequency[entry.arg2]++;

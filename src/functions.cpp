@@ -36,7 +36,9 @@ void FunctionDefintionNode::run(Scope* scope) {
 
 void FunctionDefintionNode::runSemanticChecker(Scope* scope) {
     try {
-        scope->defineFunction(returnType, name, parameters, body);
+        SymbolTableEntry stEntry = scope->defineFunction(returnType, name, parameters, body);
+        stEntry.setLine(this->line);
+        CompilerOrganizer::addSymbolTableEntry(stEntry);
     } catch( ErrorDetail error ) {
         error.setLine(line);
         CompilerOrganizer::addError(error);

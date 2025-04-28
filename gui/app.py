@@ -1,16 +1,65 @@
 import os
 import sys
 import subprocess
+import re
 from PyQt5.QtWidgets import (
-    QApplication, QMainWindow, QTabWidget, QWidget,
+    QApplication, QMainWindow, QTabWidget, QWidget, QLabel, QFileDialog,
     QVBoxLayout, QHBoxLayout, QTableWidget, QTableWidgetItem,
     QTextEdit, QPushButton, QFileDialog, QMessageBox, QPlainTextEdit, QTextEdit
 )
 from PyQt5.QtGui import QTextCursor, QColor, QPainter, QTextFormat
-from PyQt5.QtCore import Qt, QRect, QSize
-from PyQt5.QtWidgets import QHeaderView, QAbstractItemView
-from PyQt5.QtGui import QKeySequence
+from PyQt5.QtCore import Qt, QRect, QSize, QTimer, QPropertyAnimation, QEasingCurve
+from PyQt5.QtWidgets import QHeaderView, QAbstractItemView, QToolTip, QGraphicsOpacityEffect
+from PyQt5.QtGui import QKeySequence, QSyntaxHighlighter, QTextCharFormat, QFont
 from PyQt5.QtWidgets import QShortcut
+
+class SyntaxHighlighter(QSyntaxHighlighter):
+    def __init__(self, document):
+        super().__init__(document)
+
+        # --- Define text formats
+        self.comment_format = QTextCharFormat()
+        self.comment_format.setForeground(QColor("green"))
+        self.comment_format.setFontItalic(True)
+
+        self.keyword_format = QTextCharFormat()
+        self.keyword_format.setForeground(QColor(85, 0, 255))  # Purple/Blue color
+        self.keyword_format.setFontWeight(QFont.Bold)
+
+        self.symbols_format = QTextCharFormat()
+        self.symbols_format.setForeground(QColor("Gray")) 
+        self.symbols_format.setFontWeight(QFont.Bold)
+
+        # --- Extract keywords from your lexer
+        self.keywords = [
+            "if", "else", "for", "while", "do", "int", "float", "bool", "string", "char",
+            "return", "switch", "case", "default", "continue", "break", "const", "true", "false",
+            "pow", "sqrt", "print", "void"
+        ]
+
+        self.symbols = [
+            "<", ">", "+", "-", "*", "/", "mod", "~", "!", "=", "(", ")", "{", "}", "&", "|", "^", ";"
+        ]
+
+        # Build regex for keywords
+        self.keyword_pattern = r'\b(' + '|'.join(re.escape(kw) for kw in self.keywords) + r')\b'
+        self.symbols_pattern = '(' + '|'.join(re.escape(sym) for sym in self.symbols) + ')'
+
+    def highlightBlock(self, text):
+        # --- Highlight keywords
+        for match in re.finditer(self.keyword_pattern, text):
+            start, end = match.span()
+            self.setFormat(start, end - start, self.keyword_format)
+
+        # --- Highlight Symbols
+        for match in re.finditer(self.symbols_pattern, text):
+            start, end = match.span()
+            self.setFormat(start, end - start, self.symbols_format)
+
+        # --- Highlight comments
+        comment_index = text.find("//")
+        if comment_index >= 0:
+            self.setFormat(comment_index, len(text) - comment_index, self.comment_format)
 
 # === Custom Editor with Line Numbers ===
 class LineNumberArea(QWidget):
@@ -27,8 +76,13 @@ class LineNumberArea(QWidget):
 class CodeEditor(QPlainTextEdit):
     def __init__(self):
         super().__init__()
+        self.error_messages = {}
+        self.setMouseTracking(True)
+        QToolTip.setFont(self.font())
+
         self.line_number_area = LineNumberArea(self)
         self.extra_selections = []
+        self.highlighter = SyntaxHighlighter(self.document())
 
         self.blockCountChanged.connect(self.update_line_number_area_width)
         self.updateRequest.connect(self.update_line_number_area)
@@ -81,6 +135,20 @@ class CodeEditor(QPlainTextEdit):
             top = bottom
             bottom = top + int(self.blockBoundingRect(block).height())
             block_number += 1
+
+    def mouseMoveEvent(self, event):
+        cursor = self.cursorForPosition(event.pos())
+        block = cursor.block()
+        line_number = block.blockNumber() + 1
+
+        if line_number in self.error_messages:
+            message = self.error_messages[line_number]
+            QToolTip.showText(event.globalPos(), message, self)
+        else:
+            QToolTip.hideText()
+
+        super().mouseMoveEvent(event)
+
     
     def toggle_comment(self):
         cursor = self.textCursor()
@@ -119,9 +187,7 @@ class CodeEditor(QPlainTextEdit):
 
         self.textCursor().endEditBlock()
 
-    def highlight_line(self, line_number, color):
-        """Highlight a specific line number with red background"""
-
+    def highlight_line(self, line_number, color, message=None):
         block = self.document().findBlockByNumber(line_number - 1)
         if block.isValid():
             selection = QTextEdit.ExtraSelection()
@@ -130,7 +196,37 @@ class CodeEditor(QPlainTextEdit):
             selection.cursor = QTextCursor(block)
             self.extra_selections.append(selection)
 
+            if message:
+                self.error_messages[line_number] = message
+
         self.setExtraSelections(self.extra_selections)
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_Tab:
+            cursor = self.textCursor()
+            cursor.insertText(" " * 4)  # Insert 4 spaces
+        else:
+            super().keyPressEvent(event)
+
+    def goto_line(self, line_number):
+        """Scroll to the given line number and center it in the view"""
+        if line_number < 1:
+            line_number = 1
+        
+        # Find the block corresponding to the line number
+        block = self.document().findBlockByLineNumber(line_number - 1)
+        if block.isValid():
+            # Create a cursor at the start of that block
+            cursor = QTextCursor(block)
+            # Set the cursor
+            self.setTextCursor(cursor)
+            # Center the cursor/view
+            self.centerCursor()
+            # Highlight the line temporarily
+            self.highlight_line(line_number, QColor(255, 255, 0, 100))  # Light yellow highlight
+            
+            # Remove the highlight after a short delay
+            QTimer.singleShot(2000, lambda: self.remove_highlight(line_number))
 
     def highlight_current_line(self):
         """Optional: Highlight the current line (gray background)"""
@@ -146,13 +242,23 @@ class CodeEditor(QPlainTextEdit):
 
         self.setExtraSelections(extra_selections)
 
+    def remove_highlight(self, line_number):
+        """Remove the temporary highlight"""
+        # Remove the specific highlight
+        self.extra_selections = [sel for sel in self.extra_selections 
+                                if not (isinstance(sel.cursor.block().blockNumber(), int) and 
+                                    sel.cursor.block().blockNumber() == line_number - 1 and 
+                                    sel.format.background().color() == QColor(255, 255, 0, 100))]
+        self.setExtraSelections(self.extra_selections)
+
 # === Main Window ===
 class LanguageGUI(QMainWindow):
     def __init__(self):
         super().__init__()
         self.activeFileName = None
+        self.unused_variables = []
 
-        self.setWindowTitle("Language GUI")
+        self.setWindowTitle("YAPL Compiler")
         self.setGeometry(100, 100, 1200, 800)
 
         central_widget = QWidget()
@@ -189,7 +295,7 @@ class LanguageGUI(QMainWindow):
 
         # Create tabs
         self.symbol_table_tab = self.create_table_tab(
-            ["Name", "Node Type", "Data Type", "Scope Depth", "Is Const", "Is Initialized", "Is Used"]
+            ["Name", "Node Type", "Data Type", "Line Number", "Scope Depth", "Is Const", "Is Initialized", "Is Used"]
         )
         self.symbol_table_tab.table.setEditTriggers(QAbstractItemView.NoEditTriggers)
 
@@ -202,6 +308,8 @@ class LanguageGUI(QMainWindow):
             ["Operation", "Operand 1", "Operand 2", "Result"]
         )
         self.symbol_table_tab.table.setEditTriggers(QAbstractItemView.NoEditTriggers)
+
+        self.symbol_table_tab.table.cellDoubleClicked.connect(self.on_symbol_table_double_click)
 
         self.output_tab = self.create_output_tab()
         self.errors_tab = self.create_output_tab()
@@ -230,6 +338,16 @@ class LanguageGUI(QMainWindow):
 
         tab.table = table
         return tab
+    
+    def on_symbol_table_double_click(self, row, column):
+        # Get the line number from the table (4th column is the line number)
+        line_number_str = self.symbol_table_tab.table.item(row, 3).text()
+        try:
+            line_number = int(line_number_str)
+            self.editor.goto_line(line_number)
+            self.show_toast(f"Jumped to line {line_number}")
+        except (ValueError, TypeError):
+            self.show_toast("Invalid line number")
 
     def create_output_tab(self):
         tab = QWidget()
@@ -262,13 +380,13 @@ class LanguageGUI(QMainWindow):
         text_edit.setTextColor(QColor("black"))
         text_edit.moveCursor(QTextCursor.Start)
 
-        # Highlight error lines in code editor
-        if error_lines:
-            self.editor.highlight_line(error_lines[0])  # Just highlighting first error line for now
-
     def run_code(self):
+        
+        
+        self.editor.extra_selections = []
+        self.unused_variables = []
+        self.editor.setExtraSelections([])
         self.save_button.click()
-        self.extra_selections = []
 
         # Clear all tables
         self.symbol_table_tab.table.setRowCount(0)
@@ -286,27 +404,42 @@ class LanguageGUI(QMainWindow):
                     file.truncate(0)
 
 
-        process = subprocess.Popen(['./yapl', self.activeFileName], stdout=subprocess.PIPE)
+        process = subprocess.Popen(['./yapl.exe', self.activeFileName], stdout=subprocess.PIPE)
         stdout, _ = process.communicate()
 
         if "error" not in stdout.decode().lower():
             with open('log/symbol_table.txt', 'r') as f:
-                lines = f.readlines()[2:]
+                lines = f.readlines()[1:]
                 self.symbol_table_tab.table.setRowCount(0)
                 for line in lines:
-                    self.add_row(self.symbol_table_tab.table, line.split())
+                    line = line.strip()
+                    record = line.split(",")
+                    for part in record: part.strip()
+                    self.add_row(self.symbol_table_tab.table, record)
+                    if record[7].lower() == "no":
+                        self.unused_variables.append((
+                            int(record[3]), 
+                            QColor("orange"), 
+                            f"variable {record[0]} is not used"))
+                    
 
             with open('log/quadruples.txt', 'r') as f:
                 lines = f.readlines()
                 self.quadruples_tab.table.setRowCount(0)
                 for line in lines:
-                    self.add_row(self.quadruples_tab.table, line.split())
+                    line = line.strip()
+                    record = line.split(",")
+                    for part in record: part.strip()
+                    self.add_row(self.quadruples_tab.table, record)
 
             with open('log/optimized_quadruples.txt', 'r') as f:
                 optimized_lines = f.readlines()
                 self.optimized_quadruples_tab.table.setRowCount(0)
                 for line in optimized_lines:
-                    self.add_row(self.optimized_quadruples_tab.table, line.split())
+                    line = line.strip()
+                    record = line.split(",")
+                    for part in record: part.strip()
+                    self.add_row(self.optimized_quadruples_tab.table, record)
                     
         self.show_output_with_errors(stdout.decode().splitlines(), [])
         self.show_errors_tab()
@@ -321,28 +454,39 @@ class LanguageGUI(QMainWindow):
 
     def save_file(self):
         (file_name, __), _ = QFileDialog.getSaveFileName(self, "Save File", "", "All Files (*)") if self.activeFileName is None else (self.activeFileName, ""), ""
-        print(file_name)
         if file_name:
             with open(file_name, 'w') as f:
                 f.write(self.editor.toPlainText())
             self.activeFileName = file_name
-            QMessageBox.information(self, "Saved", "File saved successfully.")
+            self.show_toast("File saved successfully.")
 
     def show_errors_tab(self):
         text_edit = self.errors_tab.text_edit
         text_edit.clear()
 
         lines = []
-        error_line_numbers = []
+        error_line_numbers = self.unused_variables.copy()
+
+        for lineNum, color, message in error_line_numbers:
+            text_edit.append( f"{lineNum}: WARNING - {message}" )
 
         try:
             with open('log/errors.txt', 'r') as f:
                 lines = f.readlines()
 
             for line in lines:
-                text_edit.append(line)
-                lineNumber = line.split(':', 1)[0]
-                error_line_numbers.append((int(lineNumber), QColor("red") if "Error" in line else QColor("orange")))
+                parts = line.split(',')
+                text_edit.append(f"{parts[0]}: {parts[1]} - {parts[2]}")
+                lineNumber = parts[0]
+                error_message = parts[2]
+                error_line_numbers.append(
+                    (
+                        int(lineNumber), 
+                        QColor("red") if  parts[1].lower() == "error" else QColor("orange"),
+                        error_message
+                    )
+                ),
+                        
 
         except FileNotFoundError:
             text_edit.append("No errors detected or 'output' file not found.")
@@ -350,11 +494,84 @@ class LanguageGUI(QMainWindow):
         text_edit.moveCursor(QTextCursor.Start)
 
         # Highlight first error line if exists
-        for lineNum, color in error_line_numbers:
-            self.editor.highlight_line(lineNum, color)
+        for lineNum, color, message in error_line_numbers:
+            self.editor.highlight_line(lineNum, color, message)
+
+    def show_toast(self, message):
+        # Create toast widget
+        toast = QLabel(message, self)
+        toast.setStyleSheet("""
+            background-color: #333333;
+            color: white;
+            border-radius: 10px;
+            padding: 10px 20px;
+        """)
+        toast.setAlignment(Qt.AlignCenter)
+        
+        # Position toast at the bottom center
+        toast_width = 250
+        toast_height = 50
+        toast.resize(toast_width, toast_height)
+        
+        # Position at the bottom center of the window
+        x = (self.width() - toast_width) // 2
+        y = self.height() - toast_height - 40  # 40px from bottom
+        toast.move(x, y)
+        
+        # Show the toast
+        toast.show()
+        
+        # Create fade effect
+        self.fade_effect = QGraphicsOpacityEffect()
+        toast.setGraphicsEffect(self.fade_effect)
+        
+        # Create animation to automatically hide the toast after delay
+        self.fade_anim = QPropertyAnimation(self.fade_effect, b"opacity")
+        self.fade_anim.setDuration(1000) 
+        self.fade_anim.setStartValue(0.0)
+        self.fade_anim.setEndValue(1.0)
+        self.fade_anim.setEasingCurve(QEasingCurve.InOutQuad)
+        
+        # When animation finishes, delete the toast
+        # self.fade_anim.finished.connect(toast.deleteLater)
+        
+        # Start with quick fade in, then delay, then fade out
+        self.fade_anim.start()
+        
+        # Second animation for fade out
+        QTimer.singleShot(2000, lambda: self.start_fade_out(toast))
+
+    def start_fade_out(self, toast):
+        # Create fade out animation
+        self.fade_out = QPropertyAnimation(self.fade_effect, b"opacity")
+        self.fade_out.setDuration(1000)  # 1 second fade out
+        self.fade_out.setStartValue(1.0)
+        self.fade_out.setEndValue(0.0)
+        self.fade_out.setEasingCurve(QEasingCurve.InOutQuad)
+        self.fade_out.start()
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
+    app.setStyleSheet("""
+        QToolTip {
+            background-color: #f0f0f0;
+            color: #333333;
+            border: 1px solid #cccccc;
+            border-radius: 8px;
+            padding: 8px;
+            font-size: 12pt;
+        }
+    """)
+
+    app.setStyleSheet("""
+        QPlainTextEdit {
+            padding-left: 8px;
+            padding-top: 8px;
+            padding-bottom: 8px;
+            font-size: 14px;
+        }
+    """)
+
     window = LanguageGUI()
     window.show()
     sys.exit(app.exec_())

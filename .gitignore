@@ -1,2 +1,12 @@
 build/*
 .cache/*
+.vscode/*
+build/*
+CMakeFiles/*
+cmake_install
+CMakeCache
+gui/build
+gui/dist
+gui/myenv
+gui/app.spec
+gui/*.rar

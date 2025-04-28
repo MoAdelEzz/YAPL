@@ -42,7 +42,7 @@ class DataType {
 
 class Operand {
     public:
-        void* content;
+        void* content = nullptr;
         DataType* dataType;
 
         Operand() { content = nullptr; dataType = DataType::Undefined(); }
@@ -387,7 +387,7 @@ class Scope {
         Scope* getParent() { return parent; }
         void setParent(Scope* parent) { this->parent = parent; }
 
-        void defineVariable(std::string varName, DataType* type, Operand value, bool writeSymbol) { 
+        SymbolTableEntry defineVariable(std::string varName, DataType* type, Operand value, bool writeSymbol) { 
             if (variables.find(varName) == variables.end()) {
                 variables[varName] = { type, Operand::undefined() }; 
 
@@ -400,20 +400,22 @@ class Scope {
                         VARIABLE, 
                         type->type, 
                         scopeDepth, 
+                        -1,
                         type->isConst, 
                         value.dataType->type != TUNDEFINED,
                         false                
                     );
     
-                    CompilerOrganizer::addSymbolTableEntry(stEntry);
+                    return stEntry;
                 }
 
             } else {
                 throw ErrorDetail(Severity::ERROR, "Variable " + varName + " has already been declared");
             }
+            return SymbolTableEntry();
         }    
 
-        void defineFunction( DataType* returnType, std::string functionName, FunctionParametersNode* parameters, ScopeNode* scope) {
+        SymbolTableEntry defineFunction( DataType* returnType, std::string functionName, FunctionParametersNode* parameters, ScopeNode* scope) {
             if (functions.find(functionName) == functions.end()) {
                 functions[functionName] = std::make_tuple(returnType, parameters, scope);
 
@@ -422,6 +424,7 @@ class Scope {
                     EntryType::FUNCTION, 
                     returnType->type, 
                     scopeDepth, 
+                    -1,
                     returnType->isConst, 
                     scope != nullptr,
                     false                
@@ -431,11 +434,13 @@ class Scope {
                     stEntry.addArgument(parameters->types[i]->type);
                 }
 
-                CompilerOrganizer::addSymbolTableEntry(stEntry);
+                return stEntry;
 
             } else {
                 throw ErrorDetail(Severity::ERROR, "Function " + functionName + " has already been declared");
             }
+
+            return SymbolTableEntry();
         }
 
         // ================================================================================================================================================================

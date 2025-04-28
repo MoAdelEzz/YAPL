@@ -5,11 +5,11 @@
 #include "scoping.hpp"
 
 class ForNode : public ProgramNode {
-    ProgramNode* preLoop;
-    Expression* condition;
-    AssignNode* assignment;
-    ProgramNode* postLoop;
-    ScopeNode* body;
+    ProgramNode* preLoop = nullptr;
+    Expression* condition = nullptr;
+    AssignNode* assignment = nullptr;
+    ProgramNode* postLoop = nullptr;
+    ScopeNode* body = nullptr;
     bool inverted;
 
     public:
@@ -29,9 +29,9 @@ class ForNode : public ProgramNode {
 };
 
 class WhileNode : public ProgramNode {
-    Expression* condition;
-    AssignNode* assignment;
-    ScopeNode* body;
+    Expression* condition = nullptr;
+    AssignNode* assignment = nullptr;
+    ScopeNode* body = nullptr;
     bool inverted;
 
     public:
@@ -50,9 +50,9 @@ class WhileNode : public ProgramNode {
 };
 
 class DoWhileNode: public ProgramNode {
-    Expression* condition;
-    AssignNode* assignment;
-    ScopeNode* body;
+    Expression* condition = nullptr;
+    AssignNode* assignment = nullptr;
+    ScopeNode* body = nullptr;
     bool inverted;
 
     public:
